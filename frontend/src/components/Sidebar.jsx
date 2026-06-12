@@ -4,12 +4,12 @@ import { NavLink, useLocation } from "react-router-dom";
 const isGroupActive = (group, pathname) =>
   (group.items || []).some((item) => pathname.startsWith(item.to) || (item.children || []).some((child) => pathname.startsWith(child.to)));
 
-export default function Sidebar({ groups, auth, onLogout }) {
+export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true, onToggleSidebar }) {
   const location = useLocation();
   const defaultOpen = useMemo(() => {
     const next = {};
     for (const group of groups) {
-      next[group.label] = isGroupActive(group, location.pathname);
+      next[group.label] = Boolean(group.defaultOpen) || isGroupActive(group, location.pathname);
     }
     return next;
   }, [groups, location.pathname]);
@@ -17,6 +17,14 @@ export default function Sidebar({ groups, auth, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
+  const closeWorkspace = () => {
+    if (mobileOpen) setMobileOpen(false);
+    if (sidebarExpanded && onToggleSidebar) onToggleSidebar();
+  };
+
+  useEffect(() => {
+    setOpenGroups((current) => ({ ...current, ...defaultOpen }));
+  }, [defaultOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -46,20 +54,18 @@ export default function Sidebar({ groups, auth, onLogout }) {
           <span />
         </button>
         <div className="sidebar-mobile-brand">
-          <small>Unified Workspace</small>
-          <strong>Respark ERP</strong>
         </div>
       </div>
 
-      <div className={`surface-overlay ${mobileOpen ? "active" : ""}`} onClick={closeMobile} aria-hidden={!mobileOpen} />
+      <div
+        className={`surface-overlay ${sidebarExpanded || mobileOpen ? "active" : ""}`}
+        onClick={closeWorkspace}
+        aria-hidden={!(sidebarExpanded || mobileOpen)}
+      />
 
-      <aside className={`app-sidebar ${mobileOpen ? "mobile-open" : ""}`}>
-        <div className="sidebar-brand">
-          <div>
-            <small>Unified Workspace</small>
-            <h3>Respark ERP</h3>
-          </div>
-          <button type="button" className="surface-close-button sidebar-mobile-close" onClick={closeMobile} aria-label="Close workspace menu">X</button>
+      <aside className={`app-sidebar ${sidebarExpanded || mobileOpen ? "open" : "closed"}`}>
+        <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '40px' }}>
+          <button type="button" className="surface-close-button sidebar-mobile-close" onClick={closeWorkspace} aria-label="Close workspace menu">X</button>
         </div>
 
         {auth?.user && (
@@ -142,3 +148,4 @@ export default function Sidebar({ groups, auth, onLogout }) {
     </>
   );
 }
+

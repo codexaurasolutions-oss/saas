@@ -1,8 +1,10 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
 import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/PageLoader";
+import { SETTINGS_WORKSPACE_SECTIONS } from "./pages/owner/settingsWorkspaceConfig";
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -29,16 +31,22 @@ const MembershipsPage = lazy(() => import("./pages/owner/MembershipsPage"));
 const MyAppointmentsPage = lazy(() => import("./pages/owner/MyAppointmentsPage"));
 const MyCommissionPage = lazy(() => import("./pages/owner/MyCommissionPage"));
 const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage"));
+const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage"));
 const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage"));
 const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage"));
 const ServicesPage = lazy(() => import("./pages/owner/ServicesPage"));
 const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage"));
 const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage"));
 const UsersPage = lazy(() => import("./pages/owner/UsersPage"));
+const ExpertsPage = lazy(() => import("./pages/owner/ExpertsPage"));
 const StaffRolesPage = lazy(() => import("./pages/owner/StaffRolesPage"));
 const ReportsPage = lazy(() => import("./pages/owner/ReportsPage"));
 const PosPage = lazy(() => import("./pages/owner/PosPage"));
+const PosDashboardPage = lazy(() => import("./pages/owner/PosDashboardPage"));
 const PaymentsPage = lazy(() => import("./pages/owner/PaymentsPage"));
+const TrendsPage = lazy(() => import("./pages/owner/TrendsPage"));
+const ServiceHubPage = lazy(() => import("./pages/owner/ServiceHubPage"));
+const ReportsHubPage = lazy(() => import("./pages/owner/ReportsHubPage"));
 const SupportTicketsPage = lazy(() => import("./pages/owner/SupportTicketsPage"));
 const SettingsPage = lazy(() => import("./pages/owner/SettingsPage"));
 
@@ -58,7 +66,9 @@ const CategoryDetailPage = lazy(() => import("./pages/storefront/CategoryDetailP
 const ProductDetailPage = lazy(() => import("./pages/storefront/ProductDetailPage"));
 const CartPage = lazy(() => import("./pages/storefront/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/storefront/CheckoutPage"));
+const LegalContentPage = lazy(() => import("./pages/shared/LegalContentPage"));
 const WebsiteEditorPage = lazy(() => import("./pages/owner/WebsiteEditorPage"));
+const ManagePage = lazy(() => import("./pages/owner/ManagePage"));
 
 const RouteFallback = () => (
   <div className="page-shell">
@@ -70,6 +80,11 @@ const RouteFallback = () => (
 
 const Protected = () => {
   const { auth, logout } = useAuth();
+  const location = useLocation();
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  useEffect(() => {
+    setSidebarExpanded(false);
+  }, [location.pathname]);
   if (!auth) return <Navigate to="/login" replace />;
   const perms = auth.membership?.permissions || {};
   const flags = auth.membership?.featureFlags || {};
@@ -81,24 +96,11 @@ const Protected = () => {
           hint: "Daily flow",
           items: [
             can("dashboard") && { label: "Owner Dashboard", to: "/admin/dashboard" },
-            can("appointments") && {
-              label: "Appointments",
-              to: "/admin/appointments",
-              children: [
-                { label: "Calendar", to: "/admin/appointments/calendar" },
-                { label: "Create Booking", to: "/admin/appointments/create" }
-              ]
-            },
-            enabled("pos") && can("pos") && {
-              label: "POS & Billing",
-              to: "/admin/pos",
-              children: [
-                { label: "New Sale", to: "/admin/pos/new" },
-                { label: "Day Closing", to: "/admin/pos/day-closing" }
-              ]
-            },
             can("invoices") && { label: "Invoices", to: "/admin/invoices" },
-            can("payments") && { label: "Payments", to: "/admin/payments" }
+            can("payments") && { label: "Payments", to: "/admin/payments" },
+            can("inventory") && enabled("inventory") && { label: "Products", to: "/admin/inventory" },
+            can("memberships") && { label: "Memberships / Packages", to: "/admin/memberships" },
+            can("payroll") && { label: "Payroll", to: "/admin/payroll" }
           ].filter(Boolean)
         },
         {
@@ -108,24 +110,15 @@ const Protected = () => {
             can("branches") && { label: "Branches", to: "/admin/branches" },
             can("services") && {
               label: "Services",
-              to: "/admin/services",
-              children: [
-                { label: "Categories", to: "/admin/service-categories" }
-              ]
+              to: "/admin/services"
             },
             can("staff") && {
-              label: "Staff & Roles",
-              to: "/admin/users",
-              children: [
-                { label: "Roles & Permissions", to: "/admin/roles-permissions" }
-              ]
+              label: "Staff Details",
+              to: "/admin/users"
             },
-            can("staffSchedule") && {
-              label: "Staff Schedule",
-              to: "/admin/staff-schedule",
-              children: [
-                { label: "Availability", to: "/admin/staff-availability" }
-              ]
+            can("staff") && {
+              label: "Roles & Permissions",
+              to: "/admin/roles-permissions"
             }
           ].filter(Boolean)
         },
@@ -133,36 +126,9 @@ const Protected = () => {
           label: "CRM & Revenue",
           hint: "Customer growth",
           items: [
-            can("customers") && { label: "Customers / CRM", to: "/admin/customers" },
-            can("memberships") && { label: "Memberships", to: "/admin/memberships" },
-            can("packages") && { label: "Packages", to: "/admin/packages" },
-            enabled("loyalty") && can("loyalty") && {
-              label: "Loyalty",
-              to: "/admin/loyalty",
-              children: [
-                { label: "Rules", to: "/admin/loyalty/rules" },
-                { label: "Transactions", to: "/admin/loyalty/transactions" },
-                { label: "Reports", to: "/admin/loyalty/reports" }
-              ]
-            },
-            enabled("couponsGiftCards") && can("couponsGiftCards") && {
-              label: "Coupons & Gift Cards",
-              to: "/admin/coupons",
-              children: [
-                { label: "Gift Cards", to: "/admin/gift-cards" },
-                { label: "Reports", to: "/admin/coupons/reports" }
-              ]
-            },
-            can("reports") && {
-              label: "Reports",
-              to: "/admin/reports",
-              children: [
-                { label: "Operations", to: "/admin/reports/appointments" },
-                { label: "Loyalty", to: "/admin/reports/loyalty" },
-                { label: "Finance", to: "/admin/reports/profit-loss" },
-                { label: "Payroll", to: "/admin/reports/payroll" }
-              ]
-            }
+            can("settings") && { label: "Settings Hub", to: "/admin/settings/generic" },
+            enabled("campaigns") && can("campaigns") && { label: "Campaigns", to: "/admin/campaigns" },
+            enabled("customerPortal") && can("customerPortalSettings") && { label: "Customer Portal Settings", to: "/admin/customer-portal-settings" }
           ].filter(Boolean)
         },
         {
@@ -172,50 +138,11 @@ const Protected = () => {
             { label: "Website Editor", to: "/admin/website-editor" },
             enabled("onlineOrders") && can("orders") && {
               label: "Online Orders",
-              to: "/admin/orders",
-              children: [
-                { label: "New", to: "/admin/orders/new" },
-                { label: "Accepted", to: "/admin/orders/accepted" },
-                { label: "Ready", to: "/admin/orders/ready" },
-                { label: "Completed", to: "/admin/orders/completed" },
-                { label: "Cancelled", to: "/admin/orders/cancelled" }
-              ]
-            },
-            enabled("campaigns") && can("campaigns") && {
-              label: "Campaigns",
-              to: "/admin/campaigns",
-              children: [
-                { label: "Template Library", to: "/admin/campaign-templates" }
-              ]
+              to: "/admin/orders"
             },
             enabled("campaignTemplates") && can("campaignTemplates") && { label: "Campaign Templates", to: "/admin/campaign-templates" },
             enabled("messageTemplates") && can("messageTemplates") && { label: "Message Templates", to: "/admin/message-templates" },
             enabled("customerPortal") && can("customerPortalSettings") && { label: "Customer Portal Settings", to: "/admin/customer-portal-settings" }
-          ].filter(Boolean)
-        },
-        {
-          label: "Inventory",
-          hint: "Stock control",
-          items: [
-            enabled("inventory") && can("inventory") && {
-              label: "Inventory",
-              to: "/admin/inventory",
-              children: [
-                { label: "Products", to: "/admin/inventory/products" },
-                { label: "Categories", to: "/admin/inventory/categories" },
-                { label: "Stock Movements", to: "/admin/inventory/stock-movements" },
-                { label: "Low Stock", to: "/admin/inventory/low-stock" }
-              ]
-            },
-            can("purchases") && {
-              label: "Purchases / Vendors",
-              to: "/admin/purchases/vendors",
-              children: [
-                { label: "Purchase Orders", to: "/admin/purchases/orders" },
-                { label: "Transfers", to: "/admin/purchases/transfers" },
-                { label: "Reconciliation", to: "/admin/purchases/reconciliation" }
-              ]
-            }
           ].filter(Boolean)
         },
         {
@@ -226,6 +153,7 @@ const Protected = () => {
             can("myAppointments") && { label: "My Appointments", to: "/admin/my-appointments" },
             can("mySchedule") && { label: "My Schedule", to: "/admin/my-schedule" },
             can("myCommission") && { label: "My Commission", to: "/admin/my-commission" },
+            can("myPayroll") && { label: "My Payroll", to: "/admin/my-payroll" },
             can("myProfile") && { label: "My Profile", to: "/admin/my-profile" }
           ].filter(Boolean)
         },
@@ -233,76 +161,125 @@ const Protected = () => {
           label: "System",
           hint: "Help and config",
           items: [
-            enabled("feedback") && can("feedback") && {
-              label: "Feedback",
-              to: "/admin/feedback",
-              children: [
-                { label: "Reports", to: "/admin/feedback/reports" },
-                { label: "Settings", to: "/admin/feedback/settings" }
-              ]
-            },
             enabled("enquiries") && can("enquiries") && {
               label: "Enquiries",
-              to: "/admin/enquiries",
-              children: [
-                { label: "Follow-ups", to: "/admin/enquiries/follow-ups" },
-                { label: "Reports", to: "/admin/enquiries/reports" }
-              ]
+              to: "/admin/enquiries"
             },
             enabled("expenses") && can("expenses") && {
               label: "Expenses",
-              to: "/admin/expenses",
-              children: [
-                { label: "Categories", to: "/admin/expenses/categories" },
-                { label: "Reports", to: "/admin/expenses/reports" }
-              ]
+              to: "/admin/expenses"
             },
-            enabled("payroll") && can("payroll") && {
-              label: "Payroll & Attendance",
-              to: "/admin/payroll",
-              children: [
-                { label: "Attendance", to: "/admin/attendance" },
-                { label: "Leaves", to: "/admin/leaves" },
-                { label: "Incentives", to: "/admin/incentives" },
-                { label: "Staff Performance", to: "/admin/staff-performance" }
-              ]
-            },
-            enabled("notifications") && can("notifications") && { label: "Notifications", to: "/admin/notifications" },
             enabled("auditLogs") && can("auditLogs") && { label: "Audit Logs", to: "/admin/audit-logs" },
-            enabled("whatsapp") && can("whatsapp") && {
-              label: "WhatsApp",
-              to: "/admin/whatsapp",
-              children: [
-                { label: "Settings", to: "/admin/whatsapp/settings" },
-                { label: "Logs", to: "/admin/whatsapp/logs" },
-                { label: "Automations", to: "/admin/whatsapp/automations" }
-              ]
-            },
             can("support") && { label: "Support Tickets", to: "/admin/support-tickets" },
             can("settings") && {
               label: "Settings",
-              to: "/admin/settings/business",
-              children: [
-                { label: "Business", to: "/admin/settings/business" },
-                { label: "Invoices", to: "/admin/settings/invoices" },
-                { label: "Payments", to: "/admin/settings/payments" },
-                { label: "Booking", to: "/admin/settings/booking" },
-                { label: "Notifications", to: "/admin/settings/notifications" },
-                { label: "WhatsApp", to: "/admin/settings/whatsapp" },
-
-                { label: "Payroll", to: "/admin/settings/payroll" }
-              ]
+              to: "/admin/settings/generic"
             }
           ].filter(Boolean)
         }
       ].filter((group) => group.items.length);
 
+  const settingsGroups = [
+    {
+      label: "Workspace",
+      hint: "Back to main pages",
+      defaultOpen: true,
+      items: [
+        can("dashboard") && { label: "Home / Dashboard", to: "/admin/dashboard" },
+        can("pos") && { label: "POS", to: "/admin/pos" },
+        can("orders") && enabled("onlineOrders") && { label: "POS Dashboard", to: "/admin/pos-dashboard" },
+        can("appointments") && enabled("appointments") && { label: "Appointments", to: "/admin/appointments" },
+        can("customers") && { label: "CRM", to: "/admin/customers" },
+        can("reports") && enabled("reports") && { label: "Reports", to: "/admin/reports" },
+        can("inventory") && enabled("inventory") && { label: "Inventory", to: "/admin/inventory" },
+        { label: "Trends", to: "/admin/trends" }
+      ].filter(Boolean)
+    },
+    {
+      label: "Settings",
+      hint: "Business configuration",
+      defaultOpen: true,
+      items: SETTINGS_WORKSPACE_SECTIONS.map((item) => ({ label: item.label, to: item.to }))
+    }
+  ].filter((group) => group.items.length);
+
+  const manageGroups = [
+    {
+      label: "Manage",
+      hint: "Salon lifecycle",
+      items: [
+        { label: "Branches", to: "/admin/branches" },
+        { label: "Services", to: "/admin/services" },
+        {
+          label: "Staff & Roles",
+          to: "/admin/users"
+        },
+        {
+          label: "Staff Schedule",
+          to: "/admin/staff-schedule",
+          children: [
+            { label: "Availability", to: "/admin/staff-availability" }
+          ]
+        },
+        { label: "Memberships / Packages", to: "/admin/memberships", children: [{ label: "Packages", to: "/admin/packages" }] },
+        { label: "Loyalty / Coupons", to: "/admin/loyalty", children: [{ label: "Coupons", to: "/admin/coupons" }, { label: "Gift Cards", to: "/admin/gift-cards" }] },
+        { label: "Customer Portal", to: "/admin/customer-portal-settings" },
+        {
+          label: "WhatsApp / Notifications",
+          to: "/admin/whatsapp",
+          children: [
+            { label: "Settings", to: "/admin/whatsapp/settings" },
+            { label: "Logs", to: "/admin/whatsapp/logs" },
+            { label: "Automations", to: "/admin/whatsapp/automations" }
+          ]
+        },
+        {
+          label: "Ecommerce / Orders",
+          to: "/admin/order-dashboard",
+          children: [
+            { label: "All Orders", to: "/admin/order-dashboard" },
+            { label: "New", to: "/admin/order-dashboard/new" },
+            { label: "Accepted", to: "/admin/order-dashboard/accepted" },
+            { label: "Ready", to: "/admin/order-dashboard/ready" }
+          ]
+        },
+        { label: "Website Editor", to: "/admin/website-editor" },
+        { label: "Digital Catalog", to: "/site/demo" },
+        { label: "Payments", to: "/admin/payments" },
+        { label: "Campaigns", to: "/admin/campaigns" },
+        { label: "Reports Hub", to: "/admin/reports-hub" },
+        { label: "Inventory", to: "/admin/inventory" }
+      ]
+    }
+  ];
+
+  const sidebarMode = location.pathname.startsWith("/admin/settings")
+    ? "settings"
+    : location.pathname.startsWith("/admin/manage")
+      ? "manage"
+      : "default";
+
+  const visibleGroups = sidebarMode === "settings"
+    ? settingsGroups
+    : sidebarMode === "manage"
+      ? manageGroups
+      : groups;
+
   return (
-    <div className="app-shell">
-      <Sidebar groups={groups} auth={auth} onLogout={logout} />
-      <main className="app-main">
-        <Outlet />
-      </main>
+    <div className={`app-shell ${!sidebarExpanded ? "sidebar-collapsed" : ""}`}>
+      <Sidebar
+        groups={visibleGroups}
+        auth={auth}
+        onLogout={logout}
+        sidebarExpanded={sidebarExpanded}
+        onToggleSidebar={() => setSidebarExpanded((current) => !current)}
+      />
+      <div className="app-content-wrapper">
+        <Topbar auth={auth} sidebarExpanded={sidebarExpanded} onToggleSidebar={() => setSidebarExpanded((current) => !current)} />
+        <main className="app-main">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
@@ -378,9 +355,14 @@ export default function App() {
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="terms" element={<LegalContentPage scope="salon" title="Terms & Conditions" contentKey="termsAndConditions" />} />
+          <Route path="privacy" element={<LegalContentPage scope="salon" title="Privacy Policy" contentKey="privacyPolicy" />} />
           <Route path="about" element={<HomePage />} /> {/* Placeholder */}
           <Route path="book" element={<HomePage />} /> {/* Placeholder */}
         </Route>
+
+        <Route path="/terms" element={<LegalContentPage scope="global" title="Terms & Conditions" contentKey="termsUrl" />} />
+        <Route path="/privacy" element={<LegalContentPage scope="global" title="Privacy Policy" contentKey="privacyUrl" />} />
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -394,7 +376,7 @@ export default function App() {
           <Route path="/admin/appointments/:id" element={<OwnerRoute moduleKey="appointments" featureKey="appointments" element={<AppointmentDetailPage />} />} />
           <Route path="/admin/appointments/:id/edit" element={<OwnerRoute moduleKey="appointments" featureKey="appointments" element={<AppointmentEditPage />} />} />
           <Route path="/admin/branches" element={<OwnerRoute moduleKey="branches" element={<BranchesPage />} />} />
-          <Route path="/admin/services" element={<OwnerRoute moduleKey="services" element={<ServicesPage />} />} />
+          <Route path="/admin/services" element={<OwnerRoute moduleKey="services" element={<ServiceHubPage />} />} />
           <Route path="/admin/service-categories" element={<OwnerRoute moduleKey="services" element={<ServiceCategoriesPage />} />} />
           <Route path="/admin/staff-schedule" element={<OwnerRoute moduleKey="staffSchedule" featureKey="appointments" element={<StaffSchedulePage />} />} />
           <Route path="/admin/staff-availability" element={<OwnerRoute moduleKey="staffSchedule" featureKey="appointments" element={<StaffSchedulePage />} />} />
@@ -403,10 +385,22 @@ export default function App() {
           <Route path="/admin/customers/:id/timeline" element={<OwnerRoute moduleKey="customers" element={<CustomerHistoryPage />} />} />
           <Route path="/admin/customers/:id/history" element={<OwnerRoute moduleKey="customers" element={<CustomerHistoryPage />} />} />
           <Route path="/admin/users" element={<OwnerRoute moduleKey="staff" element={<UsersPage />} />} />
+          <Route path="/admin/experts" element={<OwnerRoute moduleKey="staff" element={<ExpertsPage />} />} />
           <Route path="/admin/roles-permissions" element={<OwnerRoute moduleKey="staff" element={<StaffRolesPage />} />} />
           <Route path="/admin/pos" element={<OwnerRoute moduleKey="pos" featureKey="pos" element={<PosPage />} />} />
           <Route path="/admin/pos/new" element={<OwnerRoute moduleKey="pos" featureKey="pos" element={<PosPage />} />} />
           <Route path="/admin/pos/day-closing" element={<OwnerRoute moduleKey="payments" featureKey="pos" element={<PosPage />} />} />
+          <Route path="/admin/order-dashboard" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/new" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/accepted" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/ready" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/completed" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/cancelled" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/order-dashboard/:id" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/pos-dashboard" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/pos-dashboard/:id" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
+          <Route path="/admin/trends" element={<TrendsPage />} />
+          <Route path="/admin/reports-hub" element={<ReportsHubPage />} />
           <Route path="/admin/invoices" element={<OwnerRoute moduleKey="invoices" element={<InvoicesPage />} />} />
           <Route path="/admin/invoices/:id" element={<OwnerRoute moduleKey="invoices" element={<InvoicesPage />} />} />
           <Route path="/admin/payments" element={<OwnerRoute moduleKey="payments" element={<PaymentsPage />} />} />
@@ -458,7 +452,7 @@ export default function App() {
           <Route path="/admin/whatsapp/settings" element={<OwnerRoute moduleKey="whatsapp" featureKey="whatsapp" element={<WhatsAppPage />} />} />
           <Route path="/admin/whatsapp/logs" element={<OwnerRoute moduleKey="whatsapp" featureKey="whatsapp" element={<WhatsAppPage />} />} />
           <Route path="/admin/whatsapp/automations" element={<OwnerRoute moduleKey="whatsapp" featureKey="whatsapp" element={<WhatsAppPage />} />} />
-          <Route path="/admin/reports" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsPage />} />} />
+          <Route path="/admin/reports" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsHubPage />} />} />
           <Route path="/admin/reports/appointments" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsPage />} />} />
           <Route path="/admin/reports/staff-performance" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsPage />} />} />
           <Route path="/admin/reports/product-sales" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsPage />} />} />
@@ -502,19 +496,25 @@ export default function App() {
           <Route path="/admin/message-templates/:type/edit" element={<OwnerRoute moduleKey="messageTemplates" featureKey="messageTemplates" element={<MessageTemplatesPage />} />} />
           <Route path="/admin/customer-portal-settings" element={<OwnerRoute moduleKey="customerPortalSettings" featureKey="customerPortal" element={<CustomerPortalSettingsPage />} />} />
           <Route path="/admin/support-tickets" element={<OwnerRoute moduleKey="support" element={<SupportTicketsPage />} />} />
-          <Route path="/admin/settings" element={<Navigate to="/admin/settings/business" replace />} />
+          <Route path="/admin/settings" element={<Navigate to="/admin/settings/generic" replace />} />
+          {SETTINGS_WORKSPACE_SECTIONS.map((item) => (
+            <Route key={item.to} path={item.to} element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
+          ))}
           <Route path="/admin/settings/business" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/settings/invoices" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/settings/payments" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/settings/booking" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/settings/notifications" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/settings/whatsapp" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/advanced" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/website-editor" element={<OwnerRoute moduleKey="settings" element={<WebsiteEditorPage />} />} />
+          <Route path="/admin/manage" element={<OwnerRoute moduleKey="settings" element={<ManagePage />} />} />
           <Route path="/admin/settings/payroll" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
           <Route path="/admin/my-dashboard" element={<OwnerRoute moduleKey="myDashboard" element={<MyDashboardPage />} />} />
           <Route path="/admin/my-appointments" element={<OwnerRoute moduleKey="myAppointments" featureKey="appointments" element={<MyAppointmentsPage />} />} />
           <Route path="/admin/my-schedule" element={<OwnerRoute moduleKey="mySchedule" featureKey="appointments" element={<MySchedulePage />} />} />
           <Route path="/admin/my-commission" element={<OwnerRoute moduleKey="myCommission" element={<MyCommissionPage />} />} />
+          <Route path="/admin/my-payroll" element={<OwnerRoute moduleKey="myPayroll" element={<MyPayrollPage />} />} />
           <Route path="/admin/my-profile" element={<OwnerRoute moduleKey="myProfile" element={<MyProfilePage />} />} />
           <Route path="/branches" element={<Navigate to="/admin/branches" replace />} />
           <Route path="/services" element={<Navigate to="/admin/services" replace />} />

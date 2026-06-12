@@ -17,7 +17,8 @@ export default function StorefrontLayout() {
   useEffect(() => {
     api.get(`/public/salon/${slug}`)
       .then(res => {
-        setSalon(res.data.salon);
+        const fullSalon = { ...res.data.salon, websiteConfig: res.data.websiteConfig };
+        setSalon(fullSalon);
         setLoading(false);
       })
       .catch(err => {
@@ -61,6 +62,10 @@ export default function StorefrontLayout() {
       
       <footer style={{ padding: '60px 20px', background: '#111', color: 'white', textAlign: 'center', marginTop: 'auto' }}>
         <p>&copy; {new Date().getFullYear()} {salon.name}. All rights reserved.</p>
+        <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
+          <Link to={`/site/${salon.slug}/terms`} style={{ color: "#cbd5e1" }}>Terms</Link>
+          <Link to={`/site/${salon.slug}/privacy`} style={{ color: "#cbd5e1" }}>Privacy</Link>
+        </div>
       </footer>
     </div>
   );
