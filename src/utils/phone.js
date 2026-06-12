@@ -15,7 +15,17 @@ export const extractIndianPhoneDigits = (value) => {
   return normalized.startsWith("+91") ? normalized.slice(3, 13) : "";
 };
 
-export const normalizeIndianPhoneInputDigits = (value) => String(value ?? "").replace(/\D/g, "").slice(0, 10);
+export const normalizeIndianPhoneInputDigits = (value) => {
+  let digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  if (digits.startsWith("0091")) digits = digits.slice(4);
+  else if (digits.startsWith("091")) digits = digits.slice(3);
+  else if (digits.length > 10 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+
+  return digits.slice(0, 10);
+};
 
 const phoneKeyPattern = /(^|_)(phone|mobile|whatsapp)(number)?$/i;
 const phoneKeys = new Set(["phone", "customerPhone", "supportPhone", "whatsappNumber", "alternatePhone"]);

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Search, Filter, Plus, Download, Upload, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, X, ChevronDown } from "lucide-react";
 import { api } from "../../api/client";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
+import { formatApiError } from "../../utils/apiError";
 import { downloadFromApi } from "../../utils/download";
 import PageLoader from "../../components/PageLoader";
 
@@ -67,7 +68,7 @@ export default function CustomersPage() {
       setFormData({ phone: "", alternatePhone: "", name: "", email: "", dateOfBirth: "", anniversary: "", gst: "", gender: "female" });
       load();
     } catch (e) {
-      alert(e.response?.data?.message || "Failed to add guest");
+      alert(formatApiError(e, "Failed to add guest"));
     }
   };
 

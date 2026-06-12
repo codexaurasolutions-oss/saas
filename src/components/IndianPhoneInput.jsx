@@ -48,9 +48,7 @@ export default function IndianPhoneInput({
         required={required}
         disabled={disabled}
         value={digits}
-        minLength={10}
         maxLength={10}
-        pattern="[6-9][0-9]{9}"
         placeholder={placeholder}
         onChange={(event) => onChange?.(`+91${normalizeIndianPhoneInputDigits(event.target.value)}`)}
         style={{
