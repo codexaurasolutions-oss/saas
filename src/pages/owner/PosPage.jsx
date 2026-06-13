@@ -318,14 +318,10 @@ export default function PosPage() {
   const buildInvoicePayload = useCallback((mode) => {
     const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
     
-    let finalPayments = [];
-    if (mode === "complete") {
-      finalPayments = form.payments.filter((payment) => Number(payment.amount) > 0).map((payment) => ({
-        ...payment,
-        amount: Number(payment.amount)
-      }));
-
-    }
+    const finalPayments = form.payments.filter((payment) => Number(payment.amount) > 0).map((payment) => ({
+      ...payment,
+      amount: Number(payment.amount)
+    }));
 
     return {
       ...form,
