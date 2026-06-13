@@ -58,7 +58,7 @@ const COLUMNS = {
   feedback: ["Date", "Customer", "Staff", "Service", "Rating", "Comment"],
   guest_followups: ["Customer", "Phone", "Last Visit", "Days Since", "Follow-up Status"],
   appointments: ["Date", "Customer", "Service", "Staff", "Branch", "Status", "Amount"],
-  staff_attendance: ["Staff", "Date", "Check-In", "Check-Out", "Hours", "Status"],
+  staff_attendance: ["SR. NO.", "STAFF", "DESIGNATION", "STAFF NUMBER", "TOTAL WORKING HOURS", "TOTAL BREAK TIME"],
   incentive_report: ["Staff", "Month", "Revenue Generated", "Commission %", "Commission Amt", "Bonus", "Total"],
   memberships: ["Date", "Customer", "Membership Plan", "Price", "Validity", "Branch"],
   membership_redemption: ["Date", "Customer", "Membership", "Service Redeemed", "Sessions Used", "Remaining"],
