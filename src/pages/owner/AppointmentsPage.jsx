@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search, X, ArrowLeft } from "lucide-react";
 import { api } from "../../api/client";
@@ -44,6 +44,14 @@ export default function AppointmentsPage() {
     smsToGuest: true,
     smsToOwner: false
   });
+
+  const spBodyRef = useRef(null);
+
+  useEffect(() => {
+    if (status.error && spBodyRef.current) {
+      spBodyRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [status.error]);
 
   const loadContext = async () => {
     try {
@@ -676,7 +684,7 @@ export default function AppointmentsPage() {
               <h3>Create Appointment</h3>
             </div>
             <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "hidden" }}>
-              <div className="sp-body">
+              <div className="sp-body" ref={spBodyRef}>
                 {status.error && <div style={{ color: "#ef4444", padding: 12, background: "#fef2f2", borderRadius: 8 }}>{status.error}</div>}
                 {status.success && <div style={{ color: "#10b981", padding: 12, background: "#ecfdf5", borderRadius: 8 }}>{status.success}</div>}
 
