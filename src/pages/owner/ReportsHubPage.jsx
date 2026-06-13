@@ -75,7 +75,7 @@ const COLUMNS = {
   daily_stock: ["Product", "Category", "Opening Stock", "Received", "Consumed", "Sold", "Closing"],
   stock_transaction: ["Date", "Product", "Type", "Qty", "Staff", "Note"],
   material_received: ["Date", "Product", "Vendor", "Qty", "Unit Cost", "Total Cost", "PO #"],
-  minimum_stock: ["Product", "Category", "Current Stock", "Min Stock", "Deficit", "Status"],
+  minimum_stock: ["SR. NO.", "CATEGORY NAME", "ITEM NAME", "VARIATION NAME", "STORE SKU", "CURRENT STOCK", "MINIMUM QUANTITY"],
   reconcile_stock: ["Product", "System Stock", "Physical Count", "Variance", "Date", "Staff"],
   consumable_tracking: ["Product", "Service", "Qty Used Per Service", "Total Used", "Cost"],
   total_consumed: ["Product", "Category", "Total Quantity Consumed", "Value"],
