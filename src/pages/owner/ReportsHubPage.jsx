@@ -1,90 +1,46 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/client";
 
-const REPORT_GROUPS = [
-  {
-    label: "Sales & Revenue",
-    icon: "💰",
-    reports: [
-      { key: "sales_summary", label: "Sales Summary" },
-      { key: "product_sales", label: "Product Revenue" },
-      { key: "service_sales", label: "Service Revenue" },
-      { key: "staff_performance", label: "Stylist Revenue" },
-      { key: "monthly_sale", label: "Monthly Sale" },
-      { key: "day_wise", label: "Day Wise Report" },
-      { key: "tip_report", label: "Tip Report" },
-      { key: "complimentary", label: "Complimentary Report" },
-      { key: "cancelled_invoices", label: "Cancelled Orders" },
-      { key: "pnl_report", label: "PnL Report" },
-    ],
-  },
-  {
-    label: "Customers & CRM",
-    icon: "👥",
-    reports: [
-      { key: "customers", label: "Guest Collection" },
-      { key: "service_reminder", label: "Service Reminder" },
-      { key: "feedback", label: "Feedback" },
-      { key: "guest_followups", label: "Guest Followups" },
-      { key: "appointments", label: "Appointment Report" },
-    ],
-  },
-  {
-    label: "Staff & Payroll",
-    icon: "🧑‍💼",
-    reports: [
-      { key: "staff_attendance", label: "Staff Attendance" },
-      { key: "incentive_report", label: "Incentive Report" },
-    ],
-  },
-  {
-    label: "Memberships & Packages",
-    icon: "🎁",
-    reports: [
-      { key: "memberships", label: "Membership Sold" },
-      { key: "membership_redemption", label: "Membership Redemption" },
-      { key: "inter_store_membership", label: "Inter-Store Membership Report" },
-      { key: "packages", label: "Packages Sold" },
-      { key: "package_redemption", label: "Package Redemption" },
-    ],
-  },
-  {
-    label: "Gift Cards & Coupons",
-    icon: "🎟️",
-    reports: [
-      { key: "gift_card_sold", label: "Gift Card Sold Report" },
-      { key: "gift_card_redemption", label: "Gift Card Redemption" },
-      { key: "coupon_redemption", label: "Coupon Redemption" },
-    ],
-  },
-  {
-    label: "Finance & GST",
-    icon: "🧾",
-    reports: [
-      { key: "advance_received", label: "Advance Received" },
-      { key: "balance_received", label: "Balance Received" },
-      { key: "gst_returns", label: "GST Returns Report" },
-      { key: "gst_outwards", label: "GST Outwards Report" },
-    ],
-  },
-  {
-    label: "Inventory & Stock",
-    icon: "📦",
-    reports: [
-      { key: "daily_stock", label: "Daily Stock" },
-      { key: "stock_transaction", label: "Stock Transaction" },
-      { key: "material_received", label: "Material Received" },
-      { key: "minimum_stock", label: "Minimum Stock" },
-      { key: "reconcile_stock", label: "Reconcile Stock" },
-      { key: "consumable_tracking", label: "Consumable Tracking" },
-      { key: "total_consumed", label: "Total Consumed" },
-      { key: "purchase_order", label: "Purchase Order Report" },
-      { key: "inventory_transaction", label: "Inventory Transaction Report" },
-    ],
-  },
+const ALL_REPORTS = [
+  { key: "sales_summary", label: "Sales Summary" },
+  { key: "product_sales", label: "Product Revenue" },
+  { key: "service_sales", label: "Service Revenue" },
+  { key: "service_reminder", label: "Service Reminder" },
+  { key: "customers", label: "Guest Collection" },
+  { key: "feedback", label: "Feedback" },
+  { key: "staff_performance", label: "Stylist Revenue" },
+  { key: "incentive_report", label: "Incentive Report" },
+  { key: "monthly_sale", label: "Monthly Sale" },
+  { key: "staff_attendance", label: "Staff Attendance" },
+  { key: "memberships", label: "Membership Sold" },
+  { key: "membership_redemption", label: "Membership Redemption" },
+  { key: "inter_store_membership", label: "Inter-Store Membership Report" },
+  { key: "packages", label: "Packages Sold" },
+  { key: "package_redemption", label: "Package Redemption" },
+  { key: "gift_card_sold", label: "Gift Card Sold Report" },
+  { key: "gift_card_redemption", label: "Gift Card Redemption" },
+  { key: "advance_received", label: "Advance Received" },
+  { key: "balance_received", label: "Balance Received" },
+  { key: "coupon_redemption", label: "Coupon Redemption" },
+  { key: "day_wise", label: "Day Wise Report" },
+  { key: "tip_report", label: "Tip Report" },
+  { key: "complimentary", label: "Complimentary Report" },
+  { key: "cancelled_invoices", label: "Cancelled Orders" },
+  { key: "appointments", label: "Appointment Report" },
+  { key: "gst_returns", label: "GST Returns Report" },
+  { key: "guest_followups", label: "Guest Followups" },
+  { key: "daily_stock", label: "Daily Stock" },
+  { key: "stock_transaction", label: "Stock Transaction" },
+  { key: "material_received", label: "Material Received" },
+  { key: "minimum_stock", label: "Minimum Stock" },
+  { key: "reconcile_stock", label: "Reconcile Stock" },
+  { key: "consumable_tracking", label: "Consumable Tracking" },
+  { key: "total_consumed", label: "Total Consumed" },
+  { key: "purchase_order", label: "Purchase Order Report" },
+  { key: "gst_outwards", label: "GST Outwards Report" },
+  { key: "inventory_transaction", label: "Inventory Transaction Report" },
+  { key: "pnl_report", label: "PnL Report" },
 ];
-
-const ALL_REPORTS = REPORT_GROUPS.flatMap((g) => g.reports);
 
 const COLUMNS = {
   sales_summary: ["Date", "Invoice #", "Customer", "Services", "Products", "Discount", "Tax", "Total", "Paid", "Due"],
@@ -167,7 +123,7 @@ const getCellValue = (row, col) => {
 function EmptyRows({ cols }) {
   return (
     <tr>
-      <td colSpan={cols} style={{ textAlign: "center", padding: "48px 0", color: "#94a3b8", fontSize: "0.95rem" }}>
+      <td colSpan={cols} style={{ textAlign: "center", padding: "48px 0", color: "#cbd5e1", fontSize: "0.95rem" }}>
         No records found for the selected filters.
       </td>
     </tr>
@@ -255,8 +211,7 @@ export default function ReportsHubPage() {
   const [filters, setFilters] = useState({ start: "", end: "", branchId: "" });
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(() => Object.fromEntries(REPORT_GROUPS.map((g) => [g.label, true])));
-
+  
   const currentReport = ALL_REPORTS.find((r) => r.key === activeReport);
 
   useEffect(() => {
@@ -276,12 +231,7 @@ export default function ReportsHubPage() {
       .finally(() => setLoading(false));
   }, [activeReport, filters.start, filters.end, filters.branchId]);
 
-  const filteredGroups = REPORT_GROUPS.map((g) => ({
-    ...g,
-    reports: g.reports.filter((r) => !search || r.label.toLowerCase().includes(search.toLowerCase())),
-  })).filter((g) => g.reports.length);
-
-  const toggleGroup = (label) => setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  const filteredReports = ALL_REPORTS.filter((r) => !search || r.label.toLowerCase().includes(search.toLowerCase()));
 
   const handleExportCSV = () => {
     if (!rows.length) return alert("No data to export");
@@ -307,7 +257,7 @@ export default function ReportsHubPage() {
   };
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 56px)", overflow: "hidden", background: "#f8fafc" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 56px)", overflow: "hidden", background: "#334155" }}>
       <style>
         {`
           @media print {
@@ -320,15 +270,15 @@ export default function ReportsHubPage() {
         `}
       </style>
       {/* LEFT SIDEBAR */}
-      <div className="no-print" style={{ width: 240, minWidth: 240, background: "white", borderRight: "1px solid #e2e8f0", overflowY: "auto", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "16px 14px 12px", borderBottom: "1px solid #e2e8f0" }}>
+      <div className="no-print" style={{ width: 240, minWidth: 240, background: "#475569", borderRight: "1px solid #e2e8f0", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "16px 14px 12px", borderBottom: "1px solid #334155" }}>
           <div style={{ position: "relative" }}>
             <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: "0.9rem" }}>🔍</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search reports..."
-              style={{ width: "100%", padding: "8px 10px 8px 30px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: "0.85rem", color: "#334155", background: "#f8fafc", outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "8px 10px 8px 30px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: "0.85rem", color: "#f8fafc", background: "#f8fafc", outline: "none", boxSizing: "border-box" }}
             />
           </div>
         </div>
