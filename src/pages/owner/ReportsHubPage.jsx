@@ -49,7 +49,7 @@ const COLUMNS = {
   staff_performance: ["Staff", "Appointments", "Completed", "Revenue", "Commission", "Qty"],
   monthly_sale: ["Month", "Invoices", "Gross Sales", "Discounts", "Net Sales", "Paid", "Due"],
   day_wise: ["Date", "Invoices", "Cash", "Card", "UPI", "Online", "Total"],
-  tip_report: ["Date", "Staff", "Customer", "Invoice #", "Tip Amount"],
+  tip_report: ["SR. NO.", "DATE", "GUEST NAME", "GUEST NUMBER", "INVOICE NO", "STAFF", "TIP AMOUNT", "PAYMENT MODE"],
   complimentary: ["Date", "Service", "Staff", "Customer", "Reason", "Value"],
   cancelled_invoices: ["Invoice", "Customer", "Branch", "Status", "Total", "Paid", "Refunded"],
   pnl_report: ["Month", "Revenue", "COGS", "Gross Profit", "Expenses", "Net Profit", "Margin Percentage"],
