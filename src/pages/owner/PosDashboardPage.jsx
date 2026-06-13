@@ -40,8 +40,8 @@ export default function PosDashboardPage() {
   const [billLoading, setBillLoading] = useState(false);
   
   const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
-  const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(todayStr);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const filter = useMemo(() => {
     if (location.pathname.endsWith("/new")) return "NEW";

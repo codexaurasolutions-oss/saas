@@ -63,12 +63,15 @@ export default function PosPage() {
   });
 
   const applyContext = useCallback((contextResponse, closingResponse, catRes, customerId, branchId) => {
+    const branches = contextResponse?.data?.branches || [];
+    const defaultBranch = branches.find(b => b.name.toLowerCase().includes("main")) || branches[0];
+
     setContext({ ...(contextResponse?.data || {}), serviceCategories: catRes?.data || [] });
     setDayClosing(closingResponse?.data || null);
     setForm((current) => ({
       ...current,
       customerId: customerId ?? current.customerId,
-      branchId: current.branchId || branchId || contextResponse?.data?.branches?.[0]?.id || ""
+      branchId: current.branchId || branchId || defaultBranch?.id || ""
     }));
     setLoading(false);
   }, []);

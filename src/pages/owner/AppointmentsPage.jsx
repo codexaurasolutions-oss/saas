@@ -61,10 +61,12 @@ export default function AppointmentsPage() {
       const staff = contextResponse.data.staffUsers || [];
       console.log('Fetched staffUsers:', staff);
       setStaffUsers(staff);
-      setBranches(contextResponse.data.branches || []);
+      const branches = contextResponse.data.branches || [];
+      setBranches(branches);
+      const defaultBranch = branches.find(b => b.name.toLowerCase().includes("main")) || branches[0];
       setForm((current) => ({
         ...current,
-        branchId: current.branchId || contextResponse.data.branches?.[0]?.id || ""
+        branchId: current.branchId || defaultBranch?.id || ""
       }));
     } catch (error) {
       console.error(error);
@@ -84,7 +86,25 @@ export default function AppointmentsPage() {
           to: endOfDay.toISOString()
         }
       });
-      setRows(response.data || []);
+      const data = response.data || [];
+      setRows(data);
+      if (data.length > 0) {
+        setTimeout(() => {
+          let earliestHour = 24;
+          data.forEach(row => {
+            const h = new Date(row.startAt).getHours();
+            if (h < earliestHour) earliestHour = h;
+          });
+          if (earliestHour >= 9 && earliestHour <= 20) {
+            const calendarBody = document.querySelector('.sp-calendar-body');
+            if (calendarBody) {
+              const rowIndex = (earliestHour - 9) * 2;
+              const scrollAmount = rowIndex * 60;
+              calendarBody.scrollTo({ top: Math.max(0, scrollAmount - 50), behavior: 'smooth' });
+            }
+          }
+        }, 300);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -203,14 +223,15 @@ export default function AppointmentsPage() {
     if (hours === 12 && modifier === "AM") hours = 0;
     if (hours < 12 && modifier === "PM") hours += 12;
 
-    const slotDate = new Date(currentDate);
-    slotDate.setHours(hours, Number.parseInt(minutes, 10), 0, 0);
+    const slotStart = new Date(currentDate);
+    slotStart.setHours(hours, Number.parseInt(minutes, 10), 0, 0);
+    const slotEnd = new Date(slotStart.getTime() + 30 * 60000); // 30 mins slot
 
     return rows.filter((row) => {
       const apptStart = new Date(row.startAt);
       const apptEnd = new Date(row.endAt);
       const hasStaff = row.items?.some((item) => (item.assignedStaff || []).some((assigned) => assigned.userSalonId === staffId)) || row.primaryStaffUserId === staffId;
-      return hasStaff && slotDate >= apptStart && slotDate < apptEnd;
+      return hasStaff && apptStart < slotEnd && apptEnd > slotStart;
     });
   };
 

@@ -366,9 +366,9 @@ export default function UsersPage() {
 
       <div className="hub-container" style={{ flex: 1, minHeight: 0, display: 'flex' }}>
         {/* Left Sidebar: Directory */}
-        <div className="hub-sidebar" style={{ width: 340, display: 'flex', flexDirection: 'column' }}>
-          <div className="hub-sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: 0, fontSize: 18, color: '#0f172a' }}>Team Directory</h3>
+        <div className="hub-sidebar" style={{ width: 340, display: 'flex', flexDirection: 'column', background: 'white', borderRight: '1px solid #e2e8f0', paddingTop: 0 }}>
+          <div className="hub-sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+            <h3 style={{ margin: 0, fontSize: 18, color: '#0f172a', fontWeight: 600 }}>Team Directory</h3>
           </div>
           
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
