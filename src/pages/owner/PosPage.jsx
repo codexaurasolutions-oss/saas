@@ -305,9 +305,15 @@ export default function PosPage() {
       if (item.itemType === "PACKAGE" && !item.packageId) return "Please select a package.";
       if (Number(item.qty || 0) <= 0) return "Quantity must be greater than zero.";
     }
-    // Validation removed: If they don't enter a payment amount, we will automatically assume full CASH payment.
+    if (mode === "complete") {
+      const paidAmount = form.payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+      const totalDue = Math.round(totals.total);
+      if (Math.round(paidAmount) < totalDue) {
+        return `Please enter full payment amount before completing. Total is ₹${totalDue} but only ₹${Math.round(paidAmount)} is paid.`;
+      }
+    }
     return "";
-  }, [form]);
+  }, [form, totals.total]);
 
   const buildInvoicePayload = useCallback((mode) => {
     const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
@@ -318,10 +324,7 @@ export default function PosPage() {
         ...payment,
         amount: Number(payment.amount)
       }));
-      // Auto-fill full amount as CASH if user didn't enter any payments
-      if (finalPayments.length === 0 && totals.total > 0) {
-        finalPayments = [{ mode: "CASH", amount: totals.total, note: "Auto-filled full amount" }];
-      }
+
     }
 
     return {
