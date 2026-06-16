@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
@@ -381,6 +381,7 @@ export default function SettingsPage() {
   const [selectedTaxId, setSelectedTaxId] = useState(null);
   const [draftTax, setDraftTax] = useState(null);
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+  const rosterInitializedRef = useRef(false);
   const salonId = auth?.salonId || auth?.membership?.salonId || auth?.membership?.salon?.id || "global";
   const salonSlug = auth?.membership?.salon?.slug || auth?.salon?.slug || "";
   const settingsPermissions = Array.isArray(auth?.membership?.permissions?.settings)
@@ -543,6 +544,9 @@ export default function SettingsPage() {
         }));
       if (!existingRows.length && !appendedRows.length) return current;
       if (!appendedRows.length && existingRows.length) return current;
+      if (rosterInitializedRef.current && existingRows.length && !appendedRows.length) return current;
+      if (!rosterInitializedRef.current && existingRows.length) rosterInitializedRef.current = true;
+      if (rosterInitializedRef.current && !existingRows.length) return current;
       return {
         ...current,
         advancedSettings: {
@@ -1237,6 +1241,100 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        <div className="settings-panel-card">
+          <div className="settings-panel-header-with-toggle" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: 12, marginBottom: 16 }}>
+            <h3>Payment Modes</h3>
+          </div>
+          <div className="toggle-options-grid">
+            {Object.entries(paymentModes).map(([key, value]) => (
+              <div key={key} className="toggle-option-row">
+                <span className="label-text">{key === "bankTransfer" ? "Bank Transfer" : key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                <label className="toggle-switch-label">
+                  <input type="checkbox" checked={value} onChange={() => togglePaymentMode(key)} />
+                  <span className="toggle-switch-slider" />
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-panel-card">
+          <div className="settings-panel-header-with-toggle" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: 12, marginBottom: 16 }}>
+            <h3>POS & Back-Office Rules</h3>
+          </div>
+          <div className="toggle-options-grid">
+            <div className="toggle-option-row">
+              <span className="label-text">Allow future backdated bills</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowFutureBackdatedBills} onChange={(e) => updateAdvancedObject("allowFutureBackdatedBills", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow backdated appointments</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowBackdatedAppointments} onChange={(e) => updateAdvancedObject("allowBackdatedAppointments", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow price edit on bill</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowPriceEditOnBill} onChange={(e) => updateAdvancedObject("allowPriceEditOnBill", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow PO price edit</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowPOPriceEdit} onChange={(e) => updateAdvancedObject("allowPOPriceEdit", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow price edit while PO settlement</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowPriceEditWhilePOSettlement} onChange={(e) => updateAdvancedObject("allowPriceEditWhilePOSettlement", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow edit consumable</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowEditConsumable} onChange={(e) => updateAdvancedObject("allowEditConsumable", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+            <div className="toggle-option-row">
+              <span className="label-text">Allow report date restriction</span>
+              <label className="toggle-switch-label">
+                <input type="checkbox" checked={form.advancedSettings.allowReportDateRestriction} onChange={(e) => updateAdvancedObject("allowReportDateRestriction", e.target.checked)} />
+                <span className="toggle-switch-slider" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-panel-card">
+          <div className="settings-panel-header-with-toggle" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: 12, marginBottom: 16 }}>
+            <h3>Booking & Invoice Defaults</h3>
+          </div>
+          <div className="settings-form-grid">
+            <label className="settings-input-group">
+              <span className="muted">Tax Label</span>
+              <input type="text" value={form.taxLabel} onChange={(e) => setForm((c) => ({ ...c, taxLabel: e.target.value }))} placeholder="e.g. GST" />
+            </label>
+            <label className="settings-input-group">
+              <span className="muted">Booking Notes</span>
+              <textarea value={form.bookingNotes} onChange={(e) => setForm((c) => ({ ...c, bookingNotes: e.target.value }))} placeholder="e.g. Please arrive 10 minutes early" style={{ padding: "10px", border: "1px solid #e2e8f0", borderRadius: 6, width: "100%", boxSizing: "border-box", outline: "none", minHeight: 60, resize: "vertical", fontFamily: "inherit" }} />
+            </label>
+            <label className="settings-input-group">
+              <span className="muted">Cancellation Policy</span>
+              <textarea value={form.cancellationPolicy} onChange={(e) => setForm((c) => ({ ...c, cancellationPolicy: e.target.value }))} placeholder="e.g. Free cancellation up to 24 hours before" style={{ padding: "10px", border: "1px solid #e2e8f0", borderRadius: 6, width: "100%", boxSizing: "border-box", outline: "none", minHeight: 60, resize: "vertical", fontFamily: "inherit" }} />
+            </label>
+          </div>
+        </div>
+
       </>
     );
   };
@@ -1536,18 +1634,26 @@ export default function SettingsPage() {
                 {taxRows.map((row) => (
                   <div
                     key={row.id}
-                    onClick={() => { setSelectedTaxId(row.id); setDraftTax(null); }}
                     style={{
                       padding: "12px 16px",
                       borderBottom: "1px solid #f1f5f9",
                       cursor: "pointer",
                       background: selectedTaxId === row.id ? "#eff6ff" : "white",
                       borderLeft: selectedTaxId === row.id ? "3px solid #3b82f6" : "3px solid transparent",
-                      transition: "all 0.15s"
+                      transition: "all 0.15s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.label || "Untitled Tax"}</div>
-                    <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.code} | {row.rate}% {row.active ? "● Active" : "○ Inactive"}</div>
+                    <div style={{ flex: 1 }} onClick={() => { setSelectedTaxId(row.id); setDraftTax(null); }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.label || "Untitled Tax"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.code} | {row.rate}% {row.active ? "● Active" : "○ Inactive"}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); startEdit(row); }} title="Edit tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}>✎</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteTax(row.id); }} title="Delete tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#dc2626", padding: 0 }}>✕</button>
+                    </div>
                   </div>
                 ))}
                 {!taxRows.length && <div style={{ padding: 24, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No taxes defined</div>}
@@ -1747,6 +1853,50 @@ export default function SettingsPage() {
             <input type="checkbox" checked={loyalty.redeemIndividually} onChange={(e) => u({ redeemIndividually: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#3b82f6", cursor: "pointer" }} />
           </div>
 
+          {loyalty.redeemIndividually ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              <div key="service">
+                <div style={{ fontWeight: 600, fontSize: 13, color: "#334155", marginBottom: 12 }}>Service Redeem Config</div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>Points</label>
+                    <input type="number" placeholder="Points" value={loyalty.serviceEarning?.redeemPoints || ""} onChange={(e) => { const n = { ...loyalty.serviceEarning, redeemPoints: Number(e.target.value) }; uService(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>{formatMoney(1).replace(/[\d.,]/g, '').trim()}</label>
+                    <input type="number" placeholder="Amount" value={loyalty.serviceEarning?.redeemAmount || ""} onChange={(e) => { const n = { ...loyalty.serviceEarning, redeemAmount: Number(e.target.value) }; uService(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                </div>
+              </div>
+              <div key="product">
+                <div style={{ fontWeight: 600, fontSize: 13, color: "#334155", marginBottom: 12 }}>Product Redeem Config</div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>Points</label>
+                    <input type="number" placeholder="Points" value={loyalty.productEarning?.redeemPoints || ""} onChange={(e) => { const n = { ...loyalty.productEarning, redeemPoints: Number(e.target.value) }; uProduct(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>{formatMoney(1).replace(/[\d.,]/g, '').trim()}</label>
+                    <input type="number" placeholder="Amount" value={loyalty.productEarning?.redeemAmount || ""} onChange={(e) => { const n = { ...loyalty.productEarning, redeemAmount: Number(e.target.value) }; uProduct(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                </div>
+              </div>
+              <div key="package">
+                <div style={{ fontWeight: 600, fontSize: 13, color: "#334155", marginBottom: 12 }}>Package Redeem Config</div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>Points</label>
+                    <input type="number" placeholder="Points" value={loyalty.packageEarning?.redeemPoints || ""} onChange={(e) => { const n = { ...loyalty.packageEarning, redeemPoints: Number(e.target.value) }; uPackage(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: "#64748b", display: "block", marginBottom: 4 }}>{formatMoney(1).replace(/[\d.,]/g, '').trim()}</label>
+                    <input type="number" placeholder="Amount" value={loyalty.packageEarning?.redeemAmount || ""} onChange={(e) => { const n = { ...loyalty.packageEarning, redeemAmount: Number(e.target.value) }; uPackage(n); }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+          <>
           <div style={{ fontWeight: 600, fontSize: 13, color: "#334155", marginBottom: 12 }}>Configuration for Loyalty Redemption</div>
           <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
             <div style={{ width: 200 }}>
@@ -1759,6 +1909,8 @@ export default function SettingsPage() {
             </div>
           </div>
           <div style={{ fontSize: 12, color: "#475569", marginBottom: 20 }}>{redeemText}</div>
+          </>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 12 }}>
             <div>
@@ -2309,15 +2461,42 @@ export default function SettingsPage() {
       case "pnl-categories":
         return (
           <>
-            {renderSimpleListSection("PNL Categories", "pnlCategories", "Build your own income and expense buckets for future reports and controls.", [
-              { key: "name", label: "Name" },
-              { key: "type", label: "Type" },
-              { key: "active", label: "Active", type: "checkbox" }
-            ], {
-              badges: [`${form.advancedSettings.pnlCategories.length} entries`, `${summary.expenseAccountInjections.length} account injections`],
-              action: <div className="inline-actions"><Link className="secondary-button" to="/admin/expenses/categories">Expense Types</Link><Link className="secondary-button" to="/admin/expenses/accounts">Ledger Accounts</Link></div>,
-              helper: "Non-income active rows are synced into live expense categories, and the linked ledger-accounts workspace now persists owner balance injections from backend settings storage."
-            })}
+            <SectionHeader
+              title="PNL Categories"
+              description="Build your own income and expense buckets for future reports and controls."
+              badges={[`${form.advancedSettings.pnlCategories.length} entries`, `${summary.expenseAccountInjections.length} account injections`]}
+              action={<div className="inline-actions"><Link className="secondary-button" to="/admin/expenses/categories">Expense Types</Link><Link className="secondary-button" to="/admin/expenses/accounts">Ledger Accounts</Link></div>}
+            />
+            <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
+              Non-income active rows are synced into live expense categories, and the linked ledger-accounts workspace now persists owner balance injections from backend settings storage.
+            </div>
+            <div className="settings-list-stack">
+              {form.advancedSettings.pnlCategories.map((row) => (
+                <div key={row.id} className="settings-panel-card">
+                  <div className="settings-form-grid">
+                    <label className="settings-input-group">
+                      <span className="muted">Name</span>
+                      <input type="text" value={row.name} onChange={(event) => { const n = [...form.advancedSettings.pnlCategories]; const idx = n.findIndex((r) => r.id === row.id); n[idx] = { ...n[idx], name: event.target.value }; updateAdvancedObject("pnlCategories", n); }} />
+                    </label>
+                    <label className="settings-input-group">
+                      <span className="muted">Type</span>
+                      <select value={row.type} onChange={(event) => { const n = [...form.advancedSettings.pnlCategories]; const idx = n.findIndex((r) => r.id === row.id); n[idx] = { ...n[idx], type: event.target.value }; updateAdvancedObject("pnlCategories", n); }}>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                      </select>
+                    </label>
+                    <label className="settings-input-group">
+                      <span className="muted">Active</span>
+                      <label className="mini-toggle-label">
+                        <input type="checkbox" className="premium-toggle-input" checked={Boolean(row.active)} onChange={(event) => { const n = [...form.advancedSettings.pnlCategories]; const idx = n.findIndex((r) => r.id === row.id); n[idx] = { ...n[idx], active: event.target.checked }; updateAdvancedObject("pnlCategories", n); }} />
+                        <div className="mini-toggle-switch"></div>
+                      </label>
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={() => updateArrayCollection("pnlCategories", [...form.advancedSettings.pnlCategories, { id: makeId("pnl"), name: "", type: "Expense", active: true }])}>Add New</button>
             <div className="settings-panel-card" style={{ marginTop: 16 }}>
               <div className="settings-toggle-grid">
                 <ToggleRow
