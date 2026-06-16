@@ -30,12 +30,12 @@ export default function OwnerDashboard() {
   if (!data) return <div className="page-shell"><PageLoader title="Loading dashboard" /></div>;
 
   const statCards = [
-    { label: "Today Sales",    value: Number(data.todaySales || 0).toFixed(2),    sub: "+4.2% from yesterday",    icon: DollarSign,  color: "#0f766e" },
-    { label: "Monthly Sales",  value: Number(data.monthlySales || 0).toFixed(2),  sub: "+12.5% from last month",  icon: TrendingUp,  color: "#2563eb" },
-    { label: "Customers",      value: data.customers,                              sub: "Total registered",        icon: Users,       color: "#7c3aed" },
-    { label: "Staff",          value: data.users,                                  sub: "Active personnel",        icon: UserCheck,   color: "#0891b2" },
-    { label: "Services",       value: data.services,                               sub: "Available catalog",       icon: Scissors,    color: "#d97706" },
-    { label: "Invoices",       value: data.invoices,                               sub: "Generated this month",    icon: FileText,    color: "#dc2626" },
+    { label: "Today Sales",    value: Number(data.todaySales || 0).toFixed(2),    sub: "",    icon: DollarSign,  color: "#0f766e" },
+    { label: "Monthly Sales",  value: Number(data.monthlySales || 0).toFixed(2),  sub: "",  icon: TrendingUp,  color: "#2563eb" },
+    { label: "Customers",      value: data.customers,                              sub: "",        icon: Users,       color: "#7c3aed" },
+    { label: "Staff",          value: data.users,                                  sub: "",        icon: UserCheck,   color: "#0891b2" },
+    { label: "Services",       value: data.services,                               sub: "",       icon: Scissors,    color: "#d97706" },
+    { label: "Invoices",       value: data.invoices,                               sub: "",    icon: FileText,    color: "#dc2626" },
   ];
 
   return (

@@ -7,7 +7,8 @@ export default function WebsiteEditorPage() {
   const [config, setConfig] = useState({
     heroTitle: "Elevate Your Beauty Experience",
     heroSubtitle: "Discover premium salon services and exclusive products curated just for you.",
-    heroImage: ""
+    heroImage: "",
+    sections: []
   });
   const [preview, setPreview] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "", success: "" });
@@ -30,7 +31,8 @@ export default function WebsiteEditorPage() {
       setConfig({
         heroTitle: configResponse.value.data.heroTitle || "Elevate Your Beauty Experience",
         heroSubtitle: configResponse.value.data.heroSubtitle || "Discover premium salon services and exclusive products curated just for you.",
-        heroImage: configResponse.value.data.heroImage || ""
+        heroImage: configResponse.value.data.heroImage || "",
+        sections: configResponse.value.data.sections || []
       });
       setPreview(previewResponse.status === "fulfilled" ? (previewResponse.value.data || null) : null);
       setStatus({ loading: false, error: "", success: "" });
@@ -137,9 +139,20 @@ export default function WebsiteEditorPage() {
             </div>
           </div>
 
-          <div style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px', border: '1px solid #eee', opacity: 0.6 }}>
-            <h3 style={{ margin: '0', fontSize: '1rem' }}>+ Add Section</h3>
-          </div>
+          {config.sections.map((section, idx) => (
+            <div key={idx} style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px', border: '1px solid #eee' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ margin: '0', fontSize: '1rem' }}>{section.heading || "Section"}</h3>
+                <button type="button" onClick={() => setConfig({ ...config, sections: config.sections.filter((_, i) => i !== idx) })} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+              </div>
+              <input value={section.heading || ""} onChange={(e) => { const s = [...config.sections]; s[idx] = { ...s[idx], heading: e.target.value }; setConfig({ ...config, sections: s }); }} placeholder="Section Heading" style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '6px', marginBottom: 8, boxSizing: 'border-box' }} />
+              <textarea value={section.content || ""} onChange={(e) => { const s = [...config.sections]; s[idx] = { ...s[idx], content: e.target.value }; setConfig({ ...config, sections: s }); }} placeholder="Section Content" rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' }} />
+            </div>
+          ))}
+
+          <button type="button" onClick={() => setConfig({ ...config, sections: [...config.sections, { heading: "New Section", content: "" }] })} style={{ width: '100%', padding: '16px', background: '#f9f9f9', borderRadius: '12px', border: '1px solid #eee', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: '#3b82f6', textAlign: 'center' }}>
+            + Add Section
+          </button>
 
         </div>
       </div>

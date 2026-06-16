@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { CalendarDays, Clock3, Edit3, PackageCheck, Phone, Store, X, ShoppingBag, ArrowRight, CheckCircle2, Truck, Check, XCircle } from "lucide-react";
+import { CalendarDays, Clock3, Edit3, FileText, PackageCheck, Phone, Store, X, ShoppingBag, ArrowRight, CheckCircle2, Truck, Check, XCircle } from "lucide-react";
 import { api } from "../../api/client";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { formatApiError } from "../../utils/apiError";
@@ -337,6 +337,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-// Ensure lucide icon is mapped if not defined in import above.
-import { FileText } from "lucide-react";

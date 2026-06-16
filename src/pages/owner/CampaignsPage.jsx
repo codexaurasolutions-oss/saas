@@ -170,22 +170,34 @@ export default function CampaignsPage() {
   };
 
   const duplicate = async (id) => {
-    await api.post(`/owner/campaigns/${id}/duplicate`);
-    await load();
+    try {
+      await api.post(`/owner/campaigns/${id}/duplicate`);
+      await load();
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Failed to duplicate campaign"), success: "" });
+    }
   };
 
   const schedule = async (id) => {
-    const scheduledFor = form.scheduledFor || new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
-    const response = await api.post(`/owner/campaigns/${id}/schedule`, { scheduledFor });
-    setStatus({ error: "", success: `Campaign scheduled for ${new Date(response.data.scheduledFor).toLocaleString()}.` });
-    await load();
+    try {
+      const scheduledFor = form.scheduledFor || new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
+      const response = await api.post(`/owner/campaigns/${id}/schedule`, { scheduledFor });
+      setStatus({ error: "", success: `Campaign scheduled for ${new Date(response.data.scheduledFor).toLocaleString()}.` });
+      await load();
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Failed to schedule campaign"), success: "" });
+    }
   };
 
   const sendPlaceholder = async (id) => {
-    const response = await api.post(`/owner/campaigns/${id}/send-placeholder`);
-    setLastShareLink(response.data.whatsappLink || "");
-    setStatus({ error: "", success: `Campaign processed. Reachable audience ${response.data.reachableCount}.` });
-    await load();
+    try {
+      const response = await api.post(`/owner/campaigns/${id}/send-placeholder`);
+      setLastShareLink(response.data.whatsappLink || "");
+      setStatus({ error: "", success: `Campaign processed. Reachable audience ${response.data.reachableCount}.` });
+      await load();
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Failed to send campaign"), success: "" });
+    }
   };
 
   const linkCoupon = async (campaignId, couponId) => {

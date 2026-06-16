@@ -33,7 +33,6 @@ const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage"));
 const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage"));
 const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage"));
 const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage"));
-const ServicesPage = lazy(() => import("./pages/owner/ServicesPage"));
 const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage"));
 const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage"));
 const UsersPage = lazy(() => import("./pages/owner/UsersPage"));

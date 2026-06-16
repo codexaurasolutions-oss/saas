@@ -144,7 +144,6 @@ export default function AppointmentsPage() {
       setCustomers(contextResponse.data.customers || []);
       setServices(contextResponse.data.services || []);
       const staff = contextResponse.data.staffUsers || [];
-      console.log('Fetched staffUsers:', staff);
       setStaffUsers(staff);
       const branches = contextResponse.data.branches || [];
       setBranches(branches);
