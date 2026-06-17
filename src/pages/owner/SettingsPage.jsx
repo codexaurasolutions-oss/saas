@@ -1348,15 +1348,21 @@ export default function SettingsPage() {
   const renderShiftSection = () => {
     const shifts = form.advancedSettings.shiftManagement.shifts;
     const rosterModuleEnabled = form.advancedSettings.allowRosterMgtSettings !== false;
+    const [selectedShiftId, setSelectedShiftId] = useState(shifts[0]?.id || null);
     const updateShift = (id, patch) => {
       updateAdvancedObject("shiftManagement", {
         shifts: shifts.map((shift) => shift.id === id ? { ...shift, ...patch } : shift)
       });
     };
-    const addShift = () => updateAdvancedObject("shiftManagement", {
-      shifts: [...shifts, { id: makeId("shift"), name: "", active: true, startTime: "09:00", endTime: "21:00", days: WEEK_DAYS.map((item) => item.key), breakLabel: "" }]
-    });
-    const removeShift = (id) => updateAdvancedObject("shiftManagement", { shifts: shifts.filter((shift) => shift.id !== id) });
+    const addShift = () => {
+      const newShift = { id: makeId("shift"), name: "", active: true, sameForAllDays: true, startTime: "09:00", endTime: "21:00", days: WEEK_DAYS.reduce((acc, day) => ({ ...acc, [day.key]: { startTime: "09:00", endTime: "21:00", active: true } }), {}), breakLabel: "", breaks: [] };
+      updateAdvancedObject("shiftManagement", { shifts: [...shifts, newShift] });
+      setSelectedShiftId(newShift.id);
+    };
+    const removeShift = (id) => {
+      updateAdvancedObject("shiftManagement", { shifts: shifts.filter((shift) => shift.id !== id) });
+      if (selectedShiftId === id) setSelectedShiftId(null);
+    };
 
     const addBreak = (shiftId) => {
       const shift = shifts.find(s => s.id === shiftId);
@@ -1376,107 +1382,262 @@ export default function SettingsPage() {
       updateShift(shiftId, { breaks: newBreaks });
     };
 
+    const handleSameForAllDays = (shift, checked) => {
+      const newDays = WEEK_DAYS.reduce((acc, day) => {
+        const existing = shift.days?.[day.key] || {};
+        acc[day.key] = {
+          startTime: existing.startTime || shift.startTime || "09:00",
+          endTime: existing.endTime || shift.endTime || "21:00",
+          active: checked ? true : (existing.active !== false)
+        };
+        return acc;
+      }, {});
+      updateShift(shift.id, { sameForAllDays: checked, days: newDays, startTime: shift.days?.SUN?.startTime || shift.startTime, endTime: shift.days?.SUN?.endTime || shift.endTime });
+    };
+    const updateDayTime = (shift, dayKey, patch) => {
+      const newDays = { ...(shift.days || {}), [dayKey]: { ...(shift.days?.[dayKey] || {}), ...patch } };
+      updateShift(shift.id, { days: newDays });
+    };
+    const selectedShift = shifts.find(s => s.id === selectedShiftId) || shifts[0] || null;
+
     return (
       <>
-        <SectionHeader title="Shift Management" description="Create reusable shift templates so roster planning stays consistent across staff, roles, and branches." badges={[`${shifts.length} shifts`, rosterModuleEnabled ? "Roster Enabled" : "Roster Locked"]} />
+        <SectionHeader title="Shift Management" description="Create reusable shift templates with per-day timing so roster planning stays consistent across staff, roles, and branches." badges={[`${shifts.length} shifts`, rosterModuleEnabled ? "Roster Enabled" : "Roster Locked"]} />
         {!rosterModuleEnabled ? (
           <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
             Roster management is currently disabled from settings, so these templates stay visible for reference but should not be treated as editable live defaults until the module is enabled again.
           </div>
         ) : null}
-        <div className="settings-list-stack">
-          {shifts.map((shift) => (
-            <div key={shift.id} className="settings-panel-card">
-              <div className="section-heading">
-                <h3>{shift.name || "New Shift"}</h3>
-                <div className="inline-actions">
-                  <span className={`badge ${shift.active ? "" : "badge-cancelled"}`}>{shift.active ? "Active" : "Inactive"}</span>
-                  <button type="button" className="secondary-button" onClick={() => removeShift(shift.id)} disabled={!rosterModuleEnabled}>Remove</button>
-                </div>
-              </div>
-              <div className="settings-form-grid">
-                <label className="settings-input-group">
-                  <span className="muted">Shift name</span>
-                  <input disabled={!rosterModuleEnabled} value={shift.name} onChange={(event) => updateShift(shift.id, { name: event.target.value })} placeholder="Enter shift name" />
-                </label>
-                <label className="settings-input-group">
-                  <span className="muted">Start time</span>
-                  <input disabled={!rosterModuleEnabled} type="time" value={shift.startTime} onChange={(event) => updateShift(shift.id, { startTime: event.target.value })} />
-                </label>
-                <label className="settings-input-group">
-                  <span className="muted">End time</span>
-                  <input disabled={!rosterModuleEnabled} type="time" value={shift.endTime} onChange={(event) => updateShift(shift.id, { endTime: event.target.value })} />
-                </label>
-                <label className="settings-input-group">
-                  <span className="muted">Break label</span>
-                  <input disabled={!rosterModuleEnabled} value={shift.breakLabel || ""} onChange={(event) => updateShift(shift.id, { breakLabel: event.target.value })} placeholder="Lunch / Tea / Prayer" />
-                </label>
-              </div>
-              <div className="settings-chip-grid" style={{ marginTop: 16 }}>
-                {WEEK_DAYS.map((day) => {
-                  const active = shift.days.includes(day.key);
-                  return (
-                    <button
-                      key={day.key}
-                      type="button"
-                      className={`settings-chip ${active ? "active" : ""}`}
-                      disabled={!rosterModuleEnabled}
-                      onClick={() => updateShift(shift.id, { days: active ? shift.days.filter((item) => item !== day.key) : [...shift.days, day.key] })}
-                    >
-                      {day.label}
-                    </button>
-                  );
-                })}
-              </div>
 
-              {/* Breaks Section */}
-              <div style={{ marginTop: 24, padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={{ fontWeight: 600, fontSize: "14px", color: "#334155" }}>Break Types</span>
-                  <button type="button" className="blue-btn-secondary" style={{ padding: "6px 12px", fontSize: "12px", background: "#2563eb", color: "white", border: "none", borderRadius: "6px" }} onClick={() => addBreak(shift.id)} disabled={!rosterModuleEnabled}>Add Break Type</button>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 320px) 1fr", gap: 16 }}>
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, height: "fit-content" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+              {shifts.map((shift) => (
+                <button
+                  key={shift.id}
+                  type="button"
+                  onClick={() => setSelectedShiftId(shift.id)}
+                  style={{
+                    padding: "10px 14px",
+                    border: selectedShiftId === shift.id ? "2px solid #3b82f6" : "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    background: selectedShiftId === shift.id ? "#eff6ff" : "#fff",
+                    textAlign: "left",
+                    fontSize: 14,
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    fontWeight: selectedShiftId === shift.id ? 600 : 500,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%"
+                  }}
+                >
+                  <span>{shift.name || "Untitled Shift"}</span>
+                  {!shift.active && <span style={{ color: "#ef4444", fontSize: 12 }}>(Inactive)</span>}
+                </button>
+              ))}
+              {shifts.length === 0 && (
+                <div style={{ padding: "20px 14px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No shifts yet</div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={addShift}
+              disabled={!rosterModuleEnabled}
+              style={{ width: "100%", padding: "10px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+            >
+              Create New
+            </button>
+          </div>
+
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 20 }}>
+            {!selectedShift ? (
+              <div style={{ padding: "60px 20px", textAlign: "center", color: "#94a3b8" }}>
+                <strong>Select a shift to edit</strong>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Or create a new shift to get started.</div>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ margin: 0, marginBottom: 16, fontSize: 20, fontWeight: 700, color: "#2563eb" }}>Shift Details</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16, alignItems: "center" }}>
+                  <label style={{ display: "block" }}>
+                    <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Shift Name</div>
+                    <input
+                      disabled={!rosterModuleEnabled}
+                      value={selectedShift.name}
+                      onChange={(event) => updateShift(selectedShift.id, { name: event.target.value })}
+                      placeholder="Enter shift name"
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      disabled={!rosterModuleEnabled}
+                      checked={Boolean(selectedShift.active)}
+                      onChange={(event) => updateShift(selectedShift.id, { active: event.target.checked })}
+                      style={{ width: 18, height: 18 }}
+                    />
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>Active</span>
+                  </label>
                 </div>
-                {(shift.breaks || []).map((brk) => (
-                  <div key={brk.id} style={{ padding: "16px", background: "white", border: "1px solid #e2e8f0", borderRadius: "8px", position: "relative", marginBottom: "12px" }}>
-                    <button type="button" onClick={() => removeBreak(shift.id, brk.id)} style={{ position: "absolute", top: "12px", right: "12px", background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "20px", fontWeight: "bold", lineHeight: 1 }}>
-                      &times;
-                    </button>
-                    
-                    <div style={{ display: "flex", gap: "24px", alignItems: "center", marginBottom: 16 }}>
-                      <label className="settings-input-group" style={{ flex: 1, margin: 0 }}>
-                        <span className="muted" style={{ display: "block", marginBottom: "6px" }}>Break Name</span>
-                        <input value={brk.name} onChange={(e) => updateBreak(shift.id, brk.id, { name: e.target.value })} placeholder="Enter Break Name" disabled={!rosterModuleEnabled} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "100%", outline: "none" }} />
+
+                <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#f8fafc", borderRadius: 8, marginBottom: 16, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    disabled={!rosterModuleEnabled}
+                    checked={Boolean(selectedShift.sameForAllDays)}
+                    onChange={(event) => handleSameForAllDays(selectedShift, event.target.checked)}
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Same For All Days</span>
+                </label>
+
+                {selectedShift.sameForAllDays ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                    <label>
+                      <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Start Time</div>
+                      <input
+                        type="time"
+                        disabled={!rosterModuleEnabled}
+                        value={selectedShift.startTime || "09:00"}
+                        onChange={(event) => {
+                          const newDays = WEEK_DAYS.reduce((acc, day) => {
+                            acc[day.key] = { ...(selectedShift.days?.[day.key] || {}), startTime: event.target.value, endTime: selectedShift.days?.[day.key]?.endTime || selectedShift.endTime || "21:00", active: selectedShift.days?.[day.key]?.active !== false };
+                            return acc;
+                          }, {});
+                          updateShift(selectedShift.id, { startTime: event.target.value, days: newDays });
+                        }}
+                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
+                      />
+                    </label>
+                    <label>
+                      <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>End Time</div>
+                      <input
+                        type="time"
+                        disabled={!rosterModuleEnabled}
+                        value={selectedShift.endTime || "21:00"}
+                        onChange={(event) => {
+                          const newDays = WEEK_DAYS.reduce((acc, day) => {
+                            acc[day.key] = { ...(selectedShift.days?.[day.key] || {}), startTime: selectedShift.days?.[day.key]?.startTime || selectedShift.startTime || "09:00", endTime: event.target.value, active: selectedShift.days?.[day.key]?.active !== false };
+                            return acc;
+                          }, {});
+                          updateShift(selectedShift.id, { endTime: event.target.value, days: newDays });
+                        }}
+                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr 60px", gap: 12, padding: "8px 12px", background: "#f8fafc", borderRadius: "6px 6px 0 0", borderBottom: "1px solid #e2e8f0", fontSize: 12, fontWeight: 600, color: "#475569" }}>
+                      <div>Day</div>
+                      <div>Start Time</div>
+                      <div>End Time</div>
+                      <div>Active</div>
+                    </div>
+                    {WEEK_DAYS.map((day) => {
+                      const dayData = selectedShift.days?.[day.key] || {};
+                      return (
+                        <div key={day.key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr 60px", gap: 12, padding: "10px 12px", borderBottom: "1px solid #f1f5f9", alignItems: "center" }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{day.label}</div>
+                          <input
+                            type="time"
+                            disabled={!rosterModuleEnabled}
+                            value={dayData.startTime || "09:00"}
+                            onChange={(event) => updateDayTime(selectedShift, day.key, { startTime: event.target.value })}
+                            style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
+                          />
+                          <input
+                            type="time"
+                            disabled={!rosterModuleEnabled}
+                            value={dayData.endTime || "21:00"}
+                            onChange={(event) => updateDayTime(selectedShift, day.key, { endTime: event.target.value })}
+                            style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
+                          />
+                          <input
+                            type="checkbox"
+                            disabled={!rosterModuleEnabled}
+                            checked={dayData.active !== false}
+                            onChange={(event) => updateDayTime(selectedShift, day.key, { active: event.target.checked })}
+                            style={{ width: 18, height: 18 }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                  <button
+                    type="button"
+                    onClick={() => addBreak(selectedShift.id)}
+                    disabled={!rosterModuleEnabled}
+                    style={{ padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 13 }}
+                  >
+                    Add Break Type
+                  </button>
+                </div>
+
+                {(selectedShift.breaks || []).map((brk) => (
+                  <div key={brk.id} style={{ padding: 16, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", position: "relative", marginBottom: 12 }}>
+                    <button type="button" onClick={() => removeBreak(selectedShift.id, brk.id)} style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>&times;</button>
+                    <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 12 }}>
+                      <label style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Break Name</div>
+                        <input value={brk.name} onChange={(e) => updateBreak(selectedShift.id, brk.id, { name: e.target.value })} placeholder="Enter Break Name" disabled={!rosterModuleEnabled} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, width: "100%", fontSize: 13, outline: "none" }} />
                       </label>
-                      <label className="checkbox-option" style={{ margin: 0, marginTop: "24px" }}>
-                        <input type="checkbox" checked={brk.active} onChange={(e) => updateBreak(shift.id, brk.id, { active: e.target.checked })} disabled={!rosterModuleEnabled} />
-                        Active
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 18, cursor: "pointer" }}>
+                        <input type="checkbox" checked={brk.active} onChange={(e) => updateBreak(selectedShift.id, brk.id, { active: e.target.checked })} disabled={!rosterModuleEnabled} style={{ width: 16, height: 16 }} />
+                        <span style={{ fontSize: 13 }}>Active</span>
                       </label>
                     </div>
-                    
-                    <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 16 }}>
-                      <span className="muted" style={{ display: "block", marginBottom: 8 }}>Break Timing</span>
-                      <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+                    <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 12 }}>
+                      <div style={{ fontSize: 12, color: "#475569", marginBottom: 8, fontWeight: 600 }}>Break Timing</div>
+                      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#64748b" }}>
                           From
-                          <input type="time" value={brk.fromTime} onChange={(e) => updateBreak(shift.id, brk.id, { fromTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
+                          <input type="time" value={brk.fromTime} onChange={(e) => updateBreak(selectedShift.id, brk.id, { fromTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
                         </label>
                         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#64748b" }}>
                           To
-                          <input type="time" value={brk.toTime} onChange={(e) => updateBreak(shift.id, brk.id, { toTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
+                          <input type="time" value={brk.toTime} onChange={(e) => updateBreak(selectedShift.id, brk.id, { toTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
                         </label>
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
 
-              <div style={{ marginTop: 16 }}>
-                <ToggleRow checked={shift.active} label="Shift active" helper="Inactive templates stay in history but do not appear in selection lists." onChange={(value) => { if (rosterModuleEnabled) updateShift(shift.id, { active: value }); }} />
-              </div>
-            </div>
-          ))}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+                  <button
+                    type="button"
+                    onClick={() => removeShift(selectedShift.id)}
+                    style={{ padding: "10px 24px", background: "#fff", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShiftId(null)}
+                    style={{ padding: "10px 24px", background: "#fff", border: "1px solid #cbd5e1", color: "#475569", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateAdvancedObject("shiftManagement", { shifts });
+                    }}
+                    style={{ padding: "10px 32px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 14 }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-        <button type="button" onClick={addShift} disabled={!rosterModuleEnabled}>Create New Shift</button>
-
       </>
     );
   };
