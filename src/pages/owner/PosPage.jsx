@@ -1040,6 +1040,21 @@ export default function PosPage() {
                     setForm(c => ({ ...c, payments: next }));
                   }} />
                 </div>
+                <div className="pos-payment-input">
+                  <label style={{ cursor: 'pointer' }} onClick={() => {
+                    const paidSoFar = form.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                    const balance = Math.max(0, totals.total - paidSoFar);
+                    const next = form.payments.filter((payment) => payment.mode !== "BALANCE");
+                    next.push({ mode: "BALANCE", amount: balance, note: "" });
+                    setForm(c => ({ ...c, payments: next }));
+                  }}><svg width="16" height="16" style={{ color: "#f59e0b" }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> Balance</label>
+                  <input type="number" placeholder="0.0" value={form.payments.find((payment) => payment.mode === "BALANCE")?.amount || ""} onChange={(e) => {
+                    const amount = e.target.value;
+                    const next = form.payments.filter((payment) => payment.mode !== "BALANCE");
+                    next.push({ mode: "BALANCE", amount, note: "" });
+                    setForm(c => ({ ...c, payments: next }));
+                  }} />
+                </div>
               </div>
 
               <div className="pos-message-config">
