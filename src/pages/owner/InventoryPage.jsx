@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { formatApiError } from "../../utils/apiError";
 import PageLoader from "../../components/PageLoader";
+import VendorManagement from "./VendorManagement";
 import { Package, Search, ShoppingCart, CheckCircle, XCircle, AlertTriangle, ArrowLeft, Tag, Layers, RefreshCw, Users, FileText, Activity, Plus, Trash2, ChevronDown, Save, Upload, Download } from "lucide-react";
 
 const emptyCategory = { name: "", description: "", imageUrl: "", sortOrder: 0, isPublicVisible: true };
@@ -1299,65 +1300,7 @@ export default function InventoryPage() {
 
         {/* Vendor Management Tab */}
         {activeTab === "Vendor Management" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ margin: 0, fontSize: "1.6rem", color: "#0f172a", fontWeight: "700" }}>{activeTab}</h2>
-              <button
-                onClick={() => setIsVendorModalOpen(true)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 18px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "#3b82f6",
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-              >
-                <Plus size={16} />
-                Add Vendor
-              </button>
-            </div>
-
-            <div style={{ background: "white", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc", color: "#475569", fontSize: "0.85rem", textTransform: "uppercase" }}>
-                    <th style={{ padding: "16px 24px", fontWeight: 600 }}>Vendor Name</th>
-                    <th style={{ padding: "16px 24px", fontWeight: 600 }}>Contact</th>
-                    <th style={{ padding: "16px 24px", fontWeight: 600 }}>Email</th>
-                    <th style={{ padding: "16px 24px", fontWeight: 600 }}>Address</th>
-                    <th style={{ padding: "16px 24px", fontWeight: 600 }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vendors.map((vendor) => (
-                    <tr key={vendor.id} style={{ borderTop: "1px solid #e2e8f0" }}>
-                      <td style={{ padding: "16px 24px", fontWeight: 600, color: "#0f172a" }}>{vendor.name}</td>
-                      <td style={{ padding: "16px 24px", color: "#64748b" }}>{vendor.phone || "-"}</td>
-                      <td style={{ padding: "16px 24px", color: "#64748b" }}>{vendor.email || "-"}</td>
-                      <td style={{ padding: "16px 24px", color: "#64748b" }}>{vendor.address || "-"}</td>
-                      <td style={{ padding: "16px 24px" }}>
-                        <span style={{ padding: "4px 10px", borderRadius: 999, background: "#dcfce7", color: "#166534", fontSize: "0.8rem", fontWeight: 700 }}>
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {vendors.length === 0 && (
-                    <tr>
-                      <td colSpan="5" style={{ padding: 32, textAlign: "center", color: "#94a3b8" }}>
-                        No vendors added yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <VendorManagement branches={branches} formatMoney={formatMoney} />
         )}
 
       </div>
