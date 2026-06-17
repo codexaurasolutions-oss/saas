@@ -516,24 +516,25 @@ export default function AppointmentsPage() {
 
       // Duration from DB appointment-level startAt → endAt
       let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
-      if (diffMin < 0 || isNaN(diffMin)) diffMin = 0;
+      if (isNaN(diffMin) || diffMin < 0) diffMin = 0;
 
-      // ALWAYS compare with service catalog total duration and use whichever is larger
-      // This corrects blocks where DB endAt was saved incorrectly (e.g. default 15min)
-      const catalogDuration = (row.items || []).reduce((sum, item) => {
-        const svc = services.find(s => s.id === item.serviceId);
-        return sum + Number(svc?.durationMin || 0);
-      }, 0);
-      if (catalogDuration > diffMin) diffMin = catalogDuration;
+      // Only use catalog fallback if DB endAt is clearly the wrong default (≤ 15 min)
+      // If DB has a real duration (e.g. 30 min booked intentionally), trust it exactly
+      if (diffMin <= DEFAULT_APPOINTMENT_DURATION_MINUTES) {
+        const catalogDuration = (row.items || []).reduce((sum, item) => {
+          const svc = services.find(s => s.id === item.serviceId);
+          return sum + Number(svc?.durationMin || DEFAULT_APPOINTMENT_DURATION_MINUTES);
+        }, 0);
+        if (catalogDuration > diffMin) diffMin = catalogDuration;
+      }
 
-      // Ensure at least 1 slot
       if (diffMin <= 0) diffMin = DEFAULT_APPOINTMENT_DURATION_MINUTES;
 
       const durationSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
 
       if (typeof window !== "undefined" && window.console) {
         const endLabel = formatTimeForSelect(row.endAt);
-        console.log("[appt duration]", { id: row.id, startAt: row.startAt, endAt: row.endAt, diffMin, catalogDuration, durationSlots, endLabel });
+        console.log("[appt duration]", { id: row.id, diffMin, durationSlots, endLabel });
       }
 
       getStaffIdsForAppointment(row).forEach((staffId) => {
