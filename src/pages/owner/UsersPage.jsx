@@ -756,16 +756,16 @@ const handleDirectorySelect = (rowId) => {
                       {form.documents.map((doc, idx) => (
                         <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, marginBottom: 12, alignItems: 'end' }}>
                           <div className="hub-form-group">
-                            <label style={{ fontSize: 12, color: '#64748b' }}>Document Name</label>
+                            <label style={{ fontSize: 12, color: '#64748b' }}>Name</label>
                             <input type="text" className="hub-input" value={doc.name || ""} onChange={e => {
                               const next = [...form.documents]; next[idx] = {...next[idx], name: e.target.value}; setForm({...form, documents: next});
-                            }} placeholder="e.g. Aadhaar Card" />
+                            }} placeholder="Enter Name" />
                           </div>
                           <div className="hub-form-group">
-                            <label style={{ fontSize: 12, color: '#64748b' }}>Document URL</label>
+                            <label style={{ fontSize: 12, color: '#64748b' }}>Number</label>
                             <input type="text" className="hub-input" value={doc.url || ""} onChange={e => {
                               const next = [...form.documents]; next[idx] = {...next[idx], url: e.target.value}; setForm({...form, documents: next});
-                            }} placeholder="Document link" />
+                            }} placeholder="Enter Number" />
                           </div>
                           <button type="button" onClick={() => setForm({...form, documents: form.documents.filter((_, i) => i !== idx)})} style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer' }}>x</button>
                         </div>
@@ -773,19 +773,19 @@ const handleDirectorySelect = (rowId) => {
                       <button type="button" onClick={() => setForm({...form, documents: [...form.documents, { name: "", url: "" }]})} style={{ background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: 8, padding: '10px 16px', cursor: 'pointer', fontSize: 14, color: '#475569', fontWeight: 600 }}>+ Add Document</button>
                     </div>
 
-                    {/* Employment & HR Details */}
+                    {/* Joining Details */}
                     <div style={{ marginBottom: 32 }}>
-                      <h4 style={{ fontSize: 15, color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginBottom: 16 }}>Employment & HR Details</h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 16, borderBottom: '2px solid #e2e8f0', paddingBottom: 10 }}>Joining Details</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 16 }}>
                         <div className="hub-form-group">
-                          <label>Date of Joining</label>
+                          <label>Joining Date</label>
                           <input type="date" className="hub-input" value={form.joiningDate} onChange={(event) => setForm({ ...form, joiningDate: event.target.value })} />
                         </div>
                         <div className="hub-form-group">
                           <label>Designation</label>
                           <div style={{ display: "grid", gap: 8 }}>
                             <select className="hub-input" value={designationOptions.includes(form.designation) ? form.designation : ""} onChange={(event) => setForm({ ...form, designation: event.target.value || form.designation })}>
-                              <option value="">Select saved designation</option>
+                              <option value="">Select Designation</option>
                               {designationOptions.map((designation) => <option key={designation} value={designation}>{designation}</option>)}
                             </select>
                             <input type="text" className="hub-input" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} placeholder="e.g. Senior Stylist" />
@@ -793,11 +793,11 @@ const handleDirectorySelect = (rowId) => {
                         </div>
                         <div className="hub-form-group">
                           <label>UAN Number</label>
-                          <input type="text" className="hub-input" value={form.uanNumber} onChange={(event) => setForm({ ...form, uanNumber: event.target.value })} placeholder="12-digit UAN" />
+                          <input type="text" className="hub-input" value={form.uanNumber} onChange={(event) => setForm({ ...form, uanNumber: event.target.value })} placeholder="Enter UAN Number" />
                         </div>
                         <div className="hub-form-group">
-                          <label>Working Hours</label>
-                          <input type="text" className="hub-input" value={form.workingHours} onChange={(event) => setForm({ ...form, workingHours: event.target.value })} placeholder="e.g. 10:00 AM - 07:00 PM" />
+                          <label>Working Hrs</label>
+                          <input type="text" className="hub-input" value={form.workingHours} onChange={(event) => setForm({ ...form, workingHours: event.target.value })} placeholder="Enter Hours" />
                         </div>
                         <div className="hub-form-group">
                           <label>Reporting To</label>
@@ -809,25 +809,25 @@ const handleDirectorySelect = (rowId) => {
                       </div>
                     </div>
 
-                    {/* Bank & Payroll Details */}
+                    {/* Bank Details */}
                     <div style={{ marginBottom: 32 }}>
-                      <h4 style={{ fontSize: 15, color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginBottom: 16 }}>Bank & Payroll Details</h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 16, borderBottom: '2px solid #e2e8f0', paddingBottom: 10 }}>Bank Details</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
                         <div className="hub-form-group">
                           <label>Bank Name</label>
-                          <input type="text" className="hub-input" value={form.bankName} onChange={(event) => setForm({ ...form, bankName: event.target.value })} placeholder="e.g. HDFC Bank" />
+                          <input type="text" className="hub-input" value={form.bankName} onChange={(event) => setForm({ ...form, bankName: event.target.value })} placeholder="Enter Name" />
                         </div>
                         <div className="hub-form-group">
-                          <label>Branch Name</label>
-                          <input type="text" className="hub-input" value={form.bankBranch} onChange={(event) => setForm({ ...form, bankBranch: event.target.value })} placeholder="Branch Area" />
+                          <label>Branch</label>
+                          <input type="text" className="hub-input" value={form.bankBranch} onChange={(event) => setForm({ ...form, bankBranch: event.target.value })} placeholder="Enter Branch" />
                         </div>
                         <div className="hub-form-group">
                           <label>Account Number</label>
-                          <input type="text" className="hub-input" value={form.accountNumber} onChange={(event) => setForm({ ...form, accountNumber: event.target.value })} placeholder="Account No." />
+                          <input type="text" className="hub-input" value={form.accountNumber} onChange={(event) => setForm({ ...form, accountNumber: event.target.value })} placeholder="Enter Number" />
                         </div>
                         <div className="hub-form-group">
-                          <label>IFSC / Routing Code</label>
-                          <input type="text" className="hub-input" value={form.ifscCode} onChange={(event) => setForm({ ...form, ifscCode: event.target.value })} placeholder="IFSC Code" />
+                          <label>IFSC Code</label>
+                          <input type="text" className="hub-input" value={form.ifscCode} onChange={(event) => setForm({ ...form, ifscCode: event.target.value })} placeholder="Enter IFSC Code" />
                         </div>
                       </div>
                     </div>
@@ -1004,16 +1004,16 @@ const handleDirectorySelect = (rowId) => {
                   {form.documents.map((doc, idx) => (
                     <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, marginBottom: 12, alignItems: 'end' }}>
                       <div className="hub-form-group">
-                        <label style={{ fontSize: 12, color: '#64748b' }}>Document Name</label>
+                        <label style={{ fontSize: 12, color: '#64748b' }}>Name</label>
                         <input type="text" className="hub-input" value={doc.name || ""} onChange={e => {
                           const next = [...form.documents]; next[idx] = {...next[idx], name: e.target.value}; setForm({...form, documents: next});
-                        }} placeholder="e.g. Aadhaar Card" />
+                        }} placeholder="Enter Name" />
                       </div>
                       <div className="hub-form-group">
-                        <label style={{ fontSize: 12, color: '#64748b' }}>Document URL</label>
+                        <label style={{ fontSize: 12, color: '#64748b' }}>Number</label>
                         <input type="text" className="hub-input" value={doc.url || ""} onChange={e => {
                           const next = [...form.documents]; next[idx] = {...next[idx], url: e.target.value}; setForm({...form, documents: next});
-                        }} placeholder="Document link" />
+                        }} placeholder="Enter Number" />
                       </div>
                       <button type="button" onClick={() => setForm({...form, documents: form.documents.filter((_, i) => i !== idx)})} style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
                     </div>
@@ -1021,6 +1021,65 @@ const handleDirectorySelect = (rowId) => {
                   <button type="button" onClick={() => setForm({...form, documents: [...form.documents, { name: "", url: "" }]})} style={{ background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: 8, padding: '10px 16px', cursor: 'pointer', fontSize: 14, color: '#475569', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     + Add Document
                   </button>
+                </div>
+
+                {/* Joining Details */}
+                <div style={{ marginBottom: 28 }}>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 16, borderBottom: '2px solid #e2e8f0', paddingBottom: 10 }}>Joining Details</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 16 }}>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Joining Date</label>
+                      <input type="date" className="hub-input" value={form.joiningDate} onChange={e => setForm({...form, joiningDate: e.target.value})} />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Designation</label>
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        <select className="hub-input" value={designationOptions.includes(form.designation) ? form.designation : ""} onChange={e => setForm({...form, designation: e.target.value || form.designation})}>
+                          <option value="">Select Designation</option>
+                          {designationOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                        <input type="text" className="hub-input" value={form.designation} onChange={e => setForm({...form, designation: e.target.value, position: e.target.value})} placeholder="e.g. Senior Stylist" />
+                      </div>
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>UAN Number</label>
+                      <input type="text" className="hub-input" value={form.uanNumber} onChange={e => setForm({...form, uanNumber: e.target.value})} placeholder="12-digit UAN" />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Reporting To</label>
+                      <select className="hub-input" value={form.reportingToId} onChange={e => setForm({...form, reportingToId: e.target.value})}>
+                        <option value="">None / Self</option>
+                        {rows.map(r => r.id !== selectedRow?.id && <option key={r.id} value={r.id}>{r.user?.name || r.phone}</option>)}
+                      </select>
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Working Hrs</label>
+                      <input type="text" className="hub-input" value={form.workingHours} onChange={e => setForm({...form, workingHours: e.target.value})} placeholder="Enter Hours" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Details */}
+                <div style={{ marginBottom: 28 }}>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 16, borderBottom: '2px solid #e2e8f0', paddingBottom: 10 }}>Bank Details</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Bank Name</label>
+                      <input type="text" className="hub-input" value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} placeholder="Enter Name" />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Branch</label>
+                      <input type="text" className="hub-input" value={form.bankBranch} onChange={e => setForm({...form, bankBranch: e.target.value})} placeholder="Enter Branch" />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Account Number</label>
+                      <input type="text" className="hub-input" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} placeholder="Enter Number" />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>IFSC Code</label>
+                      <input type="text" className="hub-input" value={form.ifscCode} onChange={e => setForm({...form, ifscCode: e.target.value})} placeholder="Enter IFSC Code" />
+                    </div>
+                  </div>
                 </div>
 
                 {status.error && <div style={{ color: '#ef4444', padding: 12, background: '#fef2f2', borderRadius: 8, fontSize: '0.9rem', marginBottom: 16 }}>{status.error}</div>}
