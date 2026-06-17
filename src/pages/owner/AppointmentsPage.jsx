@@ -509,21 +509,30 @@ export default function AppointmentsPage() {
       const startLabel = formatTimeForSelect(row.startAt);
       const startIndex = TIME_SLOT_INDEX.get(startLabel);
       if (startIndex === undefined) return;
-      const endLabel = formatTimeForSelect(row.endAt);
-      const endIndex = TIME_SLOT_INDEX.get(endLabel);
+
       const startDate = new Date(row.startAt);
       const endDate = new Date(row.endAt);
-      const diffMin = Math.max(0, (endDate.getTime() - startDate.getTime()) / 60000);
-      const timeMathSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
-      let durationSlots;
-      if (endIndex !== undefined && endIndex > startIndex) {
-        durationSlots = Math.max(endIndex - startIndex, timeMathSlots);
-      } else {
-        durationSlots = timeMathSlots;
+
+      // Calculate duration in minutes from startAt → endAt
+      let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
+
+      // If endAt is missing/invalid/same as startAt, fall back to sum of item durations
+      if (!row.endAt || diffMin <= 0) {
+        diffMin = (row.items || []).reduce((sum, item) => {
+          const svc = services.find(s => s.id === item.serviceId);
+          return sum + Number(svc?.durationMin || DEFAULT_APPOINTMENT_DURATION_MINUTES);
+        }, 0) || DEFAULT_APPOINTMENT_DURATION_MINUTES;
       }
+
+      // Number of 15-min slots this appointment should span
+      const durationSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
+
       if (typeof window !== "undefined" && window.console && rows.length > 0) {
-        console.log("[appt duration]", { id: row.id, startAt: row.startAt, endAt: row.endAt, startLabel, endLabel, startIndex, endIndex, diffMin, timeMathSlots, durationSlots });
+        const endLabel = formatTimeForSelect(row.endAt);
+        const endIndex = TIME_SLOT_INDEX.get(endLabel);
+        console.log("[appt duration]", { id: row.id, startAt: row.startAt, endAt: row.endAt, startLabel, endLabel, startIndex, endIndex, diffMin, durationSlots });
       }
+
       getStaffIdsForAppointment(row).forEach((staffId) => {
         if (!byStaff.has(staffId)) byStaff.set(staffId, new Map());
         const slotMap = byStaff.get(staffId);
@@ -533,7 +542,7 @@ export default function AppointmentsPage() {
       });
     });
     return byStaff;
-  }, [rows]);
+  }, [rows, services]);
 
   const serviceDurationById = useMemo(() => {
     return new Map(
