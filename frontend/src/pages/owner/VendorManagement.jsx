@@ -302,74 +302,64 @@ export default function VendorManagement({ branches = [], formatMoney }) {
               {status.error && <div style={{ color: "#ef4444", padding: 12, background: "#fef2f2", borderRadius: 8, fontSize: "0.9rem", marginBottom: 16 }}>{status.error}</div>}
               {status.success && <div style={{ color: "#10b981", padding: 12, background: "#f0fdf4", borderRadius: 8, fontSize: "0.9rem", marginBottom: 16 }}>{status.success}</div>}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div style={formGroupStyle}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "16px 20px", marginBottom: 24 }}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Vendor Name <span style={{ color: "#ef4444" }}>*</span></label>
                   <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Name*" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Firm Name <span style={{ color: "#ef4444" }}>*</span></label>
                   <input required value={form.firmName} onChange={e => setForm({ ...form, firmName: e.target.value })} placeholder="Firm Name*" style={inputStyle} />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Mobile <span style={{ color: "#ef4444" }}>*</span></label>
                   <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Mobile Number*" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Alternate Mobile</label>
                   <input value={form.alternateMobile} onChange={e => setForm({ ...form, alternateMobile: e.target.value })} placeholder="Alternate Mobile Number" style={inputStyle} />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Email <span style={{ color: "#ef4444" }}>*</span></label>
                   <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="Email*" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>GST Number</label>
                   <input value={form.gstNumber} onChange={e => setForm({ ...form, gstNumber: e.target.value })} placeholder="GstNo" style={inputStyle} />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 8" }}>
                   <label style={labelStyle}>Address <span style={{ color: "#ef4444" }}>*</span></label>
                   <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Address*" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 4" }}>
                   <label style={labelStyle}>Area</label>
                   <input value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} placeholder="Area" style={inputStyle} />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 4" }}>
                   <label style={labelStyle}>Landmark</label>
                   <input value={form.landmark} onChange={e => setForm({ ...form, landmark: e.target.value })} placeholder="Landmark" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 4" }}>
                   <label style={labelStyle}>City <span style={{ color: "#ef4444" }}>*</span></label>
                   <input required value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="City*" style={inputStyle} />
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 4" }}>
                   <label style={labelStyle}>Pincode</label>
                   <input value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value })} placeholder="Pincode" style={inputStyle} />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Branch</label>
                   <select value={form.branchId} onChange={e => setForm({ ...form, branchId: e.target.value })} style={inputStyle}>
                     <option value="">Salon wide</option>
                     {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
                   </select>
                 </div>
-                <div style={formGroupStyle}>
+                <div style={{ ...formGroupStyle, gridColumn: "span 6" }}>
                   <label style={labelStyle}>Notes</label>
                   <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notes" style={inputStyle} />
                 </div>
