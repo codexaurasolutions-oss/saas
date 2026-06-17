@@ -518,8 +518,19 @@ export default function AppointmentsPage() {
       let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
       if (isNaN(diffMin) || diffMin < 0) diffMin = 0;
 
+      // Always try to find the max endAt from items in case appt.endAt is wrong
+      const itemMaxEndMs = (row.items || []).reduce((maxMs, item) => {
+        if (!item.endAt) return maxMs;
+        return Math.max(maxMs, new Date(item.endAt).getTime());
+      }, 0);
+      
+      if (itemMaxEndMs > endDate.getTime()) {
+        const itemDiff = (itemMaxEndMs - startDate.getTime()) / 60000;
+        if (itemDiff > diffMin) diffMin = itemDiff;
+      }
+
       // Only use catalog fallback if DB endAt is clearly the wrong default (≤ 15 min)
-      // If DB has a real duration (e.g. 30 min booked intentionally), trust it exactly
+      // If DB has a real duration (e.g. 30 min or 60 min booked intentionally), trust it exactly
       if (diffMin <= DEFAULT_APPOINTMENT_DURATION_MINUTES) {
         const catalogDuration = (row.items || []).reduce((sum, item) => {
           const svc = services.find(s => s.id === item.serviceId);
