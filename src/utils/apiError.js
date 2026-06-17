@@ -8,9 +8,13 @@ export const formatApiError = (error, fallback = "Something went wrong.") => {
 
   if (Array.isArray(data.issues) && data.issues.length) {
     return data.issues
-      .map((issue) => issue?.field ? `${issue.field}: ${issue.message}` : issue?.message)
+      .map((issue) => {
+        const field = issue?.field ? `${issue.field}: ` : "";
+        const msg = issue?.message || "Invalid value";
+        return `${field}${msg}`;
+      })
       .filter(Boolean)
-      .join(" | ");
+      .join("\n• ");
   }
 
   return data.message || fallback;
