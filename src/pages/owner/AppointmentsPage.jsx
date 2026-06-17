@@ -507,53 +507,49 @@ export default function AppointmentsPage() {
   const appointmentsByStaffStartSlot = useMemo(() => {
     const byStaff = new Map();
     rows.forEach((row) => {
-      const startLabel = formatTimeForSelect(row.startAt);
-      const startIndex = TIME_SLOT_INDEX.get(startLabel);
-      if (startIndex === undefined) return;
-
-      const startDate = new Date(row.startAt);
-      const endDate = new Date(row.endAt);
-
-      // Duration from DB appointment-level startAt → endAt
-      let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
-      if (isNaN(diffMin) || diffMin < 0) diffMin = 0;
-
-      // Always try to find the max endAt from items in case appt.endAt is wrong
-      const itemMaxEndMs = (row.items || []).reduce((maxMs, item) => {
-        if (!item.endAt) return maxMs;
-        return Math.max(maxMs, new Date(item.endAt).getTime());
-      }, 0);
-      
-      if (itemMaxEndMs > endDate.getTime()) {
-        const itemDiff = (itemMaxEndMs - startDate.getTime()) / 60000;
-        if (itemDiff > diffMin) diffMin = itemDiff;
+      const items = row.items || [];
+      if (items.length === 0) {
+        const startLabel = formatTimeForSelect(row.startAt);
+        const startIndex = TIME_SLOT_INDEX.get(startLabel);
+        if (startIndex === undefined) return;
+        const startDate = new Date(row.startAt);
+        const endDate = new Date(row.endAt);
+        let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
+        if (isNaN(diffMin) || diffMin < 0) diffMin = DEFAULT_APPOINTMENT_DURATION_MINUTES;
+        const durationSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
+        getStaffIdsForAppointment(row).forEach((staffId) => {
+          if (!byStaff.has(staffId)) byStaff.set(staffId, new Map());
+          const slotMap = byStaff.get(staffId);
+          const existing = slotMap.get(startIndex) || [];
+          existing.push({ ...row, durationSlots, itemStartAt: row.startAt, itemEndAt: row.endAt, itemId: row.id });
+          slotMap.set(startIndex, existing);
+        });
+        return;
       }
-
-      // Only use catalog fallback if DB endAt is clearly the wrong default (≤ 15 min)
-      // If DB has a real duration (e.g. 30 min or 60 min booked intentionally), trust it exactly
-      if (diffMin <= DEFAULT_APPOINTMENT_DURATION_MINUTES) {
-        const catalogDuration = (row.items || []).reduce((sum, item) => {
+      items.forEach((item) => {
+        const itemStart = item.startAt || row.startAt;
+        const itemEnd = item.endAt || row.endAt;
+        const startLabel = formatTimeForSelect(itemStart);
+        const startIndex = TIME_SLOT_INDEX.get(startLabel);
+        if (startIndex === undefined) return;
+        const startDate = new Date(itemStart);
+        const endDate = new Date(itemEnd);
+        let diffMin = (endDate.getTime() - startDate.getTime()) / 60000;
+        if (isNaN(diffMin) || diffMin <= 0) {
           const svc = services.find(s => s.id === item.serviceId);
-          return sum + Number(svc?.durationMin || DEFAULT_APPOINTMENT_DURATION_MINUTES);
-        }, 0);
-        if (catalogDuration > diffMin) diffMin = catalogDuration;
-      }
-
-      if (diffMin <= 0) diffMin = DEFAULT_APPOINTMENT_DURATION_MINUTES;
-
-      const durationSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
-
-      if (typeof window !== "undefined" && window.console) {
-        const endLabel = formatTimeForSelect(row.endAt);
-        console.log("[appt duration]", { id: row.id, diffMin, durationSlots, endLabel });
-      }
-
-      getStaffIdsForAppointment(row).forEach((staffId) => {
-        if (!byStaff.has(staffId)) byStaff.set(staffId, new Map());
-        const slotMap = byStaff.get(staffId);
-        const existing = slotMap.get(startIndex) || [];
-        existing.push({ ...row, durationSlots });
-        slotMap.set(startIndex, existing);
+          diffMin = Number(svc?.durationMin || DEFAULT_APPOINTMENT_DURATION_MINUTES);
+        }
+        const durationSlots = Math.max(1, Math.ceil(diffMin / APPOINTMENT_SLOT_MINUTES));
+        const itemStaffIds = (item.assignedStaff || []).map(a => a.userSalonId).filter(Boolean);
+        const finalStaffIds = itemStaffIds.length > 0 ? itemStaffIds : getStaffIdsForAppointment(row);
+        const itemWithAppt = { ...row, itemId: item.id, serviceId: item.serviceId, itemStartAt: itemStart, itemEndAt: itemEnd, durationSlots };
+        finalStaffIds.forEach((staffId) => {
+          if (!byStaff.has(staffId)) byStaff.set(staffId, new Map());
+          const slotMap = byStaff.get(staffId);
+          const existing = slotMap.get(startIndex) || [];
+          existing.push(itemWithAppt);
+          slotMap.set(startIndex, existing);
+        });
       });
     });
     return byStaff;
@@ -1085,9 +1081,13 @@ export default function AppointmentsPage() {
                               Number(appt.durationSlots || 1) * APPOINTMENT_SLOT_MINUTES
                             );
 
+                            const itemService = (appt.items || []).find(it => it.id === appt.itemId);
+                            const serviceName = itemService?.service?.name || (appt.items?.[0]?.service?.name || "Service");
+                            const uniqueKey = `${appt.id}-${appt.itemId || "main"}-${staff.id}`;
+
                             return (
                               <div
-                                key={appt.id}
+                                key={uniqueKey}
                                 className="appt-block"
                                 style={{
                                   background: bg,
@@ -1099,10 +1099,10 @@ export default function AppointmentsPage() {
                                   event.stopPropagation();
                                   handleAppointmentClick(event, appt);
                                 }}
-                                title={`${appt.customer?.name || "Walk-in"} • ${appt.items?.[0]?.service?.name || "Service"} • ${totalDurationMin} min`}
+                                title={`${appt.customer?.name || "Walk-in"} • ${serviceName} • ${totalDurationMin} min`}
                               >
                                 <div style={{ fontWeight: 600 }}>{appt.customer?.name || "Walk-in"}</div>
-                                <div>{appt.items?.[0]?.service?.name || "Service"}</div>
+                                <div>{serviceName}</div>
                               </div>
                             );
                           })}
