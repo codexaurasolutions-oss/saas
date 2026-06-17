@@ -504,9 +504,37 @@ export default function AppointmentsPage() {
     return staffUsers;
   }, [staffUsers]);
 
+  const displayedRows = useMemo(() => {
+    if (!isCreateModalOpen || !editMode || !editingAppointmentId) return rows;
+    const idx = rows.findIndex((r) => r.id === editingAppointmentId);
+    if (idx === -1) return rows;
+    return rows.map((r, i) => {
+      if (i !== idx) return r;
+      const formItems = (form.items || []).filter((fi) => fi.serviceId && fi.startAt && fi.endAt && fi.staffUserIds?.length);
+      if (formItems.length === 0) return r;
+      const updatedItems = (r.items || []).map((item) => {
+        const matched = formItems.find((fi) => fi.serviceId === item.serviceId);
+        if (!matched) return item;
+        const newStart = toApiDateTime(matched.startAt);
+        const newEnd = toApiDateTime(matched.endAt);
+        const newAssigned = (matched.staffUserIds || []).map((sid) => ({ userSalonId: sid }));
+        return { ...item, startAt: newStart, endAt: newEnd, assignedStaff: newAssigned };
+      });
+      const sortedStarts = updatedItems.map((it) => it.startAt).filter(Boolean).sort();
+      const sortedEnds = updatedItems.map((it) => it.endAt).filter(Boolean).sort();
+      return {
+        ...r,
+        startAt: sortedStarts[0] || r.startAt,
+        endAt: sortedEnds[sortedEnds.length - 1] || r.endAt,
+        primaryStaffUserId: formItems[0]?.staffUserIds?.[0] || r.primaryStaffUserId,
+        items: updatedItems
+      };
+    });
+  }, [rows, isCreateModalOpen, editMode, editingAppointmentId, form.items]);
+
   const appointmentsByStaffStartSlot = useMemo(() => {
     const byStaff = new Map();
-    rows.forEach((row) => {
+    displayedRows.forEach((row) => {
       const items = row.items || [];
       if (items.length === 0) {
         const startLabel = formatTimeForSelect(row.startAt);
@@ -553,7 +581,7 @@ export default function AppointmentsPage() {
       });
     });
     return byStaff;
-  }, [rows, services]);
+  }, [displayedRows, services]);
 
   const serviceDurationById = useMemo(() => {
     return new Map(
