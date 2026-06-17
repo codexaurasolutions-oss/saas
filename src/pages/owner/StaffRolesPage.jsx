@@ -219,21 +219,30 @@ export default function StaffRolesPage() {
       setRoleFormError("Approve this role update before saving because Access Control requires role-edit acknowledgement.");
       return;
     }
+    if (!roleForm.name || roleForm.name.trim().length < 2) {
+      setRoleFormError("Role name must be at least 2 characters long.");
+      return;
+    }
     const payload = {
-      name: roleForm.name,
+      name: roleForm.name.trim(),
       description: roleForm.description,
       permissions: roleForm.permissions,
     };
-    if (editingRoleId) {
-      await api.patch(`/owner/custom-roles/${editingRoleId}`, payload);
-    } else {
-      await api.post("/owner/custom-roles", payload);
+    try {
+      if (editingRoleId) {
+        await api.patch(`/owner/custom-roles/${editingRoleId}`, payload);
+      } else {
+        await api.post("/owner/custom-roles", payload);
+      }
+      setEditingRoleId("");
+      setRoleApprovalChecked(false);
+      setRoleFormError("");
+      setRoleForm({ name: "", description: "", permissions: { dashboard: ["view"] } });
+      await load();
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Failed to save role";
+      setRoleFormError(message);
     }
-    setEditingRoleId("");
-    setRoleApprovalChecked(false);
-    setRoleFormError("");
-    setRoleForm({ name: "", description: "", permissions: { dashboard: ["view"] } });
-    await load();
   };
 
   const toggleRolePermission = (moduleKey, action) => {
