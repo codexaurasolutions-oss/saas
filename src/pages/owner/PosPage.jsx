@@ -347,28 +347,6 @@ export default function PosPage() {
   };
 
   
-  const handleAddGcToCart = () => {
-    const gc = gcModalGc;
-    const isCustom = gc?.id === "CUSTOM";
-    const gcCode = isCustom ? `GC-${Date.now().toString(36).toUpperCase()}` : (gc?.code || `GC-${Date.now().toString(36).toUpperCase()}`);
-    setForm(c => ({
-      ...c,
-      items: [...c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId || i.itemType === "GIFT_CARD"), {
-        itemType: "GIFT_CARD",
-        serviceName: gc?.name || "Custom Gift Card",
-        gcCode,
-        staffUserSalonId: gcDraft.staffId || "",
-        qty: 1,
-        unitPrice: Number(gcDraft.price || 0),
-        taxPct: 0,
-        validityDays: Number(gcDraft.validityDays || 365),
-        purchaseDate: gcDraft.purchaseDate,
-        isCustom: true
-      }]
-    }));
-    setShowGcModal(false);
-  };
-
   const handleAddPkgToCart = () => {
     const pkg = pkgModalPkg;
     setForm(c => ({
@@ -463,7 +441,7 @@ export default function PosPage() {
   const validateBeforeSubmit = useCallback((mode) => {
     if (!form.customerId) return "Please select a guest.";
     if (!form.branchId) return "Please select a branch.";
-    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD");
+    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
     if (!activeItems.length) return "Please add at least one item to the invoice.";
     for (const item of activeItems) {
       if (item.itemType === "SERVICE") {
@@ -473,7 +451,6 @@ export default function PosPage() {
       if (item.itemType === "PRODUCT" && !item.productId) return "Please select a valid product.";
       if (item.itemType === "MEMBERSHIP" && !item.membershipPlanId) return "Please select a membership plan.";
       if (item.itemType === "PACKAGE" && !item.packageId) return "Please select a package.";
-      if (item.itemType === "GIFT_CARD" && Number(item.unitPrice || 0) <= 0) return "Gift card amount must be greater than zero.";
       if (Number(item.qty || 0) <= 0) return "Quantity must be greater than zero.";
     }
     if (mode === "complete") {
@@ -485,7 +462,7 @@ export default function PosPage() {
   }, [form, totals.total]);
 
   const buildInvoicePayload = useCallback((mode) => {
-    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD");
+    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
     
     let finalPayments = [];
     if (mode === "complete") {
@@ -655,7 +632,6 @@ export default function PosPage() {
           <button className={`pos-top-tab ${tab === "billing" ? "active" : ""}`} onClick={() => setTab("billing")}>Add Service</button>
           <button className={`pos-top-tab ${tab === "products" ? "active" : ""}`} onClick={() => setTab("products")}>Add Product</button>
           <button className="pos-top-tab" onClick={() => { setPkgModalPkg(null); setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowPkgModal(true); }}>Add Package</button>
-            <button className="pos-top-tab" onClick={() => { setGcModalGc({ id: "CUSTOM", name: "CUSTOM GIFT CARD" }); setGcDraft({ staffId: "", price: "", validityDays: "30", purchaseDate: new Date().toISOString().slice(0,10) }); setShowGcModal(true); }}>Add GiftCard</button>
           <button className="pos-top-tab" onClick={() => { setMemModalMem(null); setMemDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowMemModal(true); }}>Add Membership</button>
         </div>
       </div>
@@ -888,30 +864,6 @@ export default function PosPage() {
                 </thead>
                 <tbody>
                   {form.items.map((item, index) => {
-                    if (item.itemType === "GIFT_CARD") {
-                      const price = toAmount(item.unitPrice);
-                      const qty = Number(item.qty) || 1;
-                      const subTotal = price * qty;
-                      return (
-                        <tr key={index}>
-                          <td style={{ color: "#334155" }}>{item.serviceName || "Gift Card"}</td>
-                          <td>
-                            <select className="pos-cart-select" value={item.staffUserSalonId || ""} onChange={(e) => updateItem(index, { staffUserSalonId: e.target.value })}>
-                              <option value="">Assign staff</option>
-                              {getEligibleStaffUsers(item).map((u) => <option key={u.id} value={u.id}>{u.user?.name}</option>)}
-                            </select>
-                          </td>
-                          <td><input className="pos-cart-input" type="number" min="1" value={item.qty} onChange={(e) => updateItem(index, { qty: Number(e.target.value || 1) })} /></td>
-                          <td>{price.toFixed(0)}</td>
-                          <td>{subTotal.toFixed(0)}</td>
-                          <td>-</td>
-                          <td>-</td>
-                          <td>-</td>
-                          <td>{subTotal.toFixed(0)}</td>
-                          <td><button className="pos-remove-btn" onClick={() => updateItem(index, { serviceId: "", productId: "", membershipPlanId: "", packageId: "" })}>&#x2715;</button></td>
-                        </tr>
-                      );
-                    }
                     if (!item.serviceId && !item.productId && !item.membershipPlanId && !item.packageId) return null;
                     const baseObj = item.itemType === "PRODUCT"
                       ? productLookup[item.productId]
@@ -931,7 +883,7 @@ export default function PosPage() {
                       <tr key={index}>
                         <td style={{ color: "#334155" }}>{baseObj.name}</td>
                         <td>
-                          {item.itemType === "SERVICE" || item.itemType === "PACKAGE" || item.itemType === "MEMBERSHIP" || item.itemType === "GIFT_CARD" ? (
+                          {item.itemType === "SERVICE" || item.itemType === "PACKAGE" || item.itemType === "MEMBERSHIP" ? (
                             <select className="pos-cart-select" value={item.staffUserSalonId || item.staffUserId || ""} onChange={(e) => updateItem(index, { staffUserSalonId: e.target.value, staffUserId: e.target.value })}>
                               <option value="">Assign staff</option>
                               {getEligibleStaffUsers(item).map((u) => <option key={u.id} value={u.id}>{u.user?.name}</option>)}
@@ -989,7 +941,7 @@ export default function PosPage() {
                       </tr>
                     );
                   })}
-                  {form.items.filter(item => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD").length === 0 && (
+                   {form.items.filter(item => item.serviceId || item.productId || item.membershipPlanId || item.packageId).length === 0 && (
                     <tr>
                       <td colSpan="10" style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>
                         No items added yet. Click a service or product on the left to add.
@@ -1034,34 +986,6 @@ export default function PosPage() {
                       />
                       {Number(form.loyaltyPointsUsed || 0) > 0 && (
                         <button type="button" onClick={() => setForm(c => ({ ...c, loyaltyPointsUsed: 0 }))} style={{ padding: '6px 10px', fontSize: '11px', background: '#dcfce7', border: '1px solid #86efac', borderRadius: '6px', cursor: 'pointer', color: '#166534', fontWeight: 600 }}>Clear</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-              {(() => {
-                const availableGiftCards = (context.giftCards || []).filter(gc => gc.balanceAmount > 0 || gc.originalAmount > 0);
-                if (availableGiftCards.length === 0) return null;
-                return (
-                  <div style={{ marginBottom: '12px', padding: '10px 14px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#92400e' }}>Gift Card Balance</span>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: '#92400e' }}>{availableGiftCards.length} card(s)</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>Card Code:</label>
-                      <select
-                        value={form.giftVoucherCode || ""}
-                        onChange={(e) => setForm(c => ({ ...c, giftVoucherCode: e.target.value }))}
-                        style={{ flex: 1, padding: '6px 10px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                      >
-                        <option value="">Select Gift Card</option>
-                        {availableGiftCards.map(gc => (
-                          <option key={gc.id} value={gc.code}>{gc.code} — {formatMoney(Number(gc.balanceAmount || gc.originalAmount || 0))}</option>
-                        ))}
-                      </select>
-                      {form.giftVoucherCode && (
-                        <button type="button" onClick={() => setForm(c => ({ ...c, giftVoucherCode: "" }))} style={{ padding: '6px 10px', fontSize: '11px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '6px', cursor: 'pointer', color: '#92400e', fontWeight: 600 }}>Clear</button>
                       )}
                     </div>
                   </div>
