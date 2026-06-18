@@ -537,13 +537,13 @@ export const convertOrderToInvoice = async ({ salonId, orderId, actorUser }) => 
         notes: `Converted from order ${order.orderNumber}`,
         items: {
           create: order.items.map((item) => ({
-            productId: item.productId,
             serviceName: item.productName,
             qty: item.qty,
             unitPrice: toAmount(item.unitPrice),
             taxPct: 0,
             lineTotal: toAmount(item.lineTotal),
-            itemType: "PRODUCT"
+            itemType: "PRODUCT",
+            ...(item.productId ? { product: { connect: { id: item.productId } } } : {})
           }))
         }
       }

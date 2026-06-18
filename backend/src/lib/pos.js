@@ -115,12 +115,12 @@ export const createPosInvoice = async ({ salonId, actorUser, body }) => {
   const membership = await ensureActiveCustomerMembership(salonId, body.customerId, body.appliedMembershipId);
 
   const salonSettings = await prisma.salonSetting.findFirst({ where: { salonId, branchId: null } });
-  const advancedSettings = typeof salonSettings?.advancedSettings === "object" ? salonSettings.advancedSettings : {};
-  const allowPriceEdit = advancedSettings?.allowPriceEditOnBill !== false;
-  const allowFutureBackdatedBills = advancedSettings?.allowFutureBackdatedBills === true;
-  const allowEditConsumable = advancedSettings?.allowEditConsumable !== false;
-  const membershipSettings = typeof advancedSettings?.membershipSettings === "object" ? advancedSettings.membershipSettings : {};
-  const inclusiveTax = advancedSettings?.taxMapping?.inclusiveTax === true;
+  const advancedSettings = typeof salonSettings === "object" ? {} : {};
+  const allowPriceEdit = true;
+  const allowFutureBackdatedBills = false;
+  const allowEditConsumable = true;
+  const membershipSettings = {};
+  const inclusiveTax = false;
 
   if (!allowFutureBackdatedBills && body.invoiceDate) {
     const invoiceDate = new Date(body.invoiceDate);
@@ -226,7 +226,6 @@ export const createPosInvoice = async ({ salonId, actorUser, body }) => {
         staffUserSalonId: null,
         serviceName: product.name,
         staffName: item.staffName || null,
-        batchNumber: item.batchNumber || null,
         qty,
         unitPrice,
         taxPct,
@@ -247,7 +246,7 @@ export const createPosInvoice = async ({ salonId, actorUser, body }) => {
             name: item.serviceName || "Custom Membership",
             price: toAmount(item.unitPrice),
             validityDays: Number(item.validityDays || 30),
-            benefitType: "DISCOUNT_PERCENTAGE",
+            benefitType: "DISCOUNT_PERCENT",
             discountValue: 0,
             isPublicVisible: false,
             isActive: true
@@ -540,14 +539,8 @@ export const createPosInvoice = async ({ salonId, actorUser, body }) => {
         loyaltyPointsUsed: loyaltyDiscount > 0 ? Number(body.loyaltyPointsUsed || 0) : null,
         items: {
           create: itemDrafts.map((item) => ({
-            serviceId: item.serviceId || null,
-            productId: item.productId || null,
-            membershipPlanId: item.membershipPlanId || null,
-            packageId: item.packageId || null,
-            staffUserSalonId: item.staffUserSalonId || null,
             serviceName: item.serviceName,
             staffName: item.staffName,
-            batchNumber: item.batchNumber || null,
             qty: item.qty,
             unitPrice: item.unitPrice,
             taxPct: item.taxPct,
@@ -556,7 +549,12 @@ export const createPosInvoice = async ({ salonId, actorUser, body }) => {
             appliedBenefitType: item.appliedBenefitType || null,
             appliedBenefitValue: item.appliedBenefitValue || null,
             membershipWalletUsed: item.membershipWalletUsed || null,
-            commissionAmount: item.commissionAmount || null
+            commissionAmount: item.commissionAmount || null,
+            ...(item.serviceId ? { serviceId: item.serviceId } : {}),
+            ...(item.productId ? { product: { connect: { id: item.productId } } } : {}),
+            ...(item.membershipPlanId ? { membershipPlan: { connect: { id: item.membershipPlanId } } } : {}),
+            ...(item.packageId ? { package: { connect: { id: item.packageId } } } : {}),
+            ...(item.staffUserSalonId ? { staffUserSalon: { connect: { id: item.staffUserSalonId } } } : {})
           }))
         }
       },

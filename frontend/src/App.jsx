@@ -24,9 +24,9 @@ const PayrollPage = lazy(() => import("./pages/owner/PayrollPage"));
 const NotificationsPage = lazy(() => import("./pages/owner/NotificationsPage"));
 const OwnerAuditLogsPage = lazy(() => import("./pages/owner/OwnerAuditLogsPage"));
 const WhatsAppPage = lazy(() => import("./pages/owner/WhatsAppPage"));
-const InvoicesPage = lazy(() => import("./pages/owner/InvoicesPage"));
 const BranchesPage = lazy(() => import("./pages/owner/BranchesPage"));
 const InventoryPage = lazy(() => import("./pages/owner/InventoryPage"));
+const ProductCategoriesPage = lazy(() => import("./pages/owner/ProductCategoriesPage"));
 const MembershipsPage = lazy(() => import("./pages/owner/MembershipsPage"));
 const MyAppointmentsPage = lazy(() => import("./pages/owner/MyAppointmentsPage"));
 const MyCommissionPage = lazy(() => import("./pages/owner/MyCommissionPage"));
@@ -34,7 +34,6 @@ const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage"));
 const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage"));
 const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage"));
 const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage"));
-const ServicesPage = lazy(() => import("./pages/owner/ServicesPage"));
 const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage"));
 const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage"));
 const UsersPage = lazy(() => import("./pages/owner/UsersPage"));
@@ -88,19 +87,26 @@ const Protected = () => {
   if (!auth) return <Navigate to="/login" replace />;
   const perms = auth.membership?.permissions || {};
   const flags = auth.membership?.featureFlags || {};
+  const salonRole = auth.membership?.salonRole || "";
   const can = (key, action = "view") => Array.isArray(perms[key]) && perms[key].includes(action);
   const enabled = (key) => flags[key] !== false;
+  const shouldShowMyWorkspace = salonRole && salonRole !== "SALON_OWNER";
+  const myWorkspaceItems = [
+    can("myDashboard") && { label: "My Dashboard", to: "/admin/my-dashboard" },
+    can("myAppointments") && enabled("appointments") && { label: "My Appointments", to: "/admin/my-appointments" },
+    can("mySchedule") && enabled("appointments") && { label: "My Schedule", to: "/admin/my-schedule" },
+    can("myCommission") && { label: "My Commission", to: "/admin/my-commission" },
+    can("myProfile") && { label: "My Profile", to: "/admin/my-profile" }
+  ].filter(Boolean);
   const groups = [
         {
           label: "Operations",
           hint: "Daily flow",
           items: [
-            can("dashboard") && { label: "Owner Dashboard", to: "/admin/dashboard" },
-            can("invoices") && { label: "Invoices", to: "/admin/invoices" },
-            can("payments") && { label: "Payments", to: "/admin/payments" },
-            can("inventory") && enabled("inventory") && { label: "Products", to: "/admin/inventory" },
-            can("memberships") && { label: "Memberships / Packages", to: "/admin/memberships" },
-            can("payroll") && { label: "Payroll", to: "/admin/payroll" }
+            can("inventory") && enabled("inventory") && { label: "Products", to: "/admin/product-categories" },
+            can("packages") && { label: "Packages Manage", to: "/admin/packages" },
+            can("memberships") && { label: "Membership Manage", to: "/admin/memberships" },
+            can("services") && { label: "Services", to: "/admin/services" }
           ].filter(Boolean)
         },
         {
@@ -112,6 +118,10 @@ const Protected = () => {
               label: "Services",
               to: "/admin/services"
             },
+            can("services") && {
+              label: "Service Categories",
+              to: "/admin/service-categories"
+            },
             can("staff") && {
               label: "Staff Details",
               to: "/admin/users"
@@ -122,62 +132,39 @@ const Protected = () => {
             }
           ].filter(Boolean)
         },
-        {
-          label: "CRM & Revenue",
-          hint: "Customer growth",
+
+        enabled("expenses") && can("expenses") && {
+          label: "Expenses",
+          hint: "Outflow & Accounts",
           items: [
-            can("settings") && { label: "Settings Hub", to: "/admin/settings/generic" },
-            enabled("campaigns") && can("campaigns") && { label: "Campaigns", to: "/admin/campaigns" },
-            enabled("customerPortal") && can("customerPortalSettings") && { label: "Customer Portal Settings", to: "/admin/customer-portal-settings" }
-          ].filter(Boolean)
+            { label: "Dashboard", to: "/admin/expenses/dashboard" },
+            { label: "Types", to: "/admin/expenses/types" },
+            { label: "Accounts", to: "/admin/expenses/accounts" }
+          ]
         },
-        {
-          label: "Digital & Online",
-          hint: "Catalog and sales",
+        enabled("enquiries") && can("enquiries") && {
+          label: "Enquiries",
+          hint: "Lead pipeline",
           items: [
-            { label: "Website Editor", to: "/admin/website-editor" },
-            enabled("onlineOrders") && can("orders") && {
-              label: "Online Orders",
-              to: "/admin/orders"
-            },
-            enabled("campaignTemplates") && can("campaignTemplates") && { label: "Campaign Templates", to: "/admin/campaign-templates" },
-            enabled("messageTemplates") && can("messageTemplates") && { label: "Message Templates", to: "/admin/message-templates" },
-            enabled("customerPortal") && can("customerPortalSettings") && { label: "Customer Portal Settings", to: "/admin/customer-portal-settings" }
-          ].filter(Boolean)
-        },
-        {
-          label: "My Workspace",
-          hint: "Personal view",
-          items: [
-            can("myDashboard") && { label: "My Dashboard", to: "/admin/my-dashboard" },
-            can("myAppointments") && { label: "My Appointments", to: "/admin/my-appointments" },
-            can("mySchedule") && { label: "My Schedule", to: "/admin/my-schedule" },
-            can("myCommission") && { label: "My Commission", to: "/admin/my-commission" },
-            can("myPayroll") && { label: "My Payroll", to: "/admin/my-payroll" },
-            can("myProfile") && { label: "My Profile", to: "/admin/my-profile" }
-          ].filter(Boolean)
+            { label: "Enquiries", to: "/admin/enquiries" }
+
+
+          ]
         },
         {
           label: "System",
           hint: "Help and config",
           items: [
-            enabled("enquiries") && can("enquiries") && {
-              label: "Enquiries",
-              to: "/admin/enquiries"
-            },
-            enabled("expenses") && can("expenses") && {
-              label: "Expenses",
-              to: "/admin/expenses"
-            },
-            enabled("auditLogs") && can("auditLogs") && { label: "Audit Logs", to: "/admin/audit-logs" },
-            can("support") && { label: "Support Tickets", to: "/admin/support-tickets" },
-            can("settings") && {
+
+
+
+            can("settings", "edit") && {
               label: "Settings",
               to: "/admin/settings/generic"
             }
           ].filter(Boolean)
         }
-      ].filter((group) => group.items.length);
+      ].filter((group) => Array.isArray(group?.items) && group.items.length > 0);
 
   const settingsGroups = [
     {
@@ -199,9 +186,11 @@ const Protected = () => {
       label: "Settings",
       hint: "Business configuration",
       defaultOpen: true,
-      items: SETTINGS_WORKSPACE_SECTIONS.map((item) => ({ label: item.label, to: item.to }))
+      items: can("settings", "edit")
+        ? SETTINGS_WORKSPACE_SECTIONS.map((item) => ({ label: item.label, to: item.to }))
+        : []
     }
-  ].filter((group) => group.items.length);
+  ].filter((group) => Array.isArray(group?.items) && group.items.length > 0);
 
   const manageGroups = [
     {
@@ -223,7 +212,6 @@ const Protected = () => {
         },
         { label: "Memberships / Packages", to: "/admin/memberships", children: [{ label: "Packages", to: "/admin/packages" }] },
         { label: "Loyalty / Coupons", to: "/admin/loyalty", children: [{ label: "Coupons", to: "/admin/coupons" }, { label: "Gift Cards", to: "/admin/gift-cards" }] },
-        { label: "Customer Portal", to: "/admin/customer-portal-settings" },
         {
           label: "WhatsApp / Notifications",
           to: "/admin/whatsapp",
@@ -233,18 +221,6 @@ const Protected = () => {
             { label: "Automations", to: "/admin/whatsapp/automations" }
           ]
         },
-        {
-          label: "Ecommerce / Orders",
-          to: "/admin/order-dashboard",
-          children: [
-            { label: "All Orders", to: "/admin/order-dashboard" },
-            { label: "New", to: "/admin/order-dashboard/new" },
-            { label: "Accepted", to: "/admin/order-dashboard/accepted" },
-            { label: "Ready", to: "/admin/order-dashboard/ready" }
-          ]
-        },
-        { label: "Website Editor", to: "/admin/website-editor" },
-        { label: "Digital Catalog", to: "/site/demo" },
         { label: "Payments", to: "/admin/payments" },
         { label: "Campaigns", to: "/admin/campaigns" },
         { label: "Reports Hub", to: "/admin/reports-hub" },
@@ -253,17 +229,17 @@ const Protected = () => {
     }
   ];
 
-  const sidebarMode = location.pathname.startsWith("/admin/settings")
-    ? "settings"
-    : location.pathname.startsWith("/admin/manage")
-      ? "manage"
-      : "default";
-
-  const visibleGroups = sidebarMode === "settings"
-    ? settingsGroups
-    : sidebarMode === "manage"
-      ? manageGroups
-      : groups;
+  const visibleGroups = [
+    ...(shouldShowMyWorkspace && myWorkspaceItems.length
+      ? [{
+          label: "My Workspace",
+          hint: "Personal pages",
+          defaultOpen: true,
+          items: myWorkspaceItems
+        }]
+      : []),
+    ...groups
+  ];
 
   return (
     <div className={`app-shell ${!sidebarExpanded ? "sidebar-collapsed" : ""}`}>
@@ -275,7 +251,7 @@ const Protected = () => {
         onToggleSidebar={() => setSidebarExpanded((current) => !current)}
       />
       <div className="app-content-wrapper">
-        <Topbar auth={auth} sidebarExpanded={sidebarExpanded} onToggleSidebar={() => setSidebarExpanded((current) => !current)} />
+        <Topbar auth={auth} sidebarExpanded={sidebarExpanded} onToggleSidebar={() => setSidebarExpanded((current) => !current)} onLogout={logout} />
         <main className="app-main">
           <Outlet />
         </main>
@@ -401,10 +377,13 @@ export default function App() {
           <Route path="/admin/pos-dashboard/:id" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
           <Route path="/admin/trends" element={<TrendsPage />} />
           <Route path="/admin/reports-hub" element={<ReportsHubPage />} />
-          <Route path="/admin/invoices" element={<OwnerRoute moduleKey="invoices" element={<InvoicesPage />} />} />
-          <Route path="/admin/invoices/:id" element={<OwnerRoute moduleKey="invoices" element={<InvoicesPage />} />} />
+          <Route path="/admin/invoices" element={<Navigate to="/admin/pos-dashboard" replace />} />
+          <Route path="/admin/invoices/:id" element={<Navigate to="/admin/pos-dashboard" replace />} />
           <Route path="/admin/payments" element={<OwnerRoute moduleKey="payments" element={<PaymentsPage />} />} />
+          <Route path="/admin/product-categories" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<ProductCategoriesPage />} />} />
           <Route path="/admin/inventory" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
+          <Route path="/admin/inventory/approval" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
+          <Route path="/admin/inventory/reconciliation" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
           <Route path="/admin/inventory/products/create" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
           <Route path="/admin/inventory/products" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
           <Route path="/admin/inventory/products/:id/edit" element={<OwnerRoute moduleKey="inventory" featureKey="inventory" element={<InventoryPage />} />} />
@@ -439,6 +418,9 @@ export default function App() {
           <Route path="/admin/enquiries/follow-ups" element={<OwnerRoute moduleKey="enquiries" featureKey="enquiries" element={<EnquiriesPage />} />} />
           <Route path="/admin/enquiries/reports" element={<OwnerRoute moduleKey="enquiries" featureKey="enquiries" element={<EnquiriesPage />} />} />
           <Route path="/admin/expenses" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
+          <Route path="/admin/expenses/dashboard" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
+          <Route path="/admin/expenses/types" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
+          <Route path="/admin/expenses/accounts" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
           <Route path="/admin/expenses/categories" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
           <Route path="/admin/expenses/reports" element={<OwnerRoute moduleKey="expenses" featureKey="expenses" element={<ExpensesPage />} />} />
           <Route path="/admin/payroll" element={<OwnerRoute moduleKey="payroll" featureKey="payroll" element={<PayrollPage />} />} />
@@ -496,20 +478,20 @@ export default function App() {
           <Route path="/admin/message-templates/:type/edit" element={<OwnerRoute moduleKey="messageTemplates" featureKey="messageTemplates" element={<MessageTemplatesPage />} />} />
           <Route path="/admin/customer-portal-settings" element={<OwnerRoute moduleKey="customerPortalSettings" featureKey="customerPortal" element={<CustomerPortalSettingsPage />} />} />
           <Route path="/admin/support-tickets" element={<OwnerRoute moduleKey="support" element={<SupportTicketsPage />} />} />
-          <Route path="/admin/settings" element={<Navigate to="/admin/settings/generic" replace />} />
+          <Route path="/admin/settings" element={<OwnerRoute moduleKey="settings" action="edit" element={<Navigate to="/admin/settings/generic" replace />} />} />
           {SETTINGS_WORKSPACE_SECTIONS.map((item) => (
-            <Route key={item.to} path={item.to} element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
+            <Route key={item.to} path={item.to} element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
           ))}
-          <Route path="/admin/settings/business" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/invoices" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/payments" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/booking" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/notifications" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/whatsapp" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/settings/advanced" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
-          <Route path="/admin/website-editor" element={<OwnerRoute moduleKey="settings" element={<WebsiteEditorPage />} />} />
-          <Route path="/admin/manage" element={<OwnerRoute moduleKey="settings" element={<ManagePage />} />} />
-          <Route path="/admin/settings/payroll" element={<OwnerRoute moduleKey="settings" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/business" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/invoices" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/payments" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/booking" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/notifications" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/whatsapp" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/settings/advanced" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
+          <Route path="/admin/website-editor" element={<OwnerRoute moduleKey="settings" action="edit" element={<WebsiteEditorPage />} />} />
+          <Route path="/admin/manage" element={<OwnerRoute moduleKey="settings" action="edit" element={<ManagePage />} />} />
+          <Route path="/admin/settings/payroll" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
           <Route path="/admin/my-dashboard" element={<OwnerRoute moduleKey="myDashboard" element={<MyDashboardPage />} />} />
           <Route path="/admin/my-appointments" element={<OwnerRoute moduleKey="myAppointments" featureKey="appointments" element={<MyAppointmentsPage />} />} />
           <Route path="/admin/my-schedule" element={<OwnerRoute moduleKey="mySchedule" featureKey="appointments" element={<MySchedulePage />} />} />
@@ -520,7 +502,7 @@ export default function App() {
           <Route path="/services" element={<Navigate to="/admin/services" replace />} />
           <Route path="/customers" element={<Navigate to="/admin/customers" replace />} />
           <Route path="/roles" element={<Navigate to="/admin/roles-permissions" replace />} />
-          <Route path="/invoices" element={<Navigate to="/admin/invoices" replace />} />
+          <Route path="/invoices" element={<Navigate to="/admin/pos-dashboard" replace />} />
           <Route path="/reports" element={<Navigate to="/admin/reports" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

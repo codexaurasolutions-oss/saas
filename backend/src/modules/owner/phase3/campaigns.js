@@ -54,10 +54,10 @@ export const registerCampaignRoutes = (ownerRouter) => {
         ...(audienceFilter ? { audienceFilter } : {}),
         ...(q ? {
           OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { message: { contains: q, mode: "insensitive" } },
-            { type: { contains: q, mode: "insensitive" } },
-            { audienceFilter: { contains: q, mode: "insensitive" } }
+            { name: { contains: q } },
+            { message: { contains: q } },
+            { type: { contains: q } },
+            { audienceFilter: { contains: q } }
           ]
         } : {})
       },
@@ -193,7 +193,7 @@ export const registerCampaignRoutes = (ownerRouter) => {
       where: {
         campaignId: row.id,
         ...(eventType ? { eventType } : {}),
-        ...(q ? { details: { contains: q, mode: "insensitive" } } : {})
+        ...(q ? { details: { contains: q } } : {})
       },
       orderBy: { createdAt: "desc" }
     }));
@@ -207,7 +207,7 @@ export const registerCampaignRoutes = (ownerRouter) => {
       where: {
         campaignId: row.id,
         ...(eventType ? { eventType } : {}),
-        ...(q ? { details: { contains: q, mode: "insensitive" } } : {})
+        ...(q ? { details: { contains: q } } : {})
       },
       orderBy: { createdAt: "desc" }
     });

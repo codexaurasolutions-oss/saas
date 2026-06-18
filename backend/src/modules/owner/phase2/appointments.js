@@ -304,14 +304,14 @@ export const registerAppointmentRoutes = (ownerRouter) => {
         const lineTotal = unitPrice + (unitPrice * taxPct) / 100;
         const firstStaff = item.assignedStaff[0]?.userSalonId || null;
         return {
-          serviceId: item.serviceId,
-          staffUserSalonId: firstStaff,
           serviceName: item.service.name,
           staffName: item.assignedStaff.map((assignment) => assignment.userSalon.user.name).join(", "),
           qty: 1,
           unitPrice,
           taxPct,
-          lineTotal
+          lineTotal,
+          ...(item.serviceId ? { serviceId: item.serviceId } : {}),
+          ...(firstStaff ? { staffUserSalon: { connect: { id: firstStaff } } } : {})
         };
       });
       const subtotal = items.reduce((sum, item) => sum + toAmount(item.unitPrice) * item.qty, 0);

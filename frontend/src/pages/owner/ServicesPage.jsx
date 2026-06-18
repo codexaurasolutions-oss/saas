@@ -9,6 +9,7 @@ const emptyForm = {
   price: 0,
   durationMin: 30,
   branchId: "",
+  categoryId: "",
   description: "",
   taxRate: 0,
   commissionPct: 0,
@@ -17,9 +18,21 @@ const emptyForm = {
   isPopular: false
 };
 
+const DURATION_OPTIONS = [
+  { value: 15, label: "15 min" },
+  { value: 30, label: "30 min" },
+  { value: 45, label: "45 min" },
+  { value: 60, label: "1 hour" },
+  { value: 120, label: "2 hours" },
+  { value: 180, label: "3 hours" },
+  { value: 240, label: "4 hours" },
+  { value: 300, label: "5 hours" }
+];
+
 export default function ServicesPage() {
   const [rows, setRows] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
@@ -28,12 +41,14 @@ export default function ServicesPage() {
   const title = useMemo(() => (editingId ? "Update Service" : "Add Service"), [editingId]);
 
   const load = async (branchId = selectedBranch) => {
-    const [servicesResponse, branchesResponse] = await Promise.all([
+    const [servicesResponse, branchesResponse, catsResponse] = await Promise.all([
       api.get("/owner/services", { params: branchId ? { branchId } : {} }),
-      api.get("/owner/branches")
+      api.get("/owner/branches"),
+      api.get("/owner/service-categories")
     ]);
     setRows(servicesResponse.data);
     setBranches(branchesResponse.data);
+    setCategories(catsResponse.data);
     setStatus((current) => ({ ...current, loading: false }));
   };
 
@@ -41,11 +56,13 @@ export default function ServicesPage() {
     let active = true;
     Promise.all([
       api.get("/owner/services"),
-      api.get("/owner/branches")
-    ]).then(([servicesResponse, branchesResponse]) => {
+      api.get("/owner/branches"),
+      api.get("/owner/service-categories")
+    ]).then(([servicesResponse, branchesResponse, catsResponse]) => {
       if (!active) return;
       setRows(servicesResponse.data);
       setBranches(branchesResponse.data);
+      setCategories(catsResponse.data);
       setStatus((current) => ({ ...current, loading: false }));
     });
     return () => {
@@ -58,11 +75,13 @@ export default function ServicesPage() {
     const params = selectedBranch ? { branchId: selectedBranch } : {};
     Promise.all([
       api.get("/owner/services", { params }),
-      api.get("/owner/branches")
-    ]).then(([servicesResponse, branchesResponse]) => {
+      api.get("/owner/branches"),
+      api.get("/owner/service-categories")
+    ]).then(([servicesResponse, branchesResponse, catsResponse]) => {
       if (!active) return;
       setRows(servicesResponse.data);
       setBranches(branchesResponse.data);
+      setCategories(catsResponse.data);
       setStatus((current) => ({ ...current, loading: false }));
     });
     return () => {
@@ -83,6 +102,7 @@ export default function ServicesPage() {
       price: Number(form.price),
       durationMin: Number(form.durationMin),
       branchId: form.branchId || undefined,
+      categoryId: form.categoryId || null,
       taxRate: Number(form.taxRate || 0),
       commissionPct: Number(form.commissionPct || 0)
     };
@@ -114,6 +134,7 @@ export default function ServicesPage() {
       price: Number(service.price || 0),
       durationMin: Number(service.durationMin || 30),
       branchId: service.branchId || "",
+      categoryId: service.categoryId || "",
       description: service.description || "",
       taxRate: Number(service.taxRate || 0),
       commissionPct: Number(service.commissionPct || 0),
@@ -142,18 +163,31 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      <div className="two-col">
+      <div className="settings-section-grid">
         <div className="panel-card">
           <h3>{title}</h3>
           <form onSubmit={submit} className="form-grid">
             <input placeholder="Service name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             <input type="number" min="0" placeholder="Price" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} />
-            <input type="number" min="1" placeholder="Duration (minutes)" value={form.durationMin} onChange={(event) => setForm({ ...form, durationMin: event.target.value })} />
+            <select value={form.durationMin} onChange={(event) => setForm({ ...form, durationMin: event.target.value })}>
+              {DURATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
             <select value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}>
               <option value="">All branches / salon wide</option>
               {branches.map((branch) => (
                 <option key={branch.id} value={branch.id}>{branch.name}</option>
               ))}
+            </select>
+            <select value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>
+              <option value="">No Category</option>
+              {(categories || []).flatMap(cat => [
+                <option key={cat.id} value={cat.id} style={{ fontWeight: 700 }}>{cat.name}</option>,
+                ...(cat.children || []).map(sub => (
+                  <option key={sub.id} value={sub.id}>&nbsp;&nbsp;{cat.name} / {sub.name}</option>
+                ))
+              ])}
             </select>
             <input type="number" min="0" placeholder="Tax rate %" value={form.taxRate} onChange={(event) => setForm({ ...form, taxRate: event.target.value })} />
             <input type="number" min="0" placeholder="Commission %" value={form.commissionPct} onChange={(event) => setForm({ ...form, commissionPct: event.target.value })} />
@@ -202,6 +236,7 @@ export default function ServicesPage() {
                 <strong>{service.name}</strong>
                 <div className="item-meta">Price {String(service.price)} | Duration {service.durationMin} min | Tax {String(service.taxRate || 0)}%</div>
                 <div className="item-meta">{service.branch?.name || "Available across branches"}</div>
+                <div className="item-meta">Category: {service.category?.name || "Uncategorized"}</div>
                 <div className="item-meta">Commission {String(service.commissionPct || 0)}% | Booking {service.onlineBookingEnabled ? "Enabled" : "Disabled"}</div>
                 <div className="item-meta">{service.description || "No description added"}</div>
               </div>

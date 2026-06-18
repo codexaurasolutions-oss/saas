@@ -6,6 +6,7 @@ import { createAuditLog } from "../../lib/phase4.js";
 import { patchRouterForAsync } from "../../lib/async-handler.js";
 import { requireAuth, requireMaintenanceAccess, requireSalonContext, requireSalonPermission } from "../../middlewares/rbac.js";
 import { schemas, validate } from "../../middlewares/validate.js";
+
 import { registerPhase2OwnerRoutes } from "./phase2/index.js";
 import { registerPhase3OwnerRoutes } from "./phase3/index.js";
 import { registerPhase4OwnerRoutes } from "./phase4/index.js";
@@ -257,10 +258,17 @@ ownerRouter.patch("/branches/:id/archive", requireSalonPermission("branches", "d
 });
 
 ownerRouter.get("/service-categories", requireSalonPermission("services", "view"), async (req, res) => {
-  res.json(await prisma.serviceCategory.findMany({ where: { salonId: req.salonId, isActive: true }, orderBy: { createdAt: "desc" } }));
+  res.json(await prisma.serviceCategory.findMany({ where: { salonId: req.salonId, isActive: true, parentId: null }, include: { children: { where: { isActive: true }, include: { services: { where: { isActive: true } } } }, services: { where: { isActive: true } }, }, orderBy: { createdAt: "desc" } }));
 });
-ownerRouter.post("/service-categories", requireSalonPermission("services", "create"), validate(schemas.serviceCategory), async (req, res) => {
-  res.status(201).json(await prisma.serviceCategory.create({ data: { salonId: req.salonId, ...req.body } }));
+ownerRouter.post("/service-categories", requireSalonPermission("services", "create"), async (req, res) => {
+  const { name, parentId } = req.body;
+  if (!name || name.length < 2) return res.status(400).json({ message: "Name must be at least 2 characters" });
+  const where = { salonId: req.salonId, name: name.trim(), isActive: true, parentId: parentId || null };
+  const existing = await prisma.serviceCategory.findFirst({ where });
+  if (existing) return res.status(409).json({ message: "Category with this name already exists" });
+  const data = { salonId: req.salonId, name: name.trim() };
+  if (parentId) data.parentId = parentId;
+  res.status(201).json(await prisma.serviceCategory.create({ data, include: { children: true } }));
 });
 ownerRouter.patch("/service-categories/:id", requireSalonPermission("services", "edit"), validate(schemas.serviceCategory), async (req, res) => {
   const row = await findScoped("serviceCategory", req.salonId, req.params.id);
@@ -277,24 +285,26 @@ ownerRouter.get("/services", requireSalonPermission("services", "view"), async (
   const branchId = normalizeBranchId(req.query.branchId);
   res.json(await prisma.service.findMany({
     where: { salonId: req.salonId, isActive: true, ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}) },
-    include: { branch: true },
+    include: { branch: true, category: true },
     orderBy: { createdAt: "desc" }
   }));
 });
 ownerRouter.post("/services", requireSalonPermission("services", "create"), validate(schemas.service), async (req, res) => {
   const branchId = normalizeBranchId(req.body.branchId);
   if (branchId) await ensureBranch(req.salonId, branchId);
+  const categoryId = req.body.categoryId || null;
   res.status(201).json(await prisma.service.create({
     data: {
       ...req.body,
       branchId,
+      categoryId,
       price: toAmount(req.body.price),
       durationMin: Number(req.body.durationMin),
       taxRate: req.body.taxRate != null ? toAmount(req.body.taxRate) : null,
       commissionPct: req.body.commissionPct != null ? toAmount(req.body.commissionPct) : null,
       salonId: req.salonId
     },
-    include: { branch: true }
+    include: { branch: true, category: true }
   }));
 });
 ownerRouter.patch("/services/:id", requireSalonPermission("services", "edit"), validate(schemas.service), async (req, res) => {
@@ -307,12 +317,13 @@ ownerRouter.patch("/services/:id", requireSalonPermission("services", "edit"), v
     data: {
       ...req.body,
       branchId,
+      categoryId: req.body.categoryId !== undefined ? req.body.categoryId : row.categoryId,
       price: toAmount(req.body.price),
       durationMin: Number(req.body.durationMin),
       taxRate: req.body.taxRate != null ? toAmount(req.body.taxRate) : null,
       commissionPct: req.body.commissionPct != null ? toAmount(req.body.commissionPct) : null
     },
-    include: { branch: true }
+    include: { branch: true, category: true }
   }));
 });
 ownerRouter.patch("/services/:id/archive", requireSalonPermission("services", "delete"), async (req, res) => {
@@ -333,10 +344,10 @@ ownerRouter.get("/customers", requireSalonPermission("customers", "view"), async
       ...(branchId ? { invoices: { some: { branchId } } } : {}),
       ...(query ? {
         OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } },
-          { source: { contains: query, mode: "insensitive" } }
+          { name: { contains: query } },
+          { phone: { contains: query } },
+          { email: { contains: query } },
+          { source: { contains: query } }
         ]
       } : {}),
       ...(filter === "high_spender" ? { totalSpend: { gte: 10000 } } : {}),
@@ -542,11 +553,11 @@ ownerRouter.get("/support-tickets", requireSalonPermission("support", "view"), a
       ...(priority ? { priority } : {}),
       ...(q ? {
         OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { description: { contains: q, mode: "insensitive" } },
-          { category: { contains: q, mode: "insensitive" } },
-          { internalNote: { contains: q, mode: "insensitive" } },
-          { assignedAgentName: { contains: q, mode: "insensitive" } }
+          { title: { contains: q } },
+          { description: { contains: q } },
+          { category: { contains: q } },
+          { internalNote: { contains: q } },
+          { assignedAgentName: { contains: q } }
         ]
       } : {})
     },
@@ -658,6 +669,133 @@ ownerRouter.post("/settings", requireSalonPermission("settings", "edit"), valida
   });
   res.status(201).json(row);
 });
+
+ownerRouter.get("/website/config", requireSalonPermission("settings", "view"), async (req, res) => {
+  res.json({ heroTitle: "", heroSubtitle: "", heroImage: "" });
+});
+
+ownerRouter.post("/website/config", requireSalonPermission("settings", "edit"), async (req, res) => {
+  res.json({ heroTitle: req.body.heroTitle || "", heroSubtitle: req.body.heroSubtitle || "", heroImage: req.body.heroImage || "" });
+});
+
+ownerRouter.get("/reports/trends", requireSalonPermission("reports", "view"), async (req, res) => {
+  const range = req.query.range || "7D";
+
+  let days = 7;
+  if (range === "1D")  days = 1;
+  if (range === "14D") days = 14;
+  if (range === "1M")  days = 30;
+  if (range === "2M")  days = 60;
+  if (range === "YTD") days = Math.ceil((new Date() - new Date(new Date().getFullYear(), 0, 1)) / 86400000) || 1;
+  if (range === "1Y")  days = 365;
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  startDate.setHours(0,0,0,0);
+
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      salonId: req.salonId,
+      status: "PAID",
+      createdAt: { gte: startDate }
+    },
+    include: {
+      items: true
+    }
+  });
+
+  let serviceRev = 0, productRev = 0, packageRev = 0, membershipRev = 0;
+
+  invoices.forEach(inv => {
+    inv.items.forEach(item => {
+      const type  = item.itemType || "SERVICE";  // fixed: itemType not type
+      const total = Number(item.lineTotal || 0); // fixed: lineTotal not total
+      if (type === "SERVICE")    serviceRev    += total;
+      if (type === "PRODUCT")    productRev    += total;
+      if (type === "PACKAGE")    packageRev    += total;
+      if (type === "MEMBERSHIP") membershipRev += total;
+    });
+  });
+
+  const totalRev = serviceRev + productRev + packageRev + membershipRev;
+
+  const revenueSplit = [
+    { name: "Total", value: totalRev, fill: "#6366f1" },
+    { name: "Service", value: serviceRev, fill: "#3b82f6" },
+    { name: "Product", value: productRev, fill: "#10b981" },
+    { name: "Package", value: packageRev, fill: "#f59e0b" },
+    { name: "Membership", value: membershipRev, fill: "#ec4899" },
+    { name: "Gift Card", value: 0, fill: "#8b5cf6" }
+  ];
+
+  // daily trend line
+  const dateMap = {};
+  const totalDays = Math.max(days, 1);
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (totalDays - 1 - i));
+    const dateStr = d.toISOString().slice(0, 10);
+    dateMap[dateStr] = { date: dateStr, total: 0, service: 0, product: 0, package: 0, membership: 0 };
+  }
+
+  invoices.forEach(inv => {
+    const dStr = inv.createdAt.toISOString().slice(0, 10);
+    if (dateMap[dStr]) {
+      inv.items.forEach(item => {
+        const type = item.itemType || "SERVICE";
+        const t    = Number(item.lineTotal || 0);
+        dateMap[dStr].total += t;
+        if (type === "SERVICE")    dateMap[dStr].service    += t;
+        if (type === "PRODUCT")    dateMap[dStr].product    += t;
+        if (type === "PACKAGE")    dateMap[dStr].package    += t;
+        if (type === "MEMBERSHIP") dateMap[dStr].membership += t;
+      });
+    }
+  });
+
+  // top services
+  const serviceMap = {};
+  invoices.forEach(inv => {
+    inv.items.filter(i => (i.itemType || "SERVICE") === "SERVICE").forEach(item => {
+      const name = item.serviceName || "Unknown";
+      serviceMap[name] = (serviceMap[name] || 0) + Number(item.lineTotal || 0);
+    });
+  });
+  const topServices = Object.entries(serviceMap)
+    .map(([name, revenue]) => ({ name, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  // top staff
+  const staffMap = {};
+  invoices.forEach(inv => {
+    inv.items.forEach(item => {
+      if (!item.staffName) return;
+      staffMap[item.staffName] = (staffMap[item.staffName] || 0) + Number(item.lineTotal || 0);
+    });
+  });
+  const topStaff = Object.entries(staffMap)
+    .map(([name, revenue]) => ({ name, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  res.json({
+    revenueSplit,
+    trendLine:   Object.values(dateMap),
+    topServices,
+    topStaff,
+    summary: {
+      totalInvoices: invoices.length,
+      totalRevenue:  totalRev,
+      avgBillValue:  invoices.length ? Math.round(totalRev / invoices.length) : 0,
+    }
+  });
+});
+
+
+
+
+
 
 registerPhase2OwnerRoutes(ownerRouter);
 registerPhase3OwnerRoutes(ownerRouter);

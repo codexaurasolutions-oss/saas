@@ -460,18 +460,23 @@ model Branch {
 }
 
 model ServiceCategory {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   salonId   String
   name      String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  salon     Salon    @relation(fields: [salonId], references: [id])
+  parentId  String?
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  salon     Salon            @relation(fields: [salonId], references: [id])
+  parent    ServiceCategory? @relation("CategoryTree", fields: [parentId], references: [id])
+  children  ServiceCategory[] @relation("CategoryTree")
+  services  Service[]
 }
 
 model Service {
   id                   String                    @id @default(cuid())
   salonId              String
   branchId             String?
+  categoryId           String?
   name                 String
   price                Decimal                   @db.Decimal(10, 2)
   durationMin          Int
@@ -486,6 +491,7 @@ model Service {
   createdAt            DateTime                  @default(now())
   salon                Salon                     @relation(fields: [salonId], references: [id])
   branch               Branch?                   @relation(fields: [branchId], references: [id])
+  category             ServiceCategory?          @relation(fields: [categoryId], references: [id])
   staffAssignments     StaffServiceAssignment[]
   appointmentItems     AppointmentService[]
   membershipPlans      MembershipPlanService[]

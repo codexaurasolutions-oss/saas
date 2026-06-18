@@ -62,9 +62,10 @@ export default function PosPage() {
 
   const [showPkgModal, setShowPkgModal] = useState(false);
   const [pkgModalPkg, setPkgModalPkg] = useState(null);
-  const [pkgDraft, setPkgDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [] });
+  const [pkgDraft, setPkgDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [], customProducts: [] });
   const [pkgSearch, setPkgSearch] = useState("");
   const [pkgServiceSearch, setPkgServiceSearch] = useState("");
+  const [pkgProductSearch, setPkgProductSearch] = useState("");
   const [showMemModal, setShowMemModal] = useState(false);
   const [memModalMem, setMemModalMem] = useState(null);
   const [memDraft, setMemDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [] });
@@ -340,35 +341,14 @@ export default function PosPage() {
       price: String(p.price || ""),
       validityDays: String(p.validityDays || "30"),
       purchaseDate: new Date().toISOString().slice(0, 10),
-      customServices: (p.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 }))
+      customServices: (p.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 })),
+      customProducts: []
     });
     setPkgServiceSearch("");
     setShowPkgModal(true);
   };
 
   
-  const handleAddGcToCart = () => {
-    const gc = gcModalGc;
-    const isCustom = gc?.id === "CUSTOM";
-    const gcCode = isCustom ? `GC-${Date.now().toString(36).toUpperCase()}` : (gc?.code || `GC-${Date.now().toString(36).toUpperCase()}`);
-    setForm(c => ({
-      ...c,
-      items: [...c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId || i.itemType === "GIFT_CARD"), {
-        itemType: "GIFT_CARD",
-        serviceName: gc?.name || "Custom Gift Card",
-        gcCode,
-        staffUserSalonId: gcDraft.staffId || "",
-        qty: 1,
-        unitPrice: Number(gcDraft.price || 0),
-        taxPct: 0,
-        validityDays: Number(gcDraft.validityDays || 365),
-        purchaseDate: gcDraft.purchaseDate,
-        isCustom: true
-      }]
-    }));
-    setShowGcModal(false);
-  };
-
   const handleAddPkgToCart = () => {
     const pkg = pkgModalPkg;
     setForm(c => ({
@@ -387,6 +367,7 @@ export default function PosPage() {
         validityDays: Number(pkgDraft.validityDays || 30),
         purchaseDate: pkgDraft.purchaseDate,
         customServices: pkgDraft.customServices,
+        customProducts: pkgDraft.customProducts,
         isCustom: true
       }]
     }));
@@ -463,7 +444,7 @@ export default function PosPage() {
   const validateBeforeSubmit = useCallback((mode) => {
     if (!form.customerId) return "Please select a guest.";
     if (!form.branchId) return "Please select a branch.";
-    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD");
+    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
     if (!activeItems.length) return "Please add at least one item to the invoice.";
     for (const item of activeItems) {
       if (item.itemType === "SERVICE") {
@@ -473,7 +454,6 @@ export default function PosPage() {
       if (item.itemType === "PRODUCT" && !item.productId) return "Please select a valid product.";
       if (item.itemType === "MEMBERSHIP" && !item.membershipPlanId) return "Please select a membership plan.";
       if (item.itemType === "PACKAGE" && !item.packageId) return "Please select a package.";
-      if (item.itemType === "GIFT_CARD" && Number(item.unitPrice || 0) <= 0) return "Gift card amount must be greater than zero.";
       if (Number(item.qty || 0) <= 0) return "Quantity must be greater than zero.";
     }
     if (mode === "complete") {
@@ -485,7 +465,7 @@ export default function PosPage() {
   }, [form, totals.total]);
 
   const buildInvoicePayload = useCallback((mode) => {
-    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD");
+    const activeItems = form.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId);
     
     let finalPayments = [];
     if (mode === "complete") {
@@ -654,8 +634,7 @@ export default function PosPage() {
         <div className="pos-topbar-right">
           <button className={`pos-top-tab ${tab === "billing" ? "active" : ""}`} onClick={() => setTab("billing")}>Add Service</button>
           <button className={`pos-top-tab ${tab === "products" ? "active" : ""}`} onClick={() => setTab("products")}>Add Product</button>
-          <button className="pos-top-tab" onClick={() => { setPkgModalPkg(null); setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowPkgModal(true); }}>Add Package</button>
-            <button className="pos-top-tab" onClick={() => { setGcModalGc({ id: "CUSTOM", name: "CUSTOM GIFT CARD" }); setGcDraft({ staffId: "", price: "", validityDays: "30", purchaseDate: new Date().toISOString().slice(0,10) }); setShowGcModal(true); }}>Add GiftCard</button>
+          <button className="pos-top-tab" onClick={() => { setPkgModalPkg(null); setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [], customProducts: [] }); setShowPkgModal(true); }}>Add Package</button>
           <button className="pos-top-tab" onClick={() => { setMemModalMem(null); setMemDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowMemModal(true); }}>Add Membership</button>
         </div>
       </div>
@@ -888,30 +867,6 @@ export default function PosPage() {
                 </thead>
                 <tbody>
                   {form.items.map((item, index) => {
-                    if (item.itemType === "GIFT_CARD") {
-                      const price = toAmount(item.unitPrice);
-                      const qty = Number(item.qty) || 1;
-                      const subTotal = price * qty;
-                      return (
-                        <tr key={index}>
-                          <td style={{ color: "#334155" }}>{item.serviceName || "Gift Card"}</td>
-                          <td>
-                            <select className="pos-cart-select" value={item.staffUserSalonId || ""} onChange={(e) => updateItem(index, { staffUserSalonId: e.target.value })}>
-                              <option value="">Assign staff</option>
-                              {getEligibleStaffUsers(item).map((u) => <option key={u.id} value={u.id}>{u.user?.name}</option>)}
-                            </select>
-                          </td>
-                          <td><input className="pos-cart-input" type="number" min="1" value={item.qty} onChange={(e) => updateItem(index, { qty: Number(e.target.value || 1) })} /></td>
-                          <td>{price.toFixed(0)}</td>
-                          <td>{subTotal.toFixed(0)}</td>
-                          <td>-</td>
-                          <td>-</td>
-                          <td>-</td>
-                          <td>{subTotal.toFixed(0)}</td>
-                          <td><button className="pos-remove-btn" onClick={() => updateItem(index, { serviceId: "", productId: "", membershipPlanId: "", packageId: "" })}>&#x2715;</button></td>
-                        </tr>
-                      );
-                    }
                     if (!item.serviceId && !item.productId && !item.membershipPlanId && !item.packageId) return null;
                     const baseObj = item.itemType === "PRODUCT"
                       ? productLookup[item.productId]
@@ -931,7 +886,7 @@ export default function PosPage() {
                       <tr key={index}>
                         <td style={{ color: "#334155" }}>{baseObj.name}</td>
                         <td>
-                          {item.itemType === "SERVICE" || item.itemType === "PACKAGE" || item.itemType === "MEMBERSHIP" || item.itemType === "GIFT_CARD" ? (
+                          {item.itemType === "SERVICE" || item.itemType === "PACKAGE" || item.itemType === "MEMBERSHIP" ? (
                             <select className="pos-cart-select" value={item.staffUserSalonId || item.staffUserId || ""} onChange={(e) => updateItem(index, { staffUserSalonId: e.target.value, staffUserId: e.target.value })}>
                               <option value="">Assign staff</option>
                               {getEligibleStaffUsers(item).map((u) => <option key={u.id} value={u.id}>{u.user?.name}</option>)}
@@ -989,7 +944,7 @@ export default function PosPage() {
                       </tr>
                     );
                   })}
-                  {form.items.filter(item => item.serviceId || item.productId || item.membershipPlanId || item.packageId || item.itemType === "GIFT_CARD").length === 0 && (
+                   {form.items.filter(item => item.serviceId || item.productId || item.membershipPlanId || item.packageId).length === 0 && (
                     <tr>
                       <td colSpan="10" style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>
                         No items added yet. Click a service or product on the left to add.
@@ -1039,34 +994,6 @@ export default function PosPage() {
                   </div>
                 );
               })()}
-              {(() => {
-                const availableGiftCards = (context.giftCards || []).filter(gc => gc.balanceAmount > 0 || gc.originalAmount > 0);
-                if (availableGiftCards.length === 0) return null;
-                return (
-                  <div style={{ marginBottom: '12px', padding: '10px 14px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#92400e' }}>Gift Card Balance</span>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: '#92400e' }}>{availableGiftCards.length} card(s)</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>Card Code:</label>
-                      <select
-                        value={form.giftVoucherCode || ""}
-                        onChange={(e) => setForm(c => ({ ...c, giftVoucherCode: e.target.value }))}
-                        style={{ flex: 1, padding: '6px 10px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                      >
-                        <option value="">Select Gift Card</option>
-                        {availableGiftCards.map(gc => (
-                          <option key={gc.id} value={gc.code}>{gc.code} — {formatMoney(Number(gc.balanceAmount || gc.originalAmount || 0))}</option>
-                        ))}
-                      </select>
-                      {form.giftVoucherCode && (
-                        <button type="button" onClick={() => setForm(c => ({ ...c, giftVoucherCode: "" }))} style={{ padding: '6px 10px', fontSize: '11px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '6px', cursor: 'pointer', color: '#92400e', fontWeight: 600 }}>Clear</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h5 style={{ margin: 0 }}>Payment Details:</h5>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(Click Cash/Online to auto-fill full amount)</span>
@@ -1077,7 +1004,7 @@ export default function PosPage() {
                     setForm((current) => ({ ...current, payments: [{ mode: "ONLINE", amount: totals.total, note: "" }] }));
                   }}><svg width="16" height="16" style={{ color: "#10b981" }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Online</label>
                   <input type="number" placeholder="0.0" value={form.payments.find((payment) => payment.mode === "ONLINE")?.amount || ""} onChange={(e) => {
-                    const amount = e.target.value;
+                    const amount = Math.min(Number(e.target.value) || 0, totals.total);
                     setForm((current) => ({ ...current, payments: [{ mode: "ONLINE", amount, note: "" }] }));
                   }} />
                 </div>
@@ -1086,7 +1013,7 @@ export default function PosPage() {
                     setForm((current) => ({ ...current, payments: [{ mode: "CASH", amount: totals.total, note: "" }] }));
                   }}><svg width="16" height="16" style={{ color: "#64748b" }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> Cash</label>
                   <input type="number" placeholder="0.0" value={form.payments.find((payment) => payment.mode === "CASH")?.amount || ""} onChange={(e) => {
-                    const amount = e.target.value;
+                    const amount = Math.min(Number(e.target.value) || 0, totals.total);
                     setForm((current) => ({ ...current, payments: [{ mode: "CASH", amount, note: "" }] }));
                   }} />
                 </div>
@@ -1097,7 +1024,7 @@ export default function PosPage() {
                     setForm((current) => ({ ...current, payments: [{ mode: "BALANCE", amount: balance, note: "" }] }));
                   }}><svg width="16" height="16" style={{ color: "#f59e0b" }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> Balance</label>
                   <input type="number" placeholder="0.0" value={form.payments.find((payment) => payment.mode === "BALANCE")?.amount || ""} onChange={(e) => {
-                    const amount = e.target.value;
+                    const amount = Math.min(Number(e.target.value) || 0, totals.total);
                     setForm((current) => ({ ...current, payments: [{ mode: "BALANCE", amount, note: "" }] }));
                   }} />
                 </div>
@@ -1308,7 +1235,7 @@ export default function PosPage() {
                   return (
                     <div key={pkg.id} onClick={() => {
                       setPkgModalPkg(pkg);
-                      setPkgDraft({ staffId: "", price: String(pkg.price||0), validityDays: String(pkg.validityDays||30), purchaseDate: new Date().toISOString().slice(0,10), customServices: (pkg.services||[]).map(s=>({id:s.service?.id||s.serviceId,name:s.service?.name, price: s.service?.salesPrice || s.service?.price || 0, qty:s.sessions||1})) });
+                      setPkgDraft({ staffId: "", price: String(pkg.price||0), validityDays: String(pkg.validityDays||30), purchaseDate: new Date().toISOString().slice(0,10), customServices: (pkg.services||[]).map(s=>({id:s.service?.id||s.serviceId,name:s.service?.name, price: s.service?.salesPrice || s.service?.price || 0, qty:s.sessions||1})), customProducts: [] });
                     }} style={{ background: isSelected?"#fdf4ff":"#f8fafc", border: isSelected?"2px solid #e879f9":"1px solid #e2e8f0", borderRadius:12, padding:16, cursor:"pointer", transition:"all 0.2s" }}>
                       <div style={{ fontSize:"0.95rem", fontWeight:700, color:"#4a044e", marginBottom:8, textTransform:"uppercase" }}>{pkg.name}</div>
                       <div style={{ fontSize:"0.85rem", color:"#475569", marginBottom:4 }}>Fee: {formatMoney(Number(pkg.price||0))}</div>
@@ -1327,7 +1254,7 @@ export default function PosPage() {
                 })}
                 <div onClick={() => {
                   setPkgModalPkg({ id: "CUSTOM", name: "CUSTOM PACKAGE" });
-                  setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] });
+                  setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [], customProducts: [] });
                 }} style={{ background: pkgModalPkg?.id==="CUSTOM"?"#eff6ff":"#f8fafc", border: pkgModalPkg?.id==="CUSTOM"?"2px solid #3b82f6":"1px solid #e2e8f0", borderRadius:12, padding:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", minHeight:150, transition:"all 0.2s" }}>
                   <div style={{ fontSize:"1rem", fontWeight:700, color:"#2563eb", textTransform:"uppercase" }}>CUSTOM PACKAGE</div>
                 </div>
@@ -1365,6 +1292,49 @@ export default function PosPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Add Products Search Bar */}
+                <div style={{ display:"flex", alignItems:"center", marginTop:8, gap:16 }}>
+                  <div style={{ fontWeight:600, color:"#64748b", fontSize:"0.9rem", minWidth:100 }}>Add products</div>
+                  <div style={{ position:"relative", flex:1, maxWidth:400 }}>
+                    <input placeholder="Search Product By Category Or Name" value={pkgProductSearch} onChange={e => setPkgProductSearch(e.target.value)} style={{ width:"100%", padding:"10px 14px", paddingRight:36, border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }} />
+                    <span style={{ position:"absolute", right:12, top:10, color:"#000", fontWeight:700 }}>🔍</span>
+                    {pkgProductSearch.trim() && (
+                      <div style={{ position:"absolute", top:"100%", left:0, right:0, background:"#fff", border:"1px solid #e2e8f0", borderRadius:8, maxHeight:200, overflowY:"auto", marginTop:4, zIndex:10, boxShadow: "none" }}>
+                        {(context.products || []).filter(p => p.name.toLowerCase().includes(pkgProductSearch.toLowerCase())).map(prod => (
+                          <div key={prod.id} onClick={() => { if(!pkgDraft.customProducts.find(c=>c.id===prod.id)) { const newProd = [...pkgDraft.customProducts, {id:prod.id, name:prod.name, price: prod.salesPrice || prod.price || 0, qty:1}]; const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = newProd.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d, customProducts: newProd, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); } setPkgProductSearch(""); }} style={{ padding:"10px 16px", cursor:"pointer", fontSize:"0.9rem", color:"#334155", borderBottom:"1px solid #f1f5f9" }} onMouseEnter={e => e.currentTarget.style.background="#f8fafc"} onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                            {prod.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Selected Products */}
+                {pkgDraft.customProducts.length > 0 && (
+                  <div style={{ marginTop:8 }}>
+                    <div style={{ fontWeight:600, color:"#64748b", fontSize:"0.9rem", marginBottom:4 }}>Selected products</div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                      {pkgDraft.customProducts.map((prod, idx) => (
+                        <div key={idx} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", border:"1px solid #e2e8f0", borderRadius:8, background:"#fff" }}>
+                          <span style={{ fontSize:"0.9rem", color:"#0f172a", fontWeight:500 }}>{prod.name} <span style={{color:"#64748b", fontSize:"0.8rem", marginLeft:8}}>({formatMoney(Number(prod.price||0) * Number(prod.qty||1))})</span></span>
+                          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                            <input type="number" min="1" value={prod.qty} onChange={e => { const n=[...pkgDraft.customProducts]; n[idx]={...n[idx],qty:Number(e.target.value)}; const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = n.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d,customProducts:n, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); }} style={{ width:60, padding:"8px", border:"1px solid #cbd5e1", borderRadius:6, fontSize:"0.9rem", textAlign:"center" }} />
+                            <button onClick={() => { const n=pkgDraft.customProducts.filter((_,i)=>i!==idx); const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = n.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d,customProducts:n, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); }} style={{ width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", background:"#fff", border:"1px solid #cbd5e1", borderRadius:6, cursor:"pointer", color:"#0f172a", fontWeight:600 }}>X</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Totals */}
+                <div style={{ display:"flex", gap:24, alignItems:"center", marginTop:8, padding:"10px 16px", background:"#f8fafc", borderRadius:8, fontSize:"0.9rem" }}>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(Number(pkgDraft.price || 0))}</span></div>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Service Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0))}</span></div>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Product Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(pkgDraft.customProducts.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0))}</span></div>
                 </div>
 
                 {/* The Meta Form (Name, Validity, Price, Staff, Date) */}
