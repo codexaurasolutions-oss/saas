@@ -118,6 +118,10 @@ const Protected = () => {
               label: "Services",
               to: "/admin/services"
             },
+            can("services") && {
+              label: "Service Categories",
+              to: "/admin/service-categories"
+            },
             can("staff") && {
               label: "Staff Details",
               to: "/admin/users"

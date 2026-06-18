@@ -236,6 +236,7 @@ export default function ServicesPage() {
                 <strong>{service.name}</strong>
                 <div className="item-meta">Price {String(service.price)} | Duration {service.durationMin} min | Tax {String(service.taxRate || 0)}%</div>
                 <div className="item-meta">{service.branch?.name || "Available across branches"}</div>
+                <div className="item-meta">Category: {service.category?.name || "Uncategorized"}</div>
                 <div className="item-meta">Commission {String(service.commissionPct || 0)}% | Booking {service.onlineBookingEnabled ? "Enabled" : "Disabled"}</div>
                 <div className="item-meta">{service.description || "No description added"}</div>
               </div>

@@ -99,7 +99,13 @@ export default function ServiceHubPage() {
 
   const visibleCategoryLabel = useMemo(() => {
     if (!selectedCategory) return "All categories";
-    return categories.find((category) => category.id === selectedCategory)?.name || "Selected category";
+    for (const cat of categories) {
+      if (cat.id === selectedCategory) return cat.name;
+      for (const sub of (cat.children || [])) {
+        if (sub.id === selectedCategory) return `${cat.name} / ${sub.name}`;
+      }
+    }
+    return "Selected category";
   }, [categories, selectedCategory]);
 
   const groupedServices = useMemo(() => {
@@ -230,15 +236,29 @@ export default function ServiceHubPage() {
             </div>
           </div>
           {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className={`hub-category-item ${selectedCategory === cat.id ? "active" : ""}`}
-              onClick={() => setSelectedCategory(cat.id)}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <span>{cat.name}</span>
-                <span style={{ color: "#64748b", fontSize: 12 }}>{categoryCounts.get(cat.id) || 0}</span>
+            <div key={cat.id}>
+              <div
+                className={`hub-category-item ${selectedCategory === cat.id ? "active" : ""}`}
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <span>{cat.name}</span>
+                  <span style={{ color: "#64748b", fontSize: 12 }}>{categoryCounts.get(cat.id) || 0}</span>
+                </div>
               </div>
+              {(cat.children || []).map((sub) => (
+                <div
+                  key={sub.id}
+                  className={`hub-category-item ${selectedCategory === sub.id ? "active" : ""}`}
+                  onClick={() => setSelectedCategory(sub.id)}
+                  style={{ paddingLeft: 24 }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13 }}>{sub.name}</span>
+                    <span style={{ color: "#64748b", fontSize: 12 }}>{categoryCounts.get(sub.id) || 0}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
           {!categories.length && (
@@ -432,7 +452,12 @@ export default function ServiceHubPage() {
                   <label>Category</label>
                   <select className="hub-input" value={srvForm.categoryId} onChange={e => setSrvForm({...srvForm, categoryId: e.target.value})}>
                     <option value="">Select category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.flatMap(c => [
+                      <option key={c.id} value={c.id}>{c.name}</option>,
+                      ...(c.children || []).map(sub => (
+                        <option key={sub.id} value={sub.id}>&nbsp;&nbsp;{c.name} / {sub.name}</option>
+                      ))
+                    ])}
                   </select>
                 </div>
                 <div className="hub-form-group">
