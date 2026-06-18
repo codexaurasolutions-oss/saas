@@ -162,6 +162,7 @@ export default function PosDashboardPage() {
     giftCards: [],
     serviceCategories: []
   });
+  const [posSettings, setPosSettings] = useState(null);
 
   const [posTab, setPosTab] = useState("billing");
   const [posGender, setPosGender] = useState("FEMALE");
@@ -198,14 +199,16 @@ export default function PosDashboardPage() {
 
   const loadPosContext = useCallback(async () => {
     try {
-      const [contextResponse, categoryResponse] = await Promise.all([
+      const [contextResponse, categoryResponse, settingsResponse] = await Promise.all([
         api.get("/owner/pos/context"),
-        api.get("/owner/service-categories")
+        api.get("/owner/service-categories"),
+        api.get("/owner/settings")
       ]);
       setPosContext({
         ...contextResponse.data,
         serviceCategories: categoryResponse.data || []
       });
+      setPosSettings(settingsResponse.data || null);
     } catch (error) {
       console.error(error);
     }
@@ -375,10 +378,14 @@ export default function PosDashboardPage() {
   }, [getDetailBasePrice]);
 
   const totals = useMemo(() => {
+    const advancedSettings = posSettings?.advancedSettings && typeof posSettings.advancedSettings === "object" ? posSettings.advancedSettings : {};
+    const isInclusive = advancedSettings?.taxMapping?.inclusiveTax === true;
     const subtotal = form.items.reduce((sum, item) => sum + (Number(item.unitPrice || 0) * Number(item.qty || 0)), 0);
     const tax = form.items.reduce((sum, item) => {
       const line = Number(item.unitPrice || 0) * Number(item.qty || 0);
-      return sum + ((line * Number(item.taxPct || 0)) / 100);
+      const tp = Number(item.taxPct || 0);
+      if (isInclusive && tp > 0) return sum + (line * tp) / (100 + tp);
+      return sum + (line * tp) / 100;
     }, 0);
     const total = Math.max(0, subtotal + tax - toAmount(invoiceDiscountDraft, 0));
     return {
@@ -387,7 +394,7 @@ export default function PosDashboardPage() {
       total,
       balance: Math.max(0, total - Number(invoiceDetail?.paidAmount || 0))
     };
-  }, [form.items, invoiceDetail?.paidAmount, invoiceDiscountDraft]);
+  }, [form.items, invoiceDetail?.paidAmount, invoiceDiscountDraft, posSettings]);
 
   const paidOnline = useMemo(() => (
     (invoiceDetail?.payments || [])
@@ -831,7 +838,10 @@ export default function PosDashboardPage() {
                       const qty = Number(item.qty || 1);
                       const price = Number(item.unitPrice || 0);
                       const subTotal = price * qty;
-                      const taxAmount = (subTotal * Number(item.taxPct || 0)) / 100;
+                      const tp = Number(item.taxPct || 0);
+                      const advSettings = posSettings?.advancedSettings && typeof posSettings.advancedSettings === "object" ? posSettings.advancedSettings : {};
+                      const isInc = advSettings?.taxMapping?.inclusiveTax === true;
+                      const taxAmount = isInc && tp > 0 ? (subTotal * tp) / (100 + tp) : (subTotal * tp) / 100;
                       const basePrice = getDetailBasePrice(item);
                       const discountPercent = item.complimentary ? 100 : toAmount(item.discountPct, 0);
                       const discountAmount = item.complimentary ? basePrice * qty : toAmount(item.discountAmt, 0) * qty;

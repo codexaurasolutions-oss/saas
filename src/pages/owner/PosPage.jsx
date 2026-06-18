@@ -369,7 +369,6 @@ export default function PosPage() {
         customServices: pkgDraft.customServices,
         customProducts: pkgDraft.customProducts,
         isCustom: true
-        customProducts: pkgDraft.customProducts,
       }]
     }));
     setShowPkgModal(false);

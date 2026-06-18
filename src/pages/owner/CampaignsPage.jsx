@@ -12,7 +12,7 @@ const emptyForm = {
   name: "",
   type: "WHATSAPP",
   audienceFilter: "ALL_CUSTOMERS",
-  audienceMeta: { serviceId: "", segmentId: "" },
+  audienceMeta: { serviceId: "" },
   message: "",
   bannerUrl: "",
   scheduledFor: ""
@@ -37,7 +37,6 @@ export default function CampaignsPage() {
   const [services, setServices] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [templates, setTemplates] = useState([]);
-  const [savedSegments, setSavedSegments] = useState([]);
   const [filters, setFilters] = useState({ q: "", status: "", type: "", audienceFilter: "" });
   const [logFilters, setLogFilters] = useState({ q: "", eventType: "" });
   const [loading, setLoading] = useState(true);
@@ -77,12 +76,10 @@ export default function CampaignsPage() {
         api.get("/owner/coupons").catch(() => ({ data: [] })),
         api.get("/owner/campaign-templates").catch(() => ({ data: [] }))
       ]);
-      const settingsResponse = await api.get("/owner/settings").catch(() => ({ data: {} }));
       setRows(response.data || []);
       setServices(servicesResponse.data || []);
       setCoupons(couponsResponse.data || []);
       setTemplates(templatesResponse.data || []);
-      setSavedSegments((settingsResponse.data?.advancedSettings?.crmSegments || []).filter((segment) => segment?.active !== false));
       if (params.id) {
         const detailResponse = await api.get(`/owner/campaigns/${params.id}`);
         setDetail(detailResponse.data);
@@ -113,8 +110,7 @@ export default function CampaignsPage() {
             type: detailResponse.data.type || "WHATSAPP",
             audienceFilter: detailResponse.data.audienceFilter || "ALL_CUSTOMERS",
             audienceMeta: {
-              serviceId: detailResponse.data.audienceMeta?.serviceId || "",
-              segmentId: detailResponse.data.audienceMeta?.segmentId || ""
+              serviceId: detailResponse.data.audienceMeta?.serviceId || ""
             },
             message: detailResponse.data.message || "",
             bannerUrl: detailResponse.data.bannerUrl || "",
@@ -144,9 +140,7 @@ export default function CampaignsPage() {
         scheduledFor: form.scheduledFor || undefined,
         audienceMeta: form.audienceFilter === "SERVICE_BASED_CUSTOMERS"
           ? { serviceId: form.audienceMeta?.serviceId || "" }
-          : form.audienceFilter === "CRM_SEGMENT"
-            ? { segmentId: form.audienceMeta?.segmentId || "" }
-            : undefined
+          : undefined
       };
       if (isEdit) await api.patch(`/owner/campaigns/${params.id}`, payload);
       else await api.post("/owner/campaigns", payload);
@@ -170,34 +164,22 @@ export default function CampaignsPage() {
   };
 
   const duplicate = async (id) => {
-    try {
-      await api.post(`/owner/campaigns/${id}/duplicate`);
-      await load();
-    } catch (err) {
-      setStatus({ error: formatApiError(err, "Failed to duplicate campaign"), success: "" });
-    }
+    await api.post(`/owner/campaigns/${id}/duplicate`);
+    await load();
   };
 
   const schedule = async (id) => {
-    try {
-      const scheduledFor = form.scheduledFor || new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
-      const response = await api.post(`/owner/campaigns/${id}/schedule`, { scheduledFor });
-      setStatus({ error: "", success: `Campaign scheduled for ${new Date(response.data.scheduledFor).toLocaleString()}.` });
-      await load();
-    } catch (err) {
-      setStatus({ error: formatApiError(err, "Failed to schedule campaign"), success: "" });
-    }
+    const scheduledFor = form.scheduledFor || new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
+    const response = await api.post(`/owner/campaigns/${id}/schedule`, { scheduledFor });
+    setStatus({ error: "", success: `Campaign scheduled for ${new Date(response.data.scheduledFor).toLocaleString()}.` });
+    await load();
   };
 
   const sendPlaceholder = async (id) => {
-    try {
-      const response = await api.post(`/owner/campaigns/${id}/send-placeholder`);
-      setLastShareLink(response.data.whatsappLink || "");
-      setStatus({ error: "", success: `Campaign processed. Reachable audience ${response.data.reachableCount}.` });
-      await load();
-    } catch (err) {
-      setStatus({ error: formatApiError(err, "Failed to send campaign"), success: "" });
-    }
+    const response = await api.post(`/owner/campaigns/${id}/send-placeholder`);
+    setLastShareLink(response.data.whatsappLink || "");
+    setStatus({ error: "", success: `Campaign processed. Reachable audience ${response.data.reachableCount}.` });
+    await load();
   };
 
   const linkCoupon = async (campaignId, couponId) => {
@@ -301,7 +283,6 @@ export default function CampaignsPage() {
               <option value="MEMBERSHIP_CUSTOMERS">Membership customers</option>
               <option value="PACKAGE_CUSTOMERS">Package customers</option>
               <option value="SERVICE_BASED_CUSTOMERS">Service-based customers</option>
-              <option value="CRM_SEGMENT">Saved CRM segment</option>
             </select>
             </label>
             {form.audienceFilter === "SERVICE_BASED_CUSTOMERS" ? (
@@ -312,18 +293,6 @@ export default function CampaignsPage() {
                 {services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
               </select>
             </label>
-            ) : form.audienceFilter === "CRM_SEGMENT" ? (
-              <label>
-                <span className="muted">Saved segment</span>
-                <select value={form.audienceMeta?.segmentId || ""} onChange={(event) => setForm((current) => ({ ...current, audienceMeta: { ...(current.audienceMeta || {}), segmentId: event.target.value } }))}>
-                  <option value="">Select saved segment</option>
-                  {savedSegments.map((segment) => (
-                    <option key={segment.id} value={segment.id}>
-                      {segment.name} {segment.filterType ? `| ${segment.filterType.replaceAll("_", " ")}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
             ) : <div className="summary-box"><strong>Audience source</strong><p className="item-meta">This filter will use live CRM, invoice, appointment, package, and membership data.</p></div>}
             <label><span className="muted">Scheduled For</span><input type="datetime-local" value={form.scheduledFor} onChange={(event) => setForm((current) => ({ ...current, scheduledFor: event.target.value }))} /></label>
             <label>
@@ -343,7 +312,7 @@ export default function CampaignsPage() {
       )}
 
       {!isCreate && !isEdit && (
-        <div className="settings-section-grid">
+        <div className="two-col">
         <div className="panel-card">
           <h3>Campaign List</h3>
           {loading ? <PageLoader compact title="Loading campaigns" message="Preparing campaign history, templates, audience filters, and performance context." /> : null}
@@ -384,7 +353,6 @@ export default function CampaignsPage() {
               <option value="MEMBERSHIP_CUSTOMERS">Membership customers</option>
               <option value="PACKAGE_CUSTOMERS">Package customers</option>
               <option value="SERVICE_BASED_CUSTOMERS">Service-based customers</option>
-              <option value="CRM_SEGMENT">Saved CRM segment</option>
             </select>
             </label>
             <button type="button" className="secondary-button" onClick={() => setFilters({ q: "", status: "", type: "", audienceFilter: "" })}>Reset</button>

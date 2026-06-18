@@ -4,17 +4,13 @@ export const formatApiError = (error, fallback = "Something went wrong.") => {
   }
 
   const data = error?.response?.data;
-  if (!data) return error?.message || fallback;
+  if (!data) return fallback;
 
   if (Array.isArray(data.issues) && data.issues.length) {
     return data.issues
-      .map((issue) => {
-        const field = issue?.field ? `${issue.field}: ` : "";
-        const msg = issue?.message || "Invalid value";
-        return `${field}${msg}`;
-      })
+      .map((issue) => issue?.field ? `${issue.field}: ${issue.message}` : issue?.message)
       .filter(Boolean)
-      .join("\n• ");
+      .join(" | ");
   }
 
   return data.message || fallback;
