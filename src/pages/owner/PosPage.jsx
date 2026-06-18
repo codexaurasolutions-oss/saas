@@ -62,9 +62,10 @@ export default function PosPage() {
 
   const [showPkgModal, setShowPkgModal] = useState(false);
   const [pkgModalPkg, setPkgModalPkg] = useState(null);
-  const [pkgDraft, setPkgDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [] });
+  const [pkgDraft, setPkgDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [], customProducts: [] });
   const [pkgSearch, setPkgSearch] = useState("");
   const [pkgServiceSearch, setPkgServiceSearch] = useState("");
+  const [pkgProductSearch, setPkgProductSearch] = useState("");
   const [showMemModal, setShowMemModal] = useState(false);
   const [memModalMem, setMemModalMem] = useState(null);
   const [memDraft, setMemDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [] });
@@ -340,7 +341,8 @@ export default function PosPage() {
       price: String(p.price || ""),
       validityDays: String(p.validityDays || "30"),
       purchaseDate: new Date().toISOString().slice(0, 10),
-      customServices: (p.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 }))
+      customServices: (p.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 })),
+      customProducts: []
     });
     setPkgServiceSearch("");
     setShowPkgModal(true);
@@ -365,7 +367,9 @@ export default function PosPage() {
         validityDays: Number(pkgDraft.validityDays || 30),
         purchaseDate: pkgDraft.purchaseDate,
         customServices: pkgDraft.customServices,
+        customProducts: pkgDraft.customProducts,
         isCustom: true
+        customProducts: pkgDraft.customProducts,
       }]
     }));
     setShowPkgModal(false);
@@ -631,7 +635,7 @@ export default function PosPage() {
         <div className="pos-topbar-right">
           <button className={`pos-top-tab ${tab === "billing" ? "active" : ""}`} onClick={() => setTab("billing")}>Add Service</button>
           <button className={`pos-top-tab ${tab === "products" ? "active" : ""}`} onClick={() => setTab("products")}>Add Product</button>
-          <button className="pos-top-tab" onClick={() => { setPkgModalPkg(null); setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowPkgModal(true); }}>Add Package</button>
+          <button className="pos-top-tab" onClick={() => { setPkgModalPkg(null); setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [], customProducts: [] }); setShowPkgModal(true); }}>Add Package</button>
           <button className="pos-top-tab" onClick={() => { setMemModalMem(null); setMemDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] }); setShowMemModal(true); }}>Add Membership</button>
         </div>
       </div>
@@ -1232,7 +1236,7 @@ export default function PosPage() {
                   return (
                     <div key={pkg.id} onClick={() => {
                       setPkgModalPkg(pkg);
-                      setPkgDraft({ staffId: "", price: String(pkg.price||0), validityDays: String(pkg.validityDays||30), purchaseDate: new Date().toISOString().slice(0,10), customServices: (pkg.services||[]).map(s=>({id:s.service?.id||s.serviceId,name:s.service?.name, price: s.service?.salesPrice || s.service?.price || 0, qty:s.sessions||1})) });
+                      setPkgDraft({ staffId: "", price: String(pkg.price||0), validityDays: String(pkg.validityDays||30), purchaseDate: new Date().toISOString().slice(0,10), customServices: (pkg.services||[]).map(s=>({id:s.service?.id||s.serviceId,name:s.service?.name, price: s.service?.salesPrice || s.service?.price || 0, qty:s.sessions||1})), customProducts: [] });
                     }} style={{ background: isSelected?"#fdf4ff":"#f8fafc", border: isSelected?"2px solid #e879f9":"1px solid #e2e8f0", borderRadius:12, padding:16, cursor:"pointer", transition:"all 0.2s" }}>
                       <div style={{ fontSize:"0.95rem", fontWeight:700, color:"#4a044e", marginBottom:8, textTransform:"uppercase" }}>{pkg.name}</div>
                       <div style={{ fontSize:"0.85rem", color:"#475569", marginBottom:4 }}>Fee: {formatMoney(Number(pkg.price||0))}</div>
@@ -1251,7 +1255,7 @@ export default function PosPage() {
                 })}
                 <div onClick={() => {
                   setPkgModalPkg({ id: "CUSTOM", name: "CUSTOM PACKAGE" });
-                  setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [] });
+                  setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [], customProducts: [] });
                 }} style={{ background: pkgModalPkg?.id==="CUSTOM"?"#eff6ff":"#f8fafc", border: pkgModalPkg?.id==="CUSTOM"?"2px solid #3b82f6":"1px solid #e2e8f0", borderRadius:12, padding:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", minHeight:150, transition:"all 0.2s" }}>
                   <div style={{ fontSize:"1rem", fontWeight:700, color:"#2563eb", textTransform:"uppercase" }}>CUSTOM PACKAGE</div>
                 </div>
@@ -1289,6 +1293,49 @@ export default function PosPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Add Products Search Bar */}
+                <div style={{ display:"flex", alignItems:"center", marginTop:8, gap:16 }}>
+                  <div style={{ fontWeight:600, color:"#64748b", fontSize:"0.9rem", minWidth:100 }}>Add products</div>
+                  <div style={{ position:"relative", flex:1, maxWidth:400 }}>
+                    <input placeholder="Search Product By Category Or Name" value={pkgProductSearch} onChange={e => setPkgProductSearch(e.target.value)} style={{ width:"100%", padding:"10px 14px", paddingRight:36, border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }} />
+                    <span style={{ position:"absolute", right:12, top:10, color:"#000", fontWeight:700 }}>🔍</span>
+                    {pkgProductSearch.trim() && (
+                      <div style={{ position:"absolute", top:"100%", left:0, right:0, background:"#fff", border:"1px solid #e2e8f0", borderRadius:8, maxHeight:200, overflowY:"auto", marginTop:4, zIndex:10, boxShadow: "none" }}>
+                        {(context.products || []).filter(p => p.name.toLowerCase().includes(pkgProductSearch.toLowerCase())).map(prod => (
+                          <div key={prod.id} onClick={() => { if(!pkgDraft.customProducts.find(c=>c.id===prod.id)) { const newProd = [...pkgDraft.customProducts, {id:prod.id, name:prod.name, price: prod.salesPrice || prod.price || 0, qty:1}]; const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = newProd.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d, customProducts: newProd, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); } setPkgProductSearch(""); }} style={{ padding:"10px 16px", cursor:"pointer", fontSize:"0.9rem", color:"#334155", borderBottom:"1px solid #f1f5f9" }} onMouseEnter={e => e.currentTarget.style.background="#f8fafc"} onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                            {prod.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Selected Products */}
+                {pkgDraft.customProducts.length > 0 && (
+                  <div style={{ marginTop:8 }}>
+                    <div style={{ fontWeight:600, color:"#64748b", fontSize:"0.9rem", marginBottom:4 }}>Selected products</div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                      {pkgDraft.customProducts.map((prod, idx) => (
+                        <div key={idx} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", border:"1px solid #e2e8f0", borderRadius:8, background:"#fff" }}>
+                          <span style={{ fontSize:"0.9rem", color:"#0f172a", fontWeight:500 }}>{prod.name} <span style={{color:"#64748b", fontSize:"0.8rem", marginLeft:8}}>({formatMoney(Number(prod.price||0) * Number(prod.qty||1))})</span></span>
+                          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                            <input type="number" min="1" value={prod.qty} onChange={e => { const n=[...pkgDraft.customProducts]; n[idx]={...n[idx],qty:Number(e.target.value)}; const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = n.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d,customProducts:n, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); }} style={{ width:60, padding:"8px", border:"1px solid #cbd5e1", borderRadius:6, fontSize:"0.9rem", textAlign:"center" }} />
+                            <button onClick={() => { const n=pkgDraft.customProducts.filter((_,i)=>i!==idx); const svcTotal = pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0); const prodTotal = n.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0); setPkgDraft(d=>({...d,customProducts:n, price: pkgModalPkg?.id==="CUSTOM"?String(svcTotal+prodTotal):d.price})); }} style={{ width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", background:"#fff", border:"1px solid #cbd5e1", borderRadius:6, cursor:"pointer", color:"#0f172a", fontWeight:600 }}>X</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Totals */}
+                <div style={{ display:"flex", gap:24, alignItems:"center", marginTop:8, padding:"10px 16px", background:"#f8fafc", borderRadius:8, fontSize:"0.9rem" }}>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(Number(pkgDraft.price || 0))}</span></div>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Service Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(pkgDraft.customServices.reduce((acc,s)=>acc+(Number(s.price||0)*Number(s.qty||1)),0))}</span></div>
+                  <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Product Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(pkgDraft.customProducts.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0))}</span></div>
                 </div>
 
                 {/* The Meta Form (Name, Validity, Price, Staff, Date) */}
