@@ -24,6 +24,18 @@ const toAmount = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
+const clampMoneyInput = (value, max = Number.POSITIVE_INFINITY) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+  const [whole = "", ...fractionParts] = cleaned.split(".");
+  const normalized = fractionParts.length ? `${whole}.${fractionParts.join("")}` : whole;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) return "";
+  const capped = Number.isFinite(max) ? Math.min(parsed, Math.max(0, max)) : parsed;
+  return String(Number(capped.toFixed(2)));
+};
 const genderMatches = (serviceGender, selectedGender) => {
   if (selectedGender === "ALL") return true;
   const gender = normalizeGender(serviceGender);

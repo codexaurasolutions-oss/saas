@@ -188,7 +188,7 @@ export default function CustomersPage() {
     setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "" });
     setNotes("");
     try {
-      const res = await api.get(`/owner/customers/${row.id}`);
+      const res = await api.get(`/owner/customers//history/history${row.id}`);
       setCustomerDetail(res.data);
       setUpdateForm({
         name: res.data?.name || row.name || "",
@@ -235,7 +235,7 @@ export default function CustomersPage() {
 
   const fetchCustomerGiftCards = async (customerId) => {
     try {
-      const res = await api.get(`/owner/customers/${customerId}/gift-cards`);
+      const res = await api.get(`/owner/customers//history/history${customerId}/gift-cards`);
       setCustomerGiftCards(res.data || []);
     } catch (e) {
       console.error("Failed to load gift cards", e);
@@ -244,7 +244,7 @@ export default function CustomersPage() {
 
   const fetchCustomerAdvances = async (customerId) => {
     try {
-      const res = await api.get(`/owner/customers/${customerId}/advance-payments`);
+      const res = await api.get(`/owner/customers//history/history${customerId}/advance-payments`);
       setCustomerAdvances(res.data || []);
     } catch (e) {
       console.error("Failed to load advance payments", e);
@@ -290,7 +290,7 @@ export default function CustomersPage() {
       setShowAssignMembershipModal(false);
       setSelectedPlan(null);
       setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", purchaseDate: new Date().toISOString().slice(0, 10) });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to assign membership");
@@ -311,7 +311,7 @@ export default function CustomersPage() {
       setShowAddAdvanceModal(false);
       setAdvanceForm({ amount: "", mode: "Online", remark: "" });
       fetchCustomerAdvances(selectedCustomer.id);
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to add advance");
@@ -322,7 +322,7 @@ export default function CustomersPage() {
   const handleUpdateProfile = async () => {
     if (!selectedCustomer) return;
     try {
-      await api.put(`/owner/customers/${selectedCustomer.id}`, {
+      await api.put(`/owner/customers//history/history${selectedCustomer.id}`, {
         name: updateForm.name,
         phone: updateForm.phone,
         email: updateForm.email,
@@ -330,7 +330,7 @@ export default function CustomersPage() {
         dateOfBirth: updateForm.dateOfBirth || undefined,
         anniversary: updateForm.anniversary || undefined,
       });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
       setSelectedCustomer((prev) => prev ? { ...prev, name: updateForm.name, phone: updateForm.phone } : prev);
       setDetailTab("profile");
@@ -343,8 +343,8 @@ export default function CustomersPage() {
   const handleSaveNotes = async () => {
     if (!selectedCustomer) return;
     try {
-      await api.put(`/owner/customers/${selectedCustomer.id}`, { notes });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      await api.put(`/owner/customers//history/history${selectedCustomer.id}`, { notes });
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to save notes");
@@ -394,7 +394,7 @@ export default function CustomersPage() {
       setShowPackageModal(false);
       setSelectedPackage(null);
       setPackageForm({ validityDays: "", price: "", staffId: "", purchaseDate: new Date().toISOString().slice(0, 10) });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to assign package");
@@ -431,7 +431,7 @@ export default function CustomersPage() {
       setShowFamilyModal(false);
       setFamilyForm({ name: "", phone: "", relation: "" });
       setFamilyError("");
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       setFamilyError(formatApiError(e, "Failed to add family member"));
@@ -450,7 +450,7 @@ export default function CustomersPage() {
       });
       setShowFollowUpModal(false);
       setFollowUpForm({ date: "", time: "", message: "", type: "call" });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers//history/history${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to add follow-up");
@@ -461,7 +461,7 @@ export default function CustomersPage() {
   const handleExport = async (format) => {
     setShowExportMenu(false);
     try {
-      await downloadFromApi(`/owner/customers/export?format=${format}`, { fallbackFilename: `Customers.${format}` });
+      await downloadFromApi(`/owner/customers//history/historyexport?format=${format}`, { fallbackFilename: `Customers.${format}` });
     } catch (error) {
       alert("Could not export customers");
     }
@@ -492,7 +492,7 @@ export default function CustomersPage() {
     if (!window.confirm(`Delete ${row.name || "this customer"}? If linked history exists, the system will block deletion.`)) return;
     setActionBusy(row.id);
     try {
-      await api.delete(`/owner/customers/${row.id}`);
+      await api.delete(`/owner/customers//history/history${row.id}`);
       setRows((current) => current.filter((entry) => entry.id !== row.id));
       setActiveMenuRowId("");
     } catch (error) {
@@ -509,7 +509,7 @@ export default function CustomersPage() {
     }
     setActionBusy(mergeSourceRow.id);
     try {
-      await api.post("/owner/customers/merge", {
+      await api.post("/owner/customers//history/historymerge", {
         sourceCustomerId: mergeSourceRow.id,
         targetCustomerId: mergeTargetId
       });
