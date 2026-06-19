@@ -335,90 +335,60 @@ export default function PosPage() {
     setShowMemModal(true);
   };
 
-  const addQuickPackage = (p) => {
-    setPkgModalPkg(p);
-    setPkgDraft({
-      staffId: "",
-      price: String(p.price || ""),
-      validityDays: String(p.validityDays || "30"),
-      purchaseDate: new Date().toISOString().slice(0, 10),
-      customServices: (p.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 })),
-      customProducts: [],
-      balance: "", online: "", offline: "", remark: ""
+  const addQuickPackage = (pkg) => {
+    setForm(c => {
+      const activeItems = c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId);
+      return {
+        ...c,
+        items: [...activeItems, {
+          itemType: "PACKAGE",
+          packageId: pkg.id,
+          name: pkg.name,
+          staffUserSalonId: "",
+          qty: 1,
+          unitPrice: Number(pkg.price || 0),
+          originalUnitPrice: Number(pkg.price || 0),
+          discountPct: 0,
+          discountAmt: 0,
+          taxPct: 0,
+          validityDays: Number(pkg.validityDays || 30),
+          purchaseDate: new Date().toISOString().slice(0, 10),
+          customServices: (pkg.services || []).map(s => ({ id: s.service?.id || s.serviceId || "", name: s.service?.name || "", qty: s.sessions || 1 })),
+          customProducts: [],
+          isCustom: false
+        }]
+      };
     });
-    setPkgServiceSearch("");
-    setShowPkgModal(true);
   };
 
   
-  const handleAddPkgToCart = async () => {
+  const handleAddPkgToCart = () => {
     const pkg = pkgModalPkg;
-    if (!pkg || !form.customerId) return;
     const price = Number(pkgDraft.price || pkg?.price || 0);
-    const pkgItem = {
-      itemType: "PACKAGE",
-      packageId: pkg?.id === "CUSTOM" ? "CUSTOM" : pkg?.id || "",
-      serviceName: pkg?.name || "Custom Package",
-      staffUserSalonId: pkgDraft.staffId || "",
-      qty: 1,
-      unitPrice: price,
-      originalUnitPrice: price,
-      discountPct: 0,
-      discountAmt: 0,
-      taxPct: 0,
-      validityDays: Number(pkgDraft.validityDays || pkg?.validityDays || 30),
-      purchaseDate: pkgDraft.purchaseDate || new Date().toISOString().slice(0,10),
-      customServices: (pkgDraft.customServices || []).map(s => s.id),
-      customProducts: pkgDraft.customProducts || [],
-      isCustom: pkg?.id === "CUSTOM"
-    };
-    const activeItems = form.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId);
-    const items = [...activeItems, pkgItem];
-    const payments = [];
-    const balanceAmt = Number(pkgDraft.balance || 0);
-    const onlineAmt = Number(pkgDraft.online || 0);
-    const offlineAmt = Number(pkgDraft.offline || 0);
-    if (balanceAmt > 0) payments.push({ mode: "CASH", amount: balanceAmt, note: pkgDraft.remark || "" });
-    if (onlineAmt > 0) payments.push({ mode: "ONLINE", amount: onlineAmt, note: pkgDraft.remark || "" });
-    if (offlineAmt > 0) payments.push({ mode: "OFFLINE", amount: offlineAmt, note: pkgDraft.remark || "" });
-    if (payments.length === 0) payments.push({ mode: "CASH", amount: price, note: pkgDraft.remark || "" });
-    const payload = {
-      customerId: form.customerId,
-      branchId: form.branchId,
-      items: items.map(item => ({
-        itemType: item.itemType,
-        serviceId: item.serviceId || undefined,
-        productId: item.productId || undefined,
-        membershipPlanId: item.membershipPlanId || undefined,
-        packageId: item.packageId || undefined,
-        staffUserSalonId: item.staffUserSalonId || undefined,
-        serviceName: item.serviceName || item.name || undefined,
-        qty: Number(item.qty || 1),
-        unitPrice: Number(item.unitPrice || 0),
-        taxPct: Number(item.taxPct || 0),
-        discountPct: Number(item.discountPct || 0),
-        discountAmt: Number(item.discountAmt || 0),
-        validityDays: item.validityDays || undefined,
-        purchaseDate: item.purchaseDate || undefined,
-        customServices: item.customServices || undefined,
-        isCustom: item.isCustom || false
-      })),
-      payments,
-      notes: pkgDraft.remark || "",
-      sendFeedbackMessage: false,
-      sendInvoiceMessage: false
-    };
-    try {
-      setStatus({ loading: true, error: "" });
-      const result = await api.post("/owner/invoices", payload);
-      setStatus({ loading: false, error: "", success: `Invoice ${result.invoiceNumber || ""} created. Package assigned to guest.` });
-      setForm({ customerId: "", branchId: "", items: [], payments: [{ mode: "CASH", amount: 0, note: "" }], notes: "", sendFeedbackMessage: false, sendInvoiceMessage: false });
-      setPkgDraft({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0,10), customServices: [], customProducts: [], balance: "", online: "", offline: "", remark: "" });
-      setPkgModalPkg(null);
-      setShowPkgModal(false);
-    } catch (err) {
-      setStatus({ loading: false, error: err?.response?.data?.message || err.message || "Failed to create invoice", success: "" });
-    }
+    setForm(c => {
+      const activeItems = c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId);
+      return {
+        ...c,
+        items: [...activeItems, {
+          itemType: "PACKAGE",
+          packageId: pkg?.id === "CUSTOM" ? "CUSTOM" : pkg?.id || "CUSTOM",
+          name: pkg?.name || "Custom Package",
+          staffUserSalonId: pkgDraft.staffId || "",
+          qty: 1,
+          unitPrice: price,
+          originalUnitPrice: price,
+          discountPct: 0,
+          discountAmt: 0,
+          taxPct: 0,
+          validityDays: Number(pkgDraft.validityDays || pkg?.validityDays || 30),
+          purchaseDate: pkgDraft.purchaseDate || new Date().toISOString().slice(0, 10),
+          customServices: pkgDraft.customServices || [],
+          customProducts: pkgDraft.customProducts || [],
+          isCustom: pkg?.id === "CUSTOM" || !pkg
+        }]
+      };
+    });
+    setShowPkgModal(false);
   };
 
   const handleAddMemToCart = () => {
@@ -880,6 +850,7 @@ export default function PosPage() {
               
               const activeMembership = customer.memberships?.find(m => String(m.status) === 'ACTIVE' && new Date(m.endsAt) > new Date());
               const activePackage = (context.customerPackages || []).find(p => p.customerId === customer.id && String(p.status) === 'ACTIVE' && new Date(p.endsAt) > new Date());
+              const cartPackage = form.items.find(i => i.itemType === 'PACKAGE');
               const dueBal = customer.invoices?.filter(inv => inv.status === 'UNPAID' || inv.status === 'PARTIAL').reduce((sum, inv) => sum + Number(inv.balanceAmount || 0), 0) || 0;
               
               const dob = customer.dateOfBirth ? new Date(customer.dateOfBirth).toLocaleDateString("en-GB", {day:"2-digit", month:"short"}) : "NA";
@@ -903,7 +874,7 @@ export default function PosPage() {
                     </div>
                     <div style={{display: "flex", flexDirection: "column", gap: "8px"}}>
                       <div><strong style={{color:"#0f172a"}}>Adv :</strong> {activeMembership?.remainingWalletValue ? formatMoney(Number(activeMembership.remainingWalletValue).toFixed(0)) : "NA"}</div>
-                      <div><strong style={{color:"#0f172a"}}>Package :</strong> {activePackage ? <span style={{color:"#2563eb", cursor:"pointer"}} onClick={() => setShowPkgDetailModal(activePackage)}>{activePackage?.package?.name || "NA"}</span> : "NA"} {activePackage && <span title="Package Details" onClick={() => setShowPkgDetailModal(activePackage)} style={{display:"inline-flex", alignItems:"center", justifyContent:"center", width:18, height:18, borderRadius:"50%", background:"#e2e8f0", color:"#475569", fontSize:11, fontWeight:700, cursor:"pointer", marginLeft:4, verticalAlign:"middle"}}>&#9432;</span>}</div>
+                      <div><strong style={{color:"#0f172a"}}>Package :</strong> {activePackage ? <span style={{color:"#2563eb", cursor:"pointer"}} onClick={() => setShowPkgDetailModal(activePackage)}>{activePackage?.package?.name || "NA"}</span> : cartPackage ? <span style={{color:"#10b981", fontWeight:"600"}}>{cartPackage.name} (In Cart)</span> : "NA"} {activePackage && <span title="Package Details" onClick={() => setShowPkgDetailModal(activePackage)} style={{display:"inline-flex", alignItems:"center", justifyContent:"center", width:18, height:18, borderRadius:"50%", background:"#e2e8f0", color:"#475569", fontSize:11, fontWeight:700, cursor:"pointer", marginLeft:4, verticalAlign:"middle"}}>&#9432;</span>}</div>
                     </div>
                     <div style={{display: "flex", flexDirection: "column", gap: "8px"}}>
                       <div><strong style={{color:"#0f172a"}}>Membership :</strong> {activeMembership?.membershipPlan?.name || "NA"}</div>

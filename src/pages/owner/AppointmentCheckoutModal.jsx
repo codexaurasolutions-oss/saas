@@ -733,14 +733,14 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                         <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Online</div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "0 8px", borderRadius: "6px", border: noPay ? "1px solid #fca5a5" : "1px solid #cbd5e1", height: "32px" }}>
                           <div style={{ color: "#10b981", fontSize: "0.8rem" }}>📱</div>
-                          <input type="number" value={paymentDraft.online} onChange={(e) => { setPaymentDraft({ ...paymentDraft, online: e.target.value }); setStatus({ error: "", success: "" }); }} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", height: "100%", padding: 0, margin: 0, background: "transparent", fontWeight: 600, fontSize: "0.8rem" }} />
+                          <input type="number" min="0" step="0.01" inputMode="decimal" value={paymentDraft.online} onChange={(e) => { setPaymentDraft((prev) => ({ ...prev, online: clampMoneyInput(e.target.value, Math.max(0, total - toAmount(prev.offline, 0))) })); setStatus({ error: "", success: "" }); }} max={Math.max(0, total - Number(paymentDraft.offline || 0))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", height: "100%", padding: 0, margin: 0, background: "transparent", fontWeight: 600, fontSize: "0.8rem" }} />
                         </div>
                       </div>
                       <div>
                         <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Offline</div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "0 8px", borderRadius: "6px", border: noPay ? "1px solid #fca5a5" : "1px solid #cbd5e1", height: "32px" }}>
                           <div style={{ color: "#10b981", fontSize: "0.8rem" }}>💵</div>
-                          <input type="number" value={paymentDraft.offline} onChange={(e) => { setPaymentDraft({ ...paymentDraft, offline: e.target.value }); setStatus({ error: "", success: "" }); }} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", height: "100%", padding: 0, margin: 0, background: "transparent", fontWeight: 600, fontSize: "0.8rem" }} />
+                          <input type="number" min="0" step="0.01" inputMode="decimal" value={paymentDraft.offline} onChange={(e) => { setPaymentDraft((prev) => ({ ...prev, offline: clampMoneyInput(e.target.value, Math.max(0, total - toAmount(prev.online, 0))) })); setStatus({ error: "", success: "" }); }} max={Math.max(0, total - Number(paymentDraft.online || 0))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", height: "100%", padding: 0, margin: 0, background: "transparent", fontWeight: 600, fontSize: "0.8rem" }} />
                         </div>
                       </div>
                       <div>
@@ -855,20 +855,20 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Balance</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💰</span>
-                      <input type="text" readOnly value={Math.max(0, Number(gcDraft.price || 0) - (Number(gcDraft.online || 0) + Number(gcDraft.offline || 0))).toFixed(1)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
+                      <input type="text" readOnly value={Math.max(0, toAmount(gcDraft.price, 0) - (toAmount(gcDraft.online, 0) + toAmount(gcDraft.offline, 0))).toFixed(2)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Online</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💻</span>
-                      <input type="number" value={gcDraft.online} onChange={(e) => setGcDraft({...gcDraft, online: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(gcDraft.price, 0) - toAmount(gcDraft.offline, 0))} value={gcDraft.online} onChange={(e) => setGcDraft((prev) => ({ ...prev, online: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.offline, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Offline</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
-                      <input type="number" value={gcDraft.offline} onChange={(e) => setGcDraft({...gcDraft, offline: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(gcDraft.price, 0) - toAmount(gcDraft.online, 0))} value={gcDraft.offline} onChange={(e) => setGcDraft((prev) => ({ ...prev, offline: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.online, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
                     </div>
                   </div>
                 </div>
@@ -1055,20 +1055,20 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Balance</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💰</span>
-                      <input type="text" readOnly value={Math.max(0, Number(membershipDraft.price || 0) - (Number(membershipDraft.online || 0) + Number(membershipDraft.offline || 0))).toFixed(1)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
+                      <input type="text" readOnly value={Math.max(0, toAmount(membershipDraft.price, 0) - (toAmount(membershipDraft.online, 0) + toAmount(membershipDraft.offline, 0))).toFixed(2)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Online</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💻</span>
-                      <input type="number" value={membershipDraft.online} onChange={(e) => setMembershipDraft({...membershipDraft, online: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(membershipDraft.price, 0) - toAmount(membershipDraft.offline, 0))} value={membershipDraft.online} onChange={(e) => setMembershipDraft((prev) => ({ ...prev, online: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.offline, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Offline</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
-                      <input type="number" value={membershipDraft.offline} onChange={(e) => setMembershipDraft({...membershipDraft, offline: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(membershipDraft.price, 0) - toAmount(membershipDraft.online, 0))} value={membershipDraft.offline} onChange={(e) => setMembershipDraft((prev) => ({ ...prev, offline: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.online, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
                     </div>
                   </div>
                 </div>
@@ -1264,20 +1264,20 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Balance</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💰</span>
-                      <input type="text" readOnly value={Math.max(0, Number(packageDraft.price || 0) - (Number(packageDraft.online || 0) + Number(packageDraft.offline || 0))).toFixed(1)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
+                      <input type="text" readOnly value={Math.max(0, toAmount(packageDraft.price, 0) - (toAmount(packageDraft.online, 0) + toAmount(packageDraft.offline, 0))).toFixed(2)} style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#3b82f6", fontWeight: 600 }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Online</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
                       <span>💻</span>
-                      <input type="number" value={packageDraft.online} onChange={(e) => setPackageDraft({...packageDraft, online: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(packageDraft.price, 0) - toAmount(packageDraft.offline, 0))} value={packageDraft.online} onChange={(e) => setPackageDraft((prev) => ({ ...prev, online: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.offline, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981" }} />
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>Offline</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", border: "1px solid #cbd5e1", borderRadius: "6px", width: "120px", background: "white" }}>
-                      <input type="number" value={packageDraft.offline} onChange={(e) => setPackageDraft({...packageDraft, offline: e.target.value})} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Math.max(0, toAmount(packageDraft.price, 0) - toAmount(packageDraft.online, 0))} value={packageDraft.offline} onChange={(e) => setPackageDraft((prev) => ({ ...prev, offline: clampMoneyInput(e.target.value, Math.max(0, toAmount(prev.price, 0) - toAmount(prev.online, 0))) }))} placeholder="0.0" style={{ border: "none", outline: "none", width: "100%", fontSize: "0.8rem", borderBottom: "1px solid #e2e8f0", color: "#10b981", marginLeft: "24px" }} />
                     </div>
                   </div>
                 </div>
