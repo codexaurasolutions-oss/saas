@@ -188,7 +188,7 @@ export default function CustomersPage() {
     setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "" });
     setNotes("");
     try {
-      const res = await api.get(`/owner/customers/${row.id}`);
+      const res = await api.get(`/owner/customers/${row.id}/history`);
       setCustomerDetail(res.data);
       setUpdateForm({
         name: res.data?.name || row.name || "",
@@ -300,7 +300,7 @@ export default function CustomersPage() {
       setShowAssignMembershipModal(false);
       setSelectedPlan(null);
       setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", purchaseDate: new Date().toISOString().slice(0, 10) });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to assign membership");
@@ -321,7 +321,7 @@ export default function CustomersPage() {
       setShowAddAdvanceModal(false);
       setAdvanceForm({ amount: "", mode: "Online", remark: "" });
       fetchCustomerAdvances(selectedCustomer.id);
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to add advance");
@@ -340,7 +340,7 @@ export default function CustomersPage() {
         dateOfBirth: updateForm.dateOfBirth || undefined,
         anniversary: updateForm.anniversary || undefined,
       });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
       setSelectedCustomer((prev) => prev ? { ...prev, name: updateForm.name, phone: updateForm.phone } : prev);
       setDetailTab("profile");
@@ -354,7 +354,7 @@ export default function CustomersPage() {
     if (!selectedCustomer) return;
     try {
       await api.put(`/owner/customers/${selectedCustomer.id}`, { notes });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to save notes");
@@ -404,7 +404,7 @@ export default function CustomersPage() {
       setShowPackageModal(false);
       setSelectedPackage(null);
       setPackageForm({ validityDays: "", price: "", staffId: "", purchaseDate: new Date().toISOString().slice(0, 10) });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to assign package");
@@ -441,7 +441,7 @@ export default function CustomersPage() {
       setShowFamilyModal(false);
       setFamilyForm({ name: "", phone: "", relation: "" });
       setFamilyError("");
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       setFamilyError(formatApiError(e, "Failed to add family member"));
@@ -460,7 +460,7 @@ export default function CustomersPage() {
       });
       setShowFollowUpModal(false);
       setFollowUpForm({ date: "", time: "", message: "", type: "call" });
-      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}/history`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to add follow-up");
