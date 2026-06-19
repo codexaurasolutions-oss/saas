@@ -210,8 +210,8 @@ export const registerBillingRoutes = (ownerRouter) => {
         ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
         ...(q ? {
           OR: [
-            { invoiceNumber: { contains: q } },
-            { customer: { is: { name: { contains: q } } } }
+            { invoiceNumber: { contains: q, mode: "insensitive" } },
+            { customer: { is: { name: { contains: q, mode: "insensitive" } } } }
           ]
         } : {})
       },
@@ -572,9 +572,9 @@ export const registerBillingRoutes = (ownerRouter) => {
         ...(type ? { type } : {}),
         ...(q ? {
           OR: [
-            { note: { contains: q } },
-            { invoice: { is: { invoiceNumber: { contains: q } } } },
-            { invoice: { is: { customer: { is: { name: { contains: q } } } } } }
+            { note: { contains: q, mode: "insensitive" } },
+            { invoice: { is: { invoiceNumber: { contains: q, mode: "insensitive" } } } },
+            { invoice: { is: { customer: { is: { name: { contains: q, mode: "insensitive" } } } } } }
           ]
         } : {})
       },

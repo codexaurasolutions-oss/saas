@@ -25,8 +25,8 @@ export const registerOperationsRoutes = (ownerRouter) => {
         ...(branchId ? { branchId } : {}),
         ...(q ? {
           OR: [
-            { title: { contains: q } },
-            { notes: { contains: q } }
+            { title: { contains: q, mode: "insensitive" } },
+            { notes: { contains: q, mode: "insensitive" } }
           ]
         } : {})
       },
@@ -110,7 +110,7 @@ export const registerOperationsRoutes = (ownerRouter) => {
       where: {
         salonId: req.salonId,
         ...(branchId ? { branchId } : {}),
-        ...(q ? { userSalon: { is: { user: { is: { name: { contains: q } } } } } } : {})
+        ...(q ? { userSalon: { is: { user: { is: { name: { contains: q, mode: "insensitive" } } } } } } : {})
       },
       include: { userSalon: { include: { user: true } }, branch: true },
       orderBy: { checkInAt: "desc" }
@@ -160,7 +160,7 @@ export const registerOperationsRoutes = (ownerRouter) => {
       where: {
         salonId: req.salonId,
         ...(status ? { status } : {}),
-        ...(q ? { userSalon: { is: { user: { is: { name: { contains: q } } } } } } : {})
+        ...(q ? { userSalon: { is: { user: { is: { name: { contains: q, mode: "insensitive" } } } } } } : {})
       },
       include: { userSalon: { include: { user: true } }, approvedByMembership: { include: { user: true } } },
       orderBy: { createdAt: "desc" }
@@ -202,9 +202,9 @@ export const registerOperationsRoutes = (ownerRouter) => {
         salonId: req.salonId,
         ...(q ? {
           OR: [
-            { name: { contains: q } },
-            { targetType: { contains: q } },
-            { notes: { contains: q } }
+            { name: { contains: q, mode: "insensitive" } },
+            { targetType: { contains: q, mode: "insensitive" } },
+            { notes: { contains: q, mode: "insensitive" } }
           ]
         } : {})
       },
@@ -326,10 +326,10 @@ export const registerOperationsRoutes = (ownerRouter) => {
           { OR: [{ userSalonId: null }, { userSalonId: req.user.membershipId || "" }] },
           ...(q ? [{
             OR: [
-              { title: { contains: q } },
-              { message: { contains: q } },
-              { type: { contains: q } },
-              { linkUrl: { contains: q } }
+              { title: { contains: q, mode: "insensitive" } },
+              { message: { contains: q, mode: "insensitive" } },
+              { type: { contains: q, mode: "insensitive" } },
+              { linkUrl: { contains: q, mode: "insensitive" } }
             ]
           }] : [])
         ],
@@ -350,10 +350,10 @@ export const registerOperationsRoutes = (ownerRouter) => {
           { OR: [{ userSalonId: null }, { userSalonId: req.user.membershipId || "" }] },
           ...(q ? [{
             OR: [
-              { title: { contains: q } },
-              { message: { contains: q } },
-              { type: { contains: q } },
-              { linkUrl: { contains: q } }
+              { title: { contains: q, mode: "insensitive" } },
+              { message: { contains: q, mode: "insensitive" } },
+              { type: { contains: q, mode: "insensitive" } },
+              { linkUrl: { contains: q, mode: "insensitive" } }
             ]
           }] : [])
         ],
@@ -399,12 +399,12 @@ export const registerOperationsRoutes = (ownerRouter) => {
         ...(req.query.action ? { action: String(req.query.action) } : {}),
         ...(q ? {
           OR: [
-            { module: { contains: q } },
-            { action: { contains: q } },
-            { entityType: { contains: q } },
-            { entityId: { contains: q } },
-            { summary: { contains: q } },
-            { reference: { contains: q } }
+            { module: { contains: q, mode: "insensitive" } },
+            { action: { contains: q, mode: "insensitive" } },
+            { entityType: { contains: q, mode: "insensitive" } },
+            { entityId: { contains: q, mode: "insensitive" } },
+            { summary: { contains: q, mode: "insensitive" } },
+            { reference: { contains: q, mode: "insensitive" } }
           ]
         } : {})
       },
@@ -420,12 +420,12 @@ export const registerOperationsRoutes = (ownerRouter) => {
         ...(req.query.action ? { action: String(req.query.action) } : {}),
         ...(q ? {
           OR: [
-            { module: { contains: q } },
-            { action: { contains: q } },
-            { entityType: { contains: q } },
-            { entityId: { contains: q } },
-            { summary: { contains: q } },
-            { reference: { contains: q } }
+            { module: { contains: q, mode: "insensitive" } },
+            { action: { contains: q, mode: "insensitive" } },
+            { entityType: { contains: q, mode: "insensitive" } },
+            { entityId: { contains: q, mode: "insensitive" } },
+            { summary: { contains: q, mode: "insensitive" } },
+            { reference: { contains: q, mode: "insensitive" } }
           ]
         } : {})
       },

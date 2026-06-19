@@ -146,6 +146,10 @@ const normalizeIndianPhone = (value) => {
 const indianPhoneSchema = z.string().trim()
   .transform(normalizeIndianPhone)
   .refine((value) => /^\+\d{10,15}$/.test(value), "Enter a valid phone number with country code (e.g. +91... or +92...)");
+const requiredIndianPhoneSchema = z.string().trim()
+  .min(5, "Phone must be at least 5 characters")
+  .transform(normalizeIndianPhone)
+  .refine((value) => /^\+\d{10,15}$/.test(value), "Enter a valid phone number with country code (e.g. +91... or +92...)");
 const optionalIndianPhoneSchema = z.union([z.literal(""), indianPhoneSchema]).optional()
   .transform((value) => value || undefined);
 const vendorPhoneSchema = z.string().trim().refine(
@@ -243,7 +247,7 @@ export const schemas = {
   }),
   plan: z.object({
     body: z.object({
-      name: z.string().min(2),
+      name: z.string().min(1),
       monthlyPrice: z.number().min(0),
       yearlyPrice: z.number().min(0),
       trialDays: z.number().int().min(0),
@@ -303,22 +307,42 @@ export const schemas = {
       isPopular: z.boolean().optional()
     })
   }),
-    customer: z.object({
-      body: z.object({
-        name: z.string().min(2),
-        phone: indianPhoneSchema,
-        email: optionalEmailLike,
-        branchId: z.string().optional(),
-        gender: optionalString,
-        dateOfBirth: optionalDateString,
-        anniversary: optionalDateString,
-        source: optionalString,
+  customer: z.object({
+    body: z.object({
+      name: z.string().min(1),
+      phone: requiredIndianPhoneSchema,
+      email: optionalEmailLike,
+      branchId: z.string().optional(),
+      gender: optionalString,
+      dateOfBirth: optionalDateString,
+      anniversary: optionalDateString,
+      source: optionalString,
       tags: z.array(z.string()).optional(),
       notes: optionalString,
       preferences: optionalString,
       preferredStaffId: z.string().optional(),
       allergies: optionalString,
       skinNotes: optionalString
+    })
+  }),
+  customerPatch: z.object({
+    body: z.object({
+      name: z.string().min(2).optional(),
+      phone: indianPhoneSchema.optional(),
+      email: optionalEmailLike,
+      branchId: z.string().optional(),
+      gender: optionalString,
+      dateOfBirth: optionalDateString,
+      anniversary: optionalDateString,
+      source: optionalString,
+      tags: z.array(z.string()).optional(),
+      notes: optionalString,
+      preferences: optionalString,
+      preferredStaffId: z.string().optional(),
+      allergies: optionalString,
+      skinNotes: optionalString
+    }).refine((body) => Object.keys(body).length > 0, {
+      message: "At least one customer field is required"
     })
   }),
   serviceCategory: z.object({ body: z.object({ name: z.string().min(2), parentId: z.string().nullable().optional() }) }),

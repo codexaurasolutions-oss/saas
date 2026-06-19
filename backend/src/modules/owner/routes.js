@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma.js";
 import { attachBranchStock } from "../../lib/phase2.js";
@@ -59,6 +59,26 @@ const buildCustomerData = (payload, salonId) => ({
   skinNotes: payload.skinNotes || null,
   ...(salonId ? { salonId } : {})
 });
+
+const updateCustomerHandler = async (req, res) => {
+  const row = await findScoped("customer", req.salonId, req.params.id);
+  if (!row) return res.status(404).json({ message: "Customer not found" });
+
+  if (req.body.phone) {
+    const duplicate = await prisma.customer.findFirst({
+      where: { salonId: req.salonId, phone: req.body.phone, NOT: { id: req.params.id } }
+    });
+    if (duplicate) return res.status(400).json({ message: "Another customer already uses this phone number" });
+  }
+
+  if (req.body.branchId) await ensureBranch(req.salonId, req.body.branchId);
+
+  res.json(await prisma.customer.update({
+    where: { id: req.params.id },
+    data: buildCustomerData(req.body)
+  }));
+};
+
 const resolveMembershipPermissions = async (salonId, customRoleId, explicitPermissions) => {
   let role = null;
   if (customRoleId) {
@@ -75,7 +95,12 @@ const resolveMembershipPermissions = async (salonId, customRoleId, explicitPermi
 };
 
 const createLoginUserForSalon = async (salonId, payload) => {
-  const { name, email, password, salonRole, branchId: rawBranchId, customRoleId, permissions, phone, profileNote, avatarUrl, roleTitle, showInCatalog, serviceIds = [] } = payload;
+  const {
+    name, email, password, salonRole, branchId: rawBranchId, customRoleId, permissions,
+    phone, profileNote, avatarUrl, roleTitle, showInCatalog, serviceIds = [],
+    joiningDate, designation, uanNumber, reportingToId, workingHours,
+    bankName, bankBranch, accountNumber, ifscCode
+  } = payload;
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return { status: 400, body: { message: "Email already exists" } };
 
@@ -124,7 +149,16 @@ const createLoginUserForSalon = async (salonId, payload) => {
         avatarUrl: avatarUrl || null,
         roleTitle: roleTitle || null,
         showInCatalog: Boolean(showInCatalog),
-        permissions: resolvedPermissions
+        permissions: resolvedPermissions,
+        joiningDate: joiningDate ? new Date(joiningDate) : null,
+        designation: designation || null,
+        uanNumber: uanNumber || null,
+        reportingToId: reportingToId || null,
+        workingHours: workingHours || null,
+        bankName: bankName || null,
+        bankBranch: bankBranch || null,
+        accountNumber: accountNumber || null,
+        ifscCode: ifscCode || null
       },
       include: { user: true, branch: true, customRole: true }
     });
@@ -344,10 +378,10 @@ ownerRouter.get("/customers", requireSalonPermission("customers", "view"), async
       ...(branchId ? { invoices: { some: { branchId } } } : {}),
       ...(query ? {
         OR: [
-          { name: { contains: query } },
-          { phone: { contains: query } },
-          { email: { contains: query } },
-          { source: { contains: query } }
+          { name: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { source: { contains: query, mode: "insensitive" } }
         ]
       } : {}),
       ...(filter === "high_spender" ? { totalSpend: { gte: 10000 } } : {}),
@@ -380,19 +414,8 @@ ownerRouter.post("/customers", requireSalonPermission("customers", "create"), va
     data: buildCustomerData(req.body, req.salonId)
   }));
 });
-ownerRouter.patch("/customers/:id", requireSalonPermission("customers", "edit"), validate(schemas.customer), async (req, res) => {
-  const row = await findScoped("customer", req.salonId, req.params.id);
-  if (!row) return res.status(404).json({ message: "Customer not found" });
-  const duplicate = await prisma.customer.findFirst({
-    where: { salonId: req.salonId, phone: req.body.phone, NOT: { id: req.params.id } }
-  });
-  if (duplicate) return res.status(400).json({ message: "Another customer already uses this phone number" });
-  if (req.body.branchId) await ensureBranch(req.salonId, req.body.branchId);
-  res.json(await prisma.customer.update({
-    where: { id: req.params.id },
-    data: buildCustomerData(req.body)
-  }));
-});
+ownerRouter.patch("/customers/:id", requireSalonPermission("customers", "edit"), validate(schemas.customerPatch), updateCustomerHandler);
+ownerRouter.put("/customers/:id", requireSalonPermission("customers", "edit"), validate(schemas.customerPatch), updateCustomerHandler);
 ownerRouter.get("/customers/:id", requireSalonPermission("customers", "view"), async (req, res) => {
   const customer = await prisma.customer.findFirst({
     where: { id: req.params.id, salonId: req.salonId },
@@ -424,21 +447,13 @@ ownerRouter.get("/staff-users", requireSalonPermission("staff", "view"), async (
   }));
 });
 ownerRouter.get("/custom-roles", requireSalonPermission("staff", "view"), async (req, res) => {
-  res.json(await prisma.customRole.findMany({
-    where: { salonId: req.salonId },
-    orderBy: { createdAt: "desc" }
-  }));
+  res.json(await prisma.customRole.findMany({ where: { salonId: req.salonId }, orderBy: { createdAt: "desc" } }));
 });
 ownerRouter.post("/custom-roles", requireSalonPermission("staff", "create"), validate(schemas.customRole), async (req, res) => {
   const existing = await prisma.customRole.findFirst({ where: { salonId: req.salonId, name: req.body.name } });
   if (existing) return res.status(400).json({ message: "A custom role with this name already exists" });
   res.status(201).json(await prisma.customRole.create({
-    data: {
-      salonId: req.salonId,
-      name: req.body.name,
-      description: req.body.description || null,
-      permissions: req.body.permissions
-    }
+    data: { salonId: req.salonId, name: req.body.name, description: req.body.description || null, permissions: req.body.permissions }
   }));
 });
 ownerRouter.patch("/custom-roles/:id", requireSalonPermission("staff", "edit"), validate(schemas.customRole), async (req, res) => {
@@ -446,11 +461,7 @@ ownerRouter.patch("/custom-roles/:id", requireSalonPermission("staff", "edit"), 
   if (!role) return res.status(404).json({ message: "Custom role not found" });
   res.json(await prisma.customRole.update({
     where: { id: role.id },
-    data: {
-      name: req.body.name,
-      description: req.body.description || null,
-      permissions: req.body.permissions
-    }
+    data: { name: req.body.name, description: req.body.description || null, permissions: req.body.permissions }
   }));
 });
 ownerRouter.post("/users", requireSalonPermission("staff", "create"), validate(schemas.ownerUser), async (req, res) => {
@@ -470,11 +481,9 @@ ownerRouter.patch("/users/:id", requireSalonPermission("staff", "edit"), validat
   const resolvedPermissions = await resolveMembershipPermissions(req.salonId, customRoleId, req.body.permissions);
   if (Array.isArray(req.body.serviceIds) && req.body.serviceIds.length) {
     const services = await prisma.service.findMany({ where: { id: { in: req.body.serviceIds }, salonId: req.salonId, isActive: true } });
-    if (services.length !== req.body.serviceIds.length) {
-      return res.status(400).json({ message: "One or more assigned services are invalid for this salon" });
-    }
+    if (services.length !== req.body.serviceIds.length) return res.status(400).json({ message: "One or more assigned services are invalid for this salon" });
     if (branchId) {
-      const invalidService = services.find((service) => service.branchId && service.branchId !== branchId);
+      const invalidService = services.find((s) => s.branchId && s.branchId !== branchId);
       if (invalidService) return res.status(400).json({ message: "Assigned services must belong to the selected branch or be branch-shared" });
     }
   }
@@ -491,7 +500,16 @@ ownerRouter.patch("/users/:id", requireSalonPermission("staff", "edit"), validat
         roleTitle: req.body.roleTitle ?? row.roleTitle,
         showInCatalog: req.body.showInCatalog ?? row.showInCatalog,
         isArchived: req.body.isArchived ?? row.isArchived,
-        permissions: resolvedPermissions
+        permissions: resolvedPermissions,
+        joiningDate: req.body.joiningDate !== undefined ? (req.body.joiningDate ? new Date(req.body.joiningDate) : null) : row.joiningDate,
+        designation: req.body.designation !== undefined ? (req.body.designation || null) : row.designation,
+        uanNumber: req.body.uanNumber !== undefined ? (req.body.uanNumber || null) : row.uanNumber,
+        reportingToId: req.body.reportingToId !== undefined ? (req.body.reportingToId || null) : row.reportingToId,
+        workingHours: req.body.workingHours !== undefined ? (req.body.workingHours || null) : row.workingHours,
+        bankName: req.body.bankName !== undefined ? (req.body.bankName || null) : row.bankName,
+        bankBranch: req.body.bankBranch !== undefined ? (req.body.bankBranch || null) : row.bankBranch,
+        accountNumber: req.body.accountNumber !== undefined ? (req.body.accountNumber || null) : row.accountNumber,
+        ifscCode: req.body.ifscCode !== undefined ? (req.body.ifscCode || null) : row.ifscCode
       },
       include: { user: true, branch: true, customRole: true }
     });
@@ -553,11 +571,11 @@ ownerRouter.get("/support-tickets", requireSalonPermission("support", "view"), a
       ...(priority ? { priority } : {}),
       ...(q ? {
         OR: [
-          { title: { contains: q } },
-          { description: { contains: q } },
-          { category: { contains: q } },
-          { internalNote: { contains: q } },
-          { assignedAgentName: { contains: q } }
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { category: { contains: q, mode: "insensitive" } },
+          { internalNote: { contains: q, mode: "insensitive" } },
+          { assignedAgentName: { contains: q, mode: "insensitive" } }
         ]
       } : {})
     },

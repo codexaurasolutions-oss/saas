@@ -43,6 +43,9 @@ const genderMatches = (serviceGender, selectedGender) => {
   return !gender || gender === "both" || gender === "unisex" || gender === selected;
 };
 
+const getSafeBranchStaffUsers = (staffUsers = [], branchId = "") =>
+  staffUsers.filter((staffUser) => !branchId || !staffUser.branchId || staffUser.branchId === branchId);
+
 export default function PosPage() {
   const { formatMoney } = useSalonSettings();
   const navigate = useNavigate();
@@ -219,6 +222,16 @@ export default function PosPage() {
   const pkgPaymentOnline = Math.max(0, Math.min(pkgPaymentTotal, Number(pkgDraft.online || 0)));
   const pkgPaymentOffline = Math.max(0, Math.min(pkgPaymentTotal - pkgPaymentOnline, Number(pkgDraft.offline || 0)));
   const pkgPaymentBalance = Math.max(0, Number((pkgPaymentTotal - pkgPaymentOnline - pkgPaymentOffline).toFixed(2)));
+  const branchScopedStaffUsers = useMemo(
+    () => getSafeBranchStaffUsers(context.staffUsers || [], form.branchId),
+    [context.staffUsers, form.branchId]
+  );
+  const pkgDraftCanSubmit = Boolean(
+    pkgModalPkg &&
+    pkgDraft.staffId &&
+    pkgPaymentTotal > 0 &&
+    (pkgModalPkg?.id !== "CUSTOM" || pkgDraft.customServices.length || pkgDraft.customProducts.length)
+  );
 
   useEffect(() => {
     if (!showPkgModal) return;
@@ -395,9 +408,26 @@ export default function PosPage() {
   const handleAddPkgToCart = () => {
     const pkg = pkgModalPkg;
     const price = Number(pkgDraft.price || pkg?.price || 0);
+    if (!pkg) {
+      setStatus({ error: "Please select a package first.", success: "" });
+      return;
+    }
+    if (!pkgDraft.staffId) {
+      setStatus({ error: "Please select staff before adding the package.", success: "" });
+      return;
+    }
+    if (price <= 0) {
+      setStatus({ error: "Package price must be greater than zero.", success: "" });
+      return;
+    }
+    if (pkg?.id === "CUSTOM" && !pkgDraft.customServices.length && !pkgDraft.customProducts.length) {
+      setStatus({ error: "Please add at least one service or product to the custom package.", success: "" });
+      return;
+    }
     const online = clampMoneyInput(pkgDraft.online, price);
     const offline = clampMoneyInput(pkgDraft.offline, Math.max(0, price - Number(online || 0)));
     const balance = Math.max(0, Number((price - Number(online || 0) - Number(offline || 0)).toFixed(2)));
+    setStatus((current) => ({ ...current, error: "" }));
     setForm(c => {
       const activeItems = c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId);
       return {
@@ -406,6 +436,7 @@ export default function PosPage() {
           itemType: "PACKAGE",
           packageId: pkg?.id === "CUSTOM" ? "CUSTOM" : pkg?.id || "CUSTOM",
           name: pkg?.name || "Custom Package",
+          staffUserId: pkgDraft.staffId || "",
           staffUserSalonId: pkgDraft.staffId || "",
           qty: 1,
           unitPrice: price,
@@ -532,7 +563,10 @@ export default function PosPage() {
       }
       if (item.itemType === "PRODUCT" && !item.productId) return "Please select a valid product.";
       if (item.itemType === "MEMBERSHIP" && !item.membershipPlanId) return "Please select a membership plan.";
-      if (item.itemType === "PACKAGE" && !item.packageId) return "Please select a package.";
+      if (item.itemType === "PACKAGE") {
+        if (!item.packageId) return "Please select a package.";
+        if (!(item.staffUserSalonId || item.staffUserId)) return "Please assign a staff member for each package.";
+      }
       if (Number(item.qty || 0) <= 0) return "Quantity must be greater than zero.";
     }
     if (mode === "complete") {
@@ -1417,6 +1451,48 @@ export default function PosPage() {
                   <div><span style={{ color:"#64748b", fontWeight:500 }}>Total Product Amount:</span> <span style={{ fontWeight:700, color:"#0f172a" }}>{formatMoney(pkgDraft.customProducts.reduce((acc,p)=>acc+(Number(p.price||0)*Number(p.qty||1)),0))}</span></div>
                 </div>
 
+                <div style={{ display:"flex", gap:16, alignItems:"flex-end", marginTop:8, flexWrap:"wrap" }}>
+                  <div style={{ flex:1.2, minWidth:180 }}>
+                    <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Select staff</label>
+                    <select
+                      value={pkgDraft.staffId}
+                      onChange={e => setPkgDraft(d => ({ ...d, staffId: e.target.value }))}
+                      style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }}
+                    >
+                      <option value="">Select Staff</option>
+                      {branchScopedStaffUsers.map((staffUser) => (
+                        <option key={staffUser.id} value={staffUser.id}>
+                          {staffUser.user?.name || staffUser.user?.email || staffUser.id}
+                        </option>
+                      ))}
+                    </select>
+                    {!branchScopedStaffUsers.length ? (
+                      <div style={{ marginTop:6, fontSize:"0.78rem", color:"#b45309" }}>
+                        No active staff found for the selected branch.
+                      </div>
+                    ) : null}
+                  </div>
+                  <div style={{ flex:1, minWidth:140 }}>
+                    <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Purchase date</label>
+                    <input
+                      type="date"
+                      value={pkgDraft.purchaseDate}
+                      onChange={e => setPkgDraft(d => ({ ...d, purchaseDate: e.target.value }))}
+                      style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }}
+                    />
+                  </div>
+                  <div style={{ flex:1, minWidth:120 }}>
+                    <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Validity days</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={pkgDraft.validityDays}
+                      onChange={e => setPkgDraft(d => ({ ...d, validityDays: String(Math.max(1, Number(e.target.value) || 1)) }))}
+                      style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }}
+                    />
+                  </div>
+                </div>
+
                 {/* Payment Details */}
                 <div style={{ marginTop:8 }}>
                   <div style={{ fontWeight:600, color:"#0f172a", fontSize:"0.95rem", marginBottom:12 }}>Payment Details:</div>
@@ -1447,12 +1523,17 @@ export default function PosPage() {
                   <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Remark:</label>
                   <textarea placeholder="Add remark..." value={pkgDraft.remark} onChange={e=>setPkgDraft(d=>({...d,remark:e.target.value}))} rows={2} style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box", resize:"vertical" }} />
                 </div>
+                {!pkgDraft.staffId ? (
+                  <div style={{ fontSize:"0.82rem", color:"#dc2626", fontWeight:600 }}>
+                    Staff selection required before package can be added.
+                  </div>
+                ) : null}
               </div>
             </div>
 
             <div style={{ padding:"16px 24px", borderTop:"1px solid #f1f5f9", display:"flex", justifyContent:"flex-end", gap:12 }}>
               <button onClick={() => setShowPkgModal(false)} style={{ padding:"10px 24px", background:"#fff", border:"1px solid #cbd5e1", borderRadius:8, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
-              <button onClick={handleAddPkgToCart} disabled={!pkgModalPkg} style={{ padding:"10px 24px", background:"#2563eb", color:"#fff", border:"none", borderRadius:8, fontWeight:700, cursor:pkgModalPkg?"pointer":"not-allowed", opacity:pkgModalPkg?1:0.6 }}>Add Package</button>
+              <button onClick={handleAddPkgToCart} disabled={!pkgDraftCanSubmit} style={{ padding:"10px 24px", background:"#2563eb", color:"#fff", border:"none", borderRadius:8, fontWeight:700, cursor:pkgDraftCanSubmit?"pointer":"not-allowed", opacity:pkgDraftCanSubmit?1:0.6 }}>Add Package</button>
             </div>
           </div>
         </div>

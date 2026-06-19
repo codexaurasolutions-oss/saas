@@ -1007,7 +1007,7 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                   </div>
                   {memServiceSearch.trim().length > 0 && (
                     <div style={{ position: "absolute", top: "100%", left: "112px", right: 0, background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", zIndex: 10, maxHeight: "200px", overflowY: "auto", boxShadow: "none" }}>
-                      {((typeof context !== 'undefined' ? context.services : null) || (typeof posContext !== 'undefined' ? posContext.services : null) || [])
+                      {(posContext.services || [])
                         .filter(s => s.name.toLowerCase().includes(memServiceSearch.toLowerCase()))
                         .map(s => (
                           <div key={s.id} onClick={() => handleMemServiceAdd(s)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>{s.name}</div>
@@ -1035,7 +1035,7 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                   </div>
                   {memProductSearch.trim().length > 0 && (
                     <div style={{ position: "absolute", top: "100%", left: "112px", right: 0, background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", zIndex: 10, maxHeight: "200px", overflowY: "auto", boxShadow: "none" }}>
-                      {((typeof context !== 'undefined' ? context.products : null) || (typeof posContext !== 'undefined' ? posContext.products : null) || [])
+                      {(posContext.products || [])
                         .filter(p => p.name.toLowerCase().includes(memProductSearch.toLowerCase()))
                         .map(p => (
                           <div key={p.id} onClick={() => handleMemProductAdd(p)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>{p.name}</div>
@@ -1217,7 +1217,7 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                   </div>
                   {pkgServiceSearch.trim().length > 0 && (
                     <div style={{ position: "absolute", top: "100%", left: "112px", right: 0, background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", zIndex: 10, maxHeight: "200px", overflowY: "auto", boxShadow: "none" }}>
-                      {((typeof context !== 'undefined' ? context.services : null) || (typeof posContext !== 'undefined' ? posContext.services : null) || [])
+                      {(posContext.services || [])
                         .filter(s => s.name.toLowerCase().includes(pkgServiceSearch.toLowerCase()))
                         .map(s => (
                           <div key={s.id} onClick={() => handlePackageServiceAdd(s)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>{s.name}</div>
@@ -1245,7 +1245,7 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
                   </div>
                   {pkgProductSearch.trim().length > 0 && (
                     <div style={{ position: "absolute", top: "100%", left: "112px", right: 0, background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", zIndex: 10, maxHeight: "200px", overflowY: "auto", boxShadow: "none" }}>
-                      {((typeof context !== 'undefined' ? context.products : null) || (typeof posContext !== 'undefined' ? posContext.products : null) || [])
+                      {(posContext.products || [])
                         .filter(p => p.name.toLowerCase().includes(pkgProductSearch.toLowerCase()))
                         .map(p => (
                           <div key={p.id} onClick={() => handlePackageProductAdd(p)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>{p.name}</div>

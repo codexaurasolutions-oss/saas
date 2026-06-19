@@ -5,7 +5,8 @@ import IndianPhoneInput from "../../components/IndianPhoneInput";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { formatApiError } from "../../utils/apiError";
 import { downloadFromApi } from "../../utils/download";
-import PageLoader from "../../components/PageLoader";
+import { normalizeIndianPhoneInputDigits } from "../../utils/phone";
+
 
 const EMPTY_ADVANCED_FILTERS = {
   gender: "",
@@ -388,7 +389,7 @@ export default function CustomersPage() {
       setFamilyError("Name must be at least 2 characters");
       return;
     }
-    const phoneDigits = familyForm.phone.replace(/\D/g, "");
+    const phoneDigits = normalizeIndianPhoneInputDigits(familyForm.phone);
     if (phoneDigits.length !== 10) {
       setFamilyError("Phone number must be exactly 10 digits");
       return;
@@ -399,7 +400,7 @@ export default function CustomersPage() {
     }
     try {
       await api.post("/owner/customers", {
-        phone: familyForm.phone,
+        phone: `+91${phoneDigits}`,
         name: familyForm.name.trim(),
         gender: "female",
         notes: `familyMemberOf:${selectedCustomer.id} relation:${familyForm.relation || "other"}`,

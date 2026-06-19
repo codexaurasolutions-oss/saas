@@ -320,6 +320,15 @@ model UserSalon {
   showInCatalog        Boolean                   @default(false)
   isArchived           Boolean                   @default(false)
   permissions          Json?
+  joiningDate          DateTime?
+  designation          String?
+  uanNumber            String?
+  reportingToId        String?
+  workingHours         String?
+  bankName             String?
+  bankBranch           String?
+  accountNumber        String?
+  ifscCode             String?
   user                 User                      @relation(fields: [userId], references: [id])
   salon                Salon                     @relation(fields: [salonId], references: [id])
   branch               Branch?                   @relation(fields: [branchId], references: [id])

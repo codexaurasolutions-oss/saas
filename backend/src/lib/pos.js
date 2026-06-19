@@ -11,6 +11,8 @@ const normalizeStatus = (paidAmount, total, refundAmount = 0, cancelled = false)
   return "UNPAID";
 };
 
+const toNumber = (value) => Number(value || 0);
+
 export const createInvoiceNumber = async (tx, salonId, branchId) => {
   const count = await tx.invoice.count({ where: { salonId } });
   const settings = await getSalonSetting(tx, salonId, branchId);
