@@ -400,6 +400,7 @@ export default function SettingsPage() {
     ? auth.membership.permissions.settings
     : [];
   const canEditSettings = settingsPermissions.includes("edit");
+  const settingsLocked = !canEditSettings;
 
   const refreshGiftCardsSummary = useCallback(async () => {
     try {
@@ -419,17 +420,10 @@ export default function SettingsPage() {
     return SETTINGS_WORKSPACE_SECTIONS.filter((item) => `${item.label} ${item.hint}`.toLowerCase().includes(deferredSearch));
   }, [canEditSettings, deferredSearch]);
 
-  if (!canEditSettings) {
-    return (
-      <div className="settings-workspace-wrapper">
-        <div className="settings-panel-card">
-          <p className="error-text">Access restricted. This settings workspace is only visible for roles with `settings.edit` permission.</p>
-        </div>
-      </div>
-    );
-  }
-
   useEffect(() => {
+    if (settingsLocked) {
+      return undefined;
+    }
     let active = true;
     const load = async () => {
       try {
@@ -511,7 +505,7 @@ export default function SettingsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [salonId, settingsLocked]);
 
   useEffect(() => {
     let active = true;
@@ -1681,7 +1675,6 @@ export default function SettingsPage() {
         setStatus({ error: "", success: "" });
         await api.patch("/owner/settings", form.advancedSettings);
         setStatus({ error: "", success: "Roster saved successfully." });
-        if (typeof loadSummary === "function") await loadSummary();
       } catch (error) {
         setStatus({ error: formatApiError(error, "Could not save roster"), success: "" });
       }
@@ -2947,12 +2940,15 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-workspace-wrapper">
-
-
+      {settingsLocked ? (
+        <div className="settings-panel-card">
+          <p className="error-text">Access restricted. This settings workspace is only visible for roles with `settings.edit` permission.</p>
+        </div>
+      ) : null}
       {status.error ? <div className="settings-panel-card"><p className="error-text">{status.error}</p></div> : null}
       {status.success ? <div className="settings-panel-card"><p className="success-text">{status.success}</p></div> : null}
 
-      {status.loading ? (
+      {settingsLocked ? null : status.loading ? (
         <PageLoader title="Loading settings workspace" message="Bringing together generic settings, staff controls, incentives, tax mappings, and communication defaults." />
       ) : (
         <div className="settings-layout">

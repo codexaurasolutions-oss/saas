@@ -61,11 +61,13 @@ export default function PosDashboardPage() {
   const [showGcModal, setShowGcModal] = useState(false);
   const [gcModalGc, setGcModalGc] = useState(null);
   const [gcDraft, setGcDraft] = useState({ staffId: "", price: "", validityDays: "30", purchaseDate: new Date().toISOString().slice(0, 10) });
+  const [gcSearch, setGcSearch] = useState("");
 
   const [showMemModal, setShowMemModal] = useState(false);
   const [memModalMem, setMemModalMem] = useState(null);
   const [memDraft, setMemDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10), customServices: [] });
   const [memSearch, setMemSearch] = useState("");
+  const [memServiceSearch, setMemServiceSearch] = useState("");
   
 
   const handleAddPkgToCart = () => {

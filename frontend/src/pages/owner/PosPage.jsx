@@ -349,29 +349,36 @@ export default function PosPage() {
   };
 
   
-  const handleAddPkgToCart = () => {
+  const handleCreatePkgInvoice = async () => {
     const pkg = pkgModalPkg;
-    setForm(c => ({
-      ...c,
-      items: [...c.items.filter(i => i.serviceId || i.productId || i.membershipPlanId || i.packageId), {
-        itemType: "PACKAGE",
-        packageId: pkg?.id || "",
-        name: pkg?.name || "Package",
-        staffUserSalonId: pkgDraft.staffId || "",
-        qty: 1,
-        unitPrice: Number(pkgDraft.price || 0),
-        originalUnitPrice: Number(pkgDraft.price || 0),
-        discountPct: 0,
-        discountAmt: 0,
-        taxPct: 0,
-        validityDays: Number(pkgDraft.validityDays || 30),
-        purchaseDate: pkgDraft.purchaseDate,
-        customServices: pkgDraft.customServices,
-        customProducts: pkgDraft.customProducts,
-        isCustom: true
-      }]
+    const isCustom = pkg?.id === "CUSTOM";
+    setForm((current) => ({
+      ...current,
+      items: [
+        ...current.items.filter((item) => item.serviceId || item.productId || item.membershipPlanId || item.packageId),
+        {
+          itemType: "PACKAGE",
+          packageId: isCustom ? "CUSTOM" : (pkg?.id || ""),
+          name: pkg?.name || "Package",
+          staffUserId: pkgDraft.staffId || "",
+          staffUserSalonId: pkgDraft.staffId || "",
+          qty: 1,
+          unitPrice: Number(pkgDraft.price || 0),
+          originalUnitPrice: Number(pkgDraft.price || 0),
+          discountPct: 0,
+          discountAmt: 0,
+          taxPct: 0,
+          validityDays: Number(pkgDraft.validityDays || 30),
+          purchaseDate: pkgDraft.purchaseDate,
+          customServices: pkgDraft.customServices,
+          customProducts: pkgDraft.customProducts,
+          isCustom
+        }
+      ]
     }));
     setShowPkgModal(false);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await submitInvoice("complete");
   };
 
   const handleAddMemToCart = () => {
@@ -382,6 +389,7 @@ export default function PosPage() {
         itemType: "MEMBERSHIP",
         membershipPlanId: mem?.id || "",
         name: mem?.name || "Membership",
+        staffUserId: memDraft.staffId || "",
         staffUserSalonId: memDraft.staffId || "",
         qty: 1,
         unitPrice: Number(memDraft.price || 0),
@@ -1349,7 +1357,7 @@ export default function PosPage() {
                   </div>
                   <div style={{ flex:1, minWidth:120 }}>
                     <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Price</label>
-                    <input type="number" placeholder="Enter Price" value={pkgDraft.price} onChange={e=>setPkgDraft(d=>({...d,price:e.target.value}))} style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box" }} />
+                    <input type="number" placeholder="Enter Price" value={pkgDraft.price} onChange={e=>setPkgDraft(d=>({...d,price:e.target.value}))} readOnly={pkgModalPkg?.id !== "CUSTOM"} style={{ width:"100%", padding:"10px 12px", border:"1px solid #cbd5e1", borderRadius:8, fontSize:"0.9rem", boxSizing:"border-box", background: pkgModalPkg?.id !== "CUSTOM" ? "#f8fafc" : "#fff" }} />
                   </div>
                   <div style={{ flex:1.2, minWidth:150 }}>
                     <label style={{ fontSize:"0.82rem", fontWeight:600, color:"#475569", display:"block", marginBottom:6 }}>Staff</label>
@@ -1368,7 +1376,7 @@ export default function PosPage() {
 
             <div style={{ padding:"16px 24px", borderTop:"1px solid #f1f5f9", display:"flex", justifyContent:"flex-end", gap:12 }}>
               <button onClick={() => setShowPkgModal(false)} style={{ padding:"10px 24px", background:"#fff", border:"1px solid #cbd5e1", borderRadius:8, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
-              <button onClick={handleAddPkgToCart} disabled={!pkgModalPkg || !pkgDraft.staffId} style={{ padding:"10px 24px", background:"#2563eb", color:"#fff", border:"none", borderRadius:8, fontWeight:700, cursor:(pkgModalPkg && pkgDraft.staffId)?"pointer":"not-allowed", opacity:(pkgModalPkg && pkgDraft.staffId)?1:0.6 }}>Add Package</button>
+              <button onClick={handleCreatePkgInvoice} disabled={!pkgModalPkg || !pkgDraft.staffId} style={{ padding:"10px 24px", background:"#2563eb", color:"#fff", border:"none", borderRadius:8, fontWeight:700, cursor:(pkgModalPkg && pkgDraft.staffId)?"pointer":"not-allowed", opacity:(pkgModalPkg && pkgDraft.staffId)?1:0.6 }}>Create Package</button>
             </div>
           </div>
         </div>

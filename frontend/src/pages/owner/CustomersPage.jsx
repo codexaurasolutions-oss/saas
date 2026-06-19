@@ -298,7 +298,7 @@ export default function CustomersPage() {
   const handleUpdateProfile = async () => {
     if (!selectedCustomer) return;
     try {
-      await api.put(`/owner/customers/${selectedCustomer.id}`, {
+      await api.patch(`/owner/customers/${selectedCustomer.id}`, {
         name: updateForm.name,
         phone: updateForm.phone,
         email: updateForm.email,
@@ -319,7 +319,7 @@ export default function CustomersPage() {
   const handleSaveNotes = async () => {
     if (!selectedCustomer) return;
     try {
-      await api.put(`/owner/customers/${selectedCustomer.id}`, { notes });
+      await api.patch(`/owner/customers/${selectedCustomer.id}`, { notes });
       const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {

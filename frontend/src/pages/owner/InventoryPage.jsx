@@ -236,13 +236,44 @@ export default function InventoryPage() {
 
   const loadAll = async () => {
     try {
-      api.get("/owner/inventory/categories").then(res => setCategories(res.data)).catch(console.error);
-      api.get("/owner/inventory/products").then(res => setProducts(res.data)).catch(console.error);
-      api.get("/owner/inventory/stock-movements").then(res => setMovements(res.data)).catch(console.error);
-      api.get("/owner/inventory/low-stock").then(res => setLowStock(res.data)).catch(console.error);
-      api.get("/owner/branches").then(res => setBranches(res.data)).catch(console.error);
-      api.get("/owner/purchases/vendors").then(res => setVendors(res.data)).catch(console.error);
-      api.get("/owner/purchases/orders").then(res => setOrders(res.data)).catch(console.error);
+      const [
+        categoriesResponse,
+        productsResponse,
+        movementsResponse,
+        lowStockResponse,
+        branchesResponse,
+        vendorsResponse,
+        ordersResponse
+      ] = await Promise.allSettled([
+        api.get("/owner/inventory/categories"),
+        api.get("/owner/inventory/products"),
+        api.get("/owner/inventory/stock-movements"),
+        api.get("/owner/inventory/low-stock"),
+        api.get("/owner/branches"),
+        api.get("/owner/purchases/vendors"),
+        api.get("/owner/purchases/orders")
+      ]);
+
+      if (categoriesResponse.status === "fulfilled") setCategories(categoriesResponse.value.data);
+      else console.error(categoriesResponse.reason);
+
+      if (productsResponse.status === "fulfilled") setProducts(productsResponse.value.data);
+      else console.error(productsResponse.reason);
+
+      if (movementsResponse.status === "fulfilled") setMovements(movementsResponse.value.data);
+      else console.error(movementsResponse.reason);
+
+      if (lowStockResponse.status === "fulfilled") setLowStock(lowStockResponse.value.data);
+      else console.error(lowStockResponse.reason);
+
+      if (branchesResponse.status === "fulfilled") setBranches(branchesResponse.value.data);
+      else console.error(branchesResponse.reason);
+
+      if (vendorsResponse.status === "fulfilled") setVendors(vendorsResponse.value.data);
+      else console.error(vendorsResponse.reason);
+
+      if (ordersResponse.status === "fulfilled") setOrders(ordersResponse.value.data);
+      else console.error(ordersResponse.reason);
     } finally {
       setLoading(false);
     }
