@@ -1,21 +1,10 @@
 import { useState } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
-import { formatCurrency, normalizeCurrencyCode } from "../../utils/currency";
 
 export default function ProductDetailPage() {
-  const { salon, genericSettings, addToCart } = useOutletContext();
+  const { salon, addToCart } = useOutletContext();
   const { id } = useParams();
   const [qty, setQty] = useState(1);
-  const currencyCode = normalizeCurrencyCode(
-    genericSettings?.defaultCurrency ||
-    genericSettings?.currency ||
-    salon?.defaultCurrency ||
-    salon?.currency ||
-    "INR"
-  );
-  const money = (value) => formatCurrency(value, currencyCode);
-  const showThumbnails = genericSettings.showProductThumbnails !== false;
-  const showProductPdp = genericSettings.showProductPdf !== false;
 
   const product = { 
     id, 
@@ -26,13 +15,13 @@ export default function ProductDetailPage() {
     description: "Experience our premium signature styling service designed to revitalize and refresh your look. Our expert professionals use only the highest quality products."
   };
 
-  return showProductPdp ? (
+  return (
     <div style={{ maxWidth: 1300, margin: '0 auto', padding: '60px 20px' }}>
       <Link to={`/site/${salon.slug}/collections`} style={{ color: 'var(--sf-text-light)', textDecoration: 'none', marginBottom: 32, display: 'inline-block' }}>&larr; Back</Link>
       
       <div className="sf-product-detail-layout">
         <div className="sf-product-image-container">
-          {showThumbnails ? <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1200&auto=format&fit=crop&sig=${id}`} alt="Product" /> : <div className="sf-placeholder-img">Preview hidden</div>}
+          <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1200&auto=format&fit=crop&sig=${id}`} alt="Product" />
         </div>
 
         <div className="sf-product-meta">
@@ -43,7 +32,7 @@ export default function ProductDetailPage() {
           </div>
 
           <h1 className="sf-product-headline">{product.name}</h1>
-          <p className="sf-product-price-large">{money(product.price)}</p>
+          <p className="sf-product-price-large">{salon.currency} {product.price.toFixed(2)}</p>
           
           <div className="sf-product-divider"></div>
 
@@ -74,12 +63,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-    </div>
-  ) : (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '120px 20px', textAlign: 'center' }}>
-      <h2 style={{ color: 'var(--sf-text-light)' }}>Product details are currently hidden</h2>
-      <p style={{ color: 'var(--sf-text-light)', marginTop: 16 }}>The owner has disabled product detail pages. Please browse our collection directly.</p>
-      <Link to={`/site/${salon.slug}/collections`} className="sf-btn sf-btn-primary" style={{ display: 'inline-block', marginTop: 24 }}>Browse Collections</Link>
     </div>
   );
 }

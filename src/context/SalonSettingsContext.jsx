@@ -33,7 +33,16 @@ export const SalonSettingsProvider = ({ children }) => {
   }, [initialCurrency]);
 
   useEffect(() => {
-    if (!auth) return undefined;
+    if (!auth || !auth.accessToken) return undefined;
+
+    const permissions = auth.membership?.permissions || {};
+    const hasSettingsPermission = Array.isArray(permissions.settings) && permissions.settings.includes("view");
+    const isSuperAdmin = auth.user?.systemRole === "SUPER_ADMIN";
+
+    if (!hasSettingsPermission && !isSuperAdmin) {
+      return undefined;
+    }
+
     let active = true;
 
     const syncSettings = async () => {

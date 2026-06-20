@@ -1,46 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
-import PageLoader from "../../components/PageLoader";
 
 export default function WebsiteEditorPage() {
+  const { auth } = useAuth();
   const [config, setConfig] = useState({
     heroTitle: "Elevate Your Beauty Experience",
     heroSubtitle: "Discover premium salon services and exclusive products curated just for you.",
-    heroImage: "",
-    sections: []
+    heroImage: ""
   });
-  const [preview, setPreview] = useState(null);
-  const [status, setStatus] = useState({ loading: true, error: "", success: "" });
   const [saving, setSaving] = useState(false);
   const [iframeKey, setIframeKey] = useState(Date.now());
+  const [status, setStatus] = useState({ error: "", success: "" });
 
-  const slug = useMemo(() => preview?.settings?.customSlug || preview?.salon?.slug || "demo", [preview]);
+  const slug = auth?.membership?.salon?.slug || "demo-salon";
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([
-      api.get("/owner/website/config"),
-      api.get("/owner/catalog/preview")
-    ]).then(([configResponse, previewResponse]) => {
+    api.get("/owner/website/config").then((response) => {
       if (!active) return;
-      if (configResponse.status !== "fulfilled") {
-        setStatus({ loading: false, error: formatApiError(configResponse.reason, "Could not load website editor"), success: "" });
-        return;
-      }
       setConfig({
-        heroTitle: configResponse.value.data.heroTitle || "Elevate Your Beauty Experience",
-        heroSubtitle: configResponse.value.data.heroSubtitle || "Discover premium salon services and exclusive products curated just for you.",
-        heroImage: configResponse.value.data.heroImage || "",
-        sections: configResponse.value.data.sections || []
+        heroTitle: response.data?.heroTitle || "Elevate Your Beauty Experience",
+        heroSubtitle: response.data?.heroSubtitle || "Discover premium salon services and exclusive products curated just for you.",
+        heroImage: response.data?.heroImage || ""
       });
-      setPreview(previewResponse.status === "fulfilled" ? (previewResponse.value.data || null) : null);
-      setStatus({ loading: false, error: "", success: "" });
     }).catch((error) => {
       if (!active) return;
-      setStatus({ loading: false, error: formatApiError(error, "Could not load website editor"), success: "" });
+      setStatus({ error: formatApiError(error, "Could not load website editor settings"), success: "" });
     });
-
     return () => {
       active = false;
     };
@@ -48,21 +36,23 @@ export default function WebsiteEditorPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    setStatus((current) => ({ ...current, error: "", success: "" }));
+    setStatus({ error: "", success: "" });
     try {
-      await api.post("/owner/website/config", config);
+      const response = await api.post("/owner/website/config", config);
+      setConfig({
+        heroTitle: response.data?.heroTitle || "",
+        heroSubtitle: response.data?.heroSubtitle || "",
+        heroImage: response.data?.heroImage || ""
+      });
+      // Force iframe reload to reflect changes
       setIframeKey(Date.now());
-      setStatus({ loading: false, error: "", success: "Website editor changes published successfully." });
+      setStatus({ error: "", success: "Website content published successfully." });
     } catch (err) {
-      setStatus({ loading: false, error: formatApiError(err, "Failed to save website configuration"), success: "" });
+      setStatus({ error: formatApiError(err, "Could not publish website content"), success: "" });
     } finally {
       setSaving(false);
     }
   };
-
-  if (status.loading) {
-    return <PageLoader title="Loading website editor" message="Preparing your live storefront preview and editable website content." />;
-  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f5f5' }}>
@@ -80,17 +70,13 @@ export default function WebsiteEditorPage() {
           </button>
         </div>
 
+        {(status.error || status.success) ? (
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid #e0e0e0', background: status.error ? '#fef2f2' : '#f0fdf4', color: status.error ? '#b91c1c' : '#166534', fontSize: '0.9rem', fontWeight: 600 }}>
+            {status.error || status.success}
+          </div>
+        ) : null}
+
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {status.error ? (
-            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px 14px', borderRadius: 10, border: '1px solid #fecaca', fontSize: 13, fontWeight: 600 }}>
-              {status.error}
-            </div>
-          ) : null}
-          {status.success ? (
-            <div style={{ background: '#dcfce7', color: '#166534', padding: '12px 14px', borderRadius: 10, border: '1px solid #bbf7d0', fontSize: 13, fontWeight: 600 }}>
-              {status.success}
-            </div>
-          ) : null}
           
           {/* Section: Hero */}
           <div style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px', border: '1px solid #eee' }}>
@@ -123,9 +109,11 @@ export default function WebsiteEditorPage() {
               <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem', fontWeight: 500, marginTop: '8px' }}>
                 Hero Background Image
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '6px', border: '1px solid #ccc', overflow: 'hidden', background: config.heroImage ? '#fff' : 'linear-gradient(135deg, #dbeafe, #f8fafc)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '0.65rem', fontWeight: 700 }}>
-                    {config.heroImage ? <img src={config.heroImage} alt="Preview" style={{ width: '48px', height: '48px', objectFit: 'cover' }} /> : 'No Img'}
-                  </div>
+                  <img 
+                    src={config.heroImage || "https://via.placeholder.com/150"} 
+                    alt="Preview" 
+                    style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #ccc' }} 
+                  />
                   <input 
                     type="text" 
                     value={config.heroImage}
@@ -139,20 +127,9 @@ export default function WebsiteEditorPage() {
             </div>
           </div>
 
-          {config.sections.map((section, idx) => (
-            <div key={idx} style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px', border: '1px solid #eee' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 style={{ margin: '0', fontSize: '1rem' }}>{section.heading || "Section"}</h3>
-                <button type="button" onClick={() => setConfig({ ...config, sections: config.sections.filter((_, i) => i !== idx) })} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
-              </div>
-              <input value={section.heading || ""} onChange={(e) => { const s = [...config.sections]; s[idx] = { ...s[idx], heading: e.target.value }; setConfig({ ...config, sections: s }); }} placeholder="Section Heading" style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '6px', marginBottom: 8, boxSizing: 'border-box' }} />
-              <textarea value={section.content || ""} onChange={(e) => { const s = [...config.sections]; s[idx] = { ...s[idx], content: e.target.value }; setConfig({ ...config, sections: s }); }} placeholder="Section Content" rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' }} />
-            </div>
-          ))}
-
-          <button type="button" onClick={() => setConfig({ ...config, sections: [...config.sections, { heading: "New Section", content: "" }] })} style={{ width: '100%', padding: '16px', background: '#f9f9f9', borderRadius: '12px', border: '1px solid #eee', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: '#3b82f6', textAlign: 'center' }}>
-            + Add Section
-          </button>
+          <div style={{ background: '#f9f9f9', padding: '16px', borderRadius: '12px', border: '1px solid #eee', opacity: 0.6 }}>
+            <h3 style={{ margin: '0', fontSize: '1rem' }}>+ Add Section</h3>
+          </div>
 
         </div>
       </div>
@@ -161,7 +138,6 @@ export default function WebsiteEditorPage() {
       <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ background: '#e0e0e0', padding: '6px 16px', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 600 }}>Desktop Preview</div>
-          <div style={{ background: '#eef2ff', color: '#3730a3', padding: '6px 16px', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 600 }}>Slug: {slug}</div>
           <a 
             href={`/site/${slug}`} 
             target="_blank" 
@@ -172,7 +148,7 @@ export default function WebsiteEditorPage() {
           </a>
         </div>
         
-        <div style={{ flex: 1, background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: "none", border: '1px solid #ccc' }}>
+        <div style={{ flex: 1, background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid #ccc' }}>
           <iframe 
             key={iframeKey}
             src={`/site/${slug}`} 

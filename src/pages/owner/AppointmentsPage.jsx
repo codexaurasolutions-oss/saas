@@ -18,7 +18,7 @@ for (let h = APPOINTMENT_START_HOUR; h <= APPOINTMENT_END_HOUR; h++) {
   const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
   const hourText = String(hour12).padStart(2, "0");
   [0, 15, 30, 45].forEach((minutes) => {
-    if (h === APPOINTMENT_END_HOUR && minutes > 45) return;
+    if (h === APPOINTMENT_END_HOUR && minutes > 0) return;
     TIME_SLOTS.push(`${hourText}:${String(minutes).padStart(2, "0")} ${ampm}`);
   });
 }
@@ -719,7 +719,6 @@ export default function AppointmentsPage() {
           width: 100%;
           border-collapse: collapse;
           table-layout: fixed;
-          min-width: 900px;
         }
         .calendar-th {
           position: sticky;
@@ -1059,7 +1058,7 @@ export default function AppointmentsPage() {
 
       <div className="calendar-grid-wrapper">
         {loading && <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 100 }}><PageLoader title="Loading schedule..." /></div>}
-        <table className="calendar-table">
+        <table className="calendar-table" style={{ minWidth: Math.max(900, filteredStaffUsers.length * 120 + 60) + "px" }}>
           <thead>
             <tr>
               <th className="calendar-th time-col-header"><Search size={18} /></th>
@@ -1375,11 +1374,11 @@ export default function AppointmentsPage() {
                   <div className="sp-footer-checks">
                     <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "0.8rem", fontWeight: 500, color: "#334155", cursor: "pointer" }}>
                       <input type="checkbox" className="styled-checkbox" checked={form.smsToGuest} onChange={(event) => setForm({ ...form, smsToGuest: event.target.checked })} />
-                      Confirmation Sms
+                      Confirmation Email
                     </label>
                     <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "0.8rem", fontWeight: 500, color: "#334155", cursor: "pointer" }}>
                       <input type="checkbox" className="styled-checkbox" checked={form.smsToOwner} onChange={(event) => setForm({ ...form, smsToOwner: event.target.checked })} />
-                      Sms To Owner
+                      Email To Owner
                     </label>
                   </div>
                 )}

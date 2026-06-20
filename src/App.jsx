@@ -1,73 +1,72 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
+import Sidebar from "./components/Sidebar.jsx";
+import Topbar from "./components/Topbar.jsx";
 import { useAuth } from "./context/AuthContext";
-import PageLoader from "./components/PageLoader";
-import { SETTINGS_WORKSPACE_SECTIONS } from "./pages/owner/settingsWorkspaceConfig";
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
-const OwnerDashboard = lazy(() => import("./pages/owner/Dashboard"));
-const AppointmentsPage = lazy(() => import("./pages/owner/AppointmentsPage"));
-const AppointmentDetailPage = lazy(() => import("./pages/owner/AppointmentDetailPage"));
-const AppointmentEditPage = lazy(() => import("./pages/owner/AppointmentEditPage"));
-const CustomersPage = lazy(() => import("./pages/owner/CustomersPage"));
-const CustomerHistoryPage = lazy(() => import("./pages/owner/CustomerHistoryPage"));
-const CustomerPortalSettingsPage = lazy(() => import("./pages/owner/CustomerPortalSettingsPage"));
-const LoyaltyPage = lazy(() => import("./pages/owner/LoyaltyPage"));
-const CouponsPage = lazy(() => import("./pages/owner/CouponsPage"));
-const FeedbackPage = lazy(() => import("./pages/owner/FeedbackPage"));
-const EnquiriesPage = lazy(() => import("./pages/owner/EnquiriesPage"));
-const ExpensesPage = lazy(() => import("./pages/owner/ExpensesPage"));
-const PayrollPage = lazy(() => import("./pages/owner/PayrollPage"));
-const NotificationsPage = lazy(() => import("./pages/owner/NotificationsPage"));
-const OwnerAuditLogsPage = lazy(() => import("./pages/owner/OwnerAuditLogsPage"));
-const WhatsAppPage = lazy(() => import("./pages/owner/WhatsAppPage"));
-const BranchesPage = lazy(() => import("./pages/owner/BranchesPage"));
-const InventoryPage = lazy(() => import("./pages/owner/InventoryPage"));
-const ProductCategoriesPage = lazy(() => import("./pages/owner/ProductCategoriesPage"));
-const MembershipsPage = lazy(() => import("./pages/owner/MembershipsPage"));
-const MyAppointmentsPage = lazy(() => import("./pages/owner/MyAppointmentsPage"));
-const MyCommissionPage = lazy(() => import("./pages/owner/MyCommissionPage"));
-const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage"));
-const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage"));
-const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage"));
-const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage"));
-const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage"));
-const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage"));
-const UsersPage = lazy(() => import("./pages/owner/UsersPage"));
-const ExpertsPage = lazy(() => import("./pages/owner/ExpertsPage"));
-const StaffRolesPage = lazy(() => import("./pages/owner/StaffRolesPage"));
-const ReportsPage = lazy(() => import("./pages/owner/ReportsPage"));
-const PosPage = lazy(() => import("./pages/owner/PosPage"));
-const PosDashboardPage = lazy(() => import("./pages/owner/PosDashboardPage"));
-const PaymentsPage = lazy(() => import("./pages/owner/PaymentsPage"));
-const TrendsPage = lazy(() => import("./pages/owner/TrendsPage"));
-const ServiceHubPage = lazy(() => import("./pages/owner/ServiceHubPage"));
-const ReportsHubPage = lazy(() => import("./pages/owner/ReportsHubPage"));
-const SupportTicketsPage = lazy(() => import("./pages/owner/SupportTicketsPage"));
-const SettingsPage = lazy(() => import("./pages/owner/SettingsPage"));
+import PageLoader from "./components/PageLoader.jsx";
+import { SETTINGS_WORKSPACE_SECTIONS } from "./pages/owner/settingsWorkspaceConfig.js";
+const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage.jsx"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage.jsx"));
+const OwnerDashboard = lazy(() => import("./pages/owner/Dashboard.jsx"));
+const AppointmentsPage = lazy(() => import("./pages/owner/AppointmentsPage.jsx"));
+const AppointmentDetailPage = lazy(() => import("./pages/owner/AppointmentDetailPage.jsx"));
+const AppointmentEditPage = lazy(() => import("./pages/owner/AppointmentEditPage.jsx"));
+const CustomersPage = lazy(() => import("./pages/owner/CustomersPage.jsx"));
+const CustomerHistoryPage = lazy(() => import("./pages/owner/CustomerHistoryPage.jsx"));
+const CustomerPortalSettingsPage = lazy(() => import("./pages/owner/CustomerPortalSettingsPage.jsx"));
+const LoyaltyPage = lazy(() => import("./pages/owner/LoyaltyPage.jsx"));
+const CouponsPage = lazy(() => import("./pages/owner/CouponsPage.jsx"));
+const FeedbackPage = lazy(() => import("./pages/owner/FeedbackPage.jsx"));
+const EnquiriesPage = lazy(() => import("./pages/owner/EnquiriesPage.jsx"));
+const ExpensesPage = lazy(() => import("./pages/owner/ExpensesPage.jsx"));
+const PayrollPage = lazy(() => import("./pages/owner/PayrollPage.jsx"));
+const NotificationsPage = lazy(() => import("./pages/owner/NotificationsPage.jsx"));
+const OwnerAuditLogsPage = lazy(() => import("./pages/owner/OwnerAuditLogsPage.jsx"));
+const WhatsAppPage = lazy(() => import("./pages/owner/WhatsAppPage.jsx"));
+const BranchesPage = lazy(() => import("./pages/owner/BranchesPage.jsx"));
+const InventoryPage = lazy(() => import("./pages/owner/InventoryPage.jsx"));
+const ProductCategoriesPage = lazy(() => import("./pages/owner/ProductCategoriesPage.jsx"));
+const MembershipsPage = lazy(() => import("./pages/owner/MembershipsPage.jsx"));
+const MyAppointmentsPage = lazy(() => import("./pages/owner/MyAppointmentsPage.jsx"));
+const MyCommissionPage = lazy(() => import("./pages/owner/MyCommissionPage.jsx"));
+const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage.jsx"));
+const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage.jsx"));
+const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage.jsx"));
+const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage.jsx"));
+const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage.jsx"));
+const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage.jsx"));
+const UsersPage = lazy(() => import("./pages/owner/UsersPage.jsx"));
+const ExpertsPage = lazy(() => import("./pages/owner/ExpertsPage.jsx"));
+const StaffRolesPage = lazy(() => import("./pages/owner/StaffRolesPage.jsx"));
+const ReportsPage = lazy(() => import("./pages/owner/ReportsPage.jsx"));
+const PosPage = lazy(() => import("./pages/owner/PosPage.jsx"));
+const PosDashboardPage = lazy(() => import("./pages/owner/PosDashboardPage.jsx"));
+const PaymentsPage = lazy(() => import("./pages/owner/PaymentsPage.jsx"));
+const TrendsPage = lazy(() => import("./pages/owner/TrendsPage.jsx"));
+const ReportsHubPage = lazy(() => import("./pages/owner/ReportsHubPage.jsx"));
+const SupportTicketsPage = lazy(() => import("./pages/owner/SupportTicketsPage.jsx"));
+const SettingsPage = lazy(() => import("./pages/owner/SettingsPage.jsx"));
 
-const CustomerLoginPage = lazy(() => import("./pages/customer/CustomerLoginPage"));
-const CustomerRegisterPage = lazy(() => import("./pages/customer/CustomerRegisterPage"));
-const CustomerPortalPage = lazy(() => import("./pages/customer/CustomerPortalPage"));
+const CustomerLoginPage = lazy(() => import("./pages/customer/CustomerLoginPage.jsx"));
+const CustomerRegisterPage = lazy(() => import("./pages/customer/CustomerRegisterPage.jsx"));
+const CustomerPortalPage = lazy(() => import("./pages/customer/CustomerPortalPage.jsx"));
 
-const OrdersPage = lazy(() => import("./pages/owner/OrdersPage"));
-const CampaignsPage = lazy(() => import("./pages/owner/CampaignsPage"));
-const CampaignTemplatesPage = lazy(() => import("./pages/owner/CampaignTemplatesPage"));
-const MessageTemplatesPage = lazy(() => import("./pages/owner/MessageTemplatesPage"));
+const OrdersPage = lazy(() => import("./pages/owner/OrdersPage.jsx"));
+const CampaignsPage = lazy(() => import("./pages/owner/CampaignsPage.jsx"));
+const CampaignTemplatesPage = lazy(() => import("./pages/owner/CampaignTemplatesPage.jsx"));
+const MessageTemplatesPage = lazy(() => import("./pages/owner/MessageTemplatesPage.jsx"));
 
-const StorefrontLayout = lazy(() => import("./pages/storefront/StorefrontLayout"));
-const HomePage = lazy(() => import("./pages/storefront/HomePage"));
-const CollectionsPage = lazy(() => import("./pages/storefront/CollectionsPage"));
-const CategoryDetailPage = lazy(() => import("./pages/storefront/CategoryDetailPage"));
-const ProductDetailPage = lazy(() => import("./pages/storefront/ProductDetailPage"));
-const CartPage = lazy(() => import("./pages/storefront/CartPage"));
-const CheckoutPage = lazy(() => import("./pages/storefront/CheckoutPage"));
-const LegalContentPage = lazy(() => import("./pages/shared/LegalContentPage"));
-const WebsiteEditorPage = lazy(() => import("./pages/owner/WebsiteEditorPage"));
-const ManagePage = lazy(() => import("./pages/owner/ManagePage"));
+const StorefrontLayout = lazy(() => import("./pages/storefront/StorefrontLayout.jsx"));
+const HomePage = lazy(() => import("./pages/storefront/HomePage.jsx"));
+const CollectionsPage = lazy(() => import("./pages/storefront/CollectionsPage.jsx"));
+const CategoryDetailPage = lazy(() => import("./pages/storefront/CategoryDetailPage.jsx"));
+const ProductDetailPage = lazy(() => import("./pages/storefront/ProductDetailPage.jsx"));
+const CartPage = lazy(() => import("./pages/storefront/CartPage.jsx"));
+const CheckoutPage = lazy(() => import("./pages/storefront/CheckoutPage.jsx"));
+const LegalContentPage = lazy(() => import("./pages/shared/LegalContentPage.jsx"));
+const WebsiteEditorPage = lazy(() => import("./pages/owner/WebsiteEditorPage.jsx"));
+const ManagePage = lazy(() => import("./pages/owner/ManagePage.jsx"));
 
 const RouteFallback = () => (
   <div className="page-shell">
@@ -114,14 +113,6 @@ const Protected = () => {
           hint: "Branches and team",
           items: [
             can("branches") && { label: "Branches", to: "/admin/branches" },
-            can("services") && {
-              label: "Services",
-              to: "/admin/services"
-            },
-            can("services") && {
-              label: "Service Categories",
-              to: "/admin/service-categories"
-            },
             can("staff") && {
               label: "Staff Details",
               to: "/admin/users"
@@ -352,7 +343,7 @@ export default function App() {
           <Route path="/admin/appointments/:id" element={<OwnerRoute moduleKey="appointments" featureKey="appointments" element={<AppointmentDetailPage />} />} />
           <Route path="/admin/appointments/:id/edit" element={<OwnerRoute moduleKey="appointments" featureKey="appointments" element={<AppointmentEditPage />} />} />
           <Route path="/admin/branches" element={<OwnerRoute moduleKey="branches" element={<BranchesPage />} />} />
-          <Route path="/admin/services" element={<OwnerRoute moduleKey="services" element={<ServiceHubPage />} />} />
+          <Route path="/admin/services" element={<OwnerRoute moduleKey="services" element={<ServiceCategoriesPage />} />} />
           <Route path="/admin/service-categories" element={<OwnerRoute moduleKey="services" element={<ServiceCategoriesPage />} />} />
           <Route path="/admin/staff-schedule" element={<OwnerRoute moduleKey="staffSchedule" featureKey="appointments" element={<StaffSchedulePage />} />} />
           <Route path="/admin/staff-availability" element={<OwnerRoute moduleKey="staffSchedule" featureKey="appointments" element={<StaffSchedulePage />} />} />
@@ -375,8 +366,8 @@ export default function App() {
           <Route path="/admin/order-dashboard/:id" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
           <Route path="/admin/pos-dashboard" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
           <Route path="/admin/pos-dashboard/:id" element={<OwnerRoute moduleKey="orders" featureKey="onlineOrders" element={<PosDashboardPage />} />} />
-          <Route path="/admin/trends" element={<TrendsPage />} />
-          <Route path="/admin/reports-hub" element={<ReportsHubPage />} />
+          <Route path="/admin/trends" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<TrendsPage />} />} />
+          <Route path="/admin/reports-hub" element={<OwnerRoute moduleKey="reports" featureKey="reports" element={<ReportsHubPage />} />} />
           <Route path="/admin/invoices" element={<Navigate to="/admin/pos-dashboard" replace />} />
           <Route path="/admin/invoices/:id" element={<Navigate to="/admin/pos-dashboard" replace />} />
           <Route path="/admin/payments" element={<OwnerRoute moduleKey="payments" element={<PaymentsPage />} />} />

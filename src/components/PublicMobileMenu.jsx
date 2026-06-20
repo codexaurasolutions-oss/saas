@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function PublicMobileMenu({
-  brand = { label: "Skillify", sublabel: "Salon ERP Platform", logo: "/skillify-logo.png", to: "/" },
+  brand = { label: "ReSpark", sublabel: "Salon ERP Platform", logo: "/logo-respark.svg", to: "/" },
   items = [],
   cta = null
 }) {

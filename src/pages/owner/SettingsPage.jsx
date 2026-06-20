@@ -169,7 +169,45 @@ const defaultAdvancedSettings = {
     whatsappEnabled: true,
     pushEnabled: false,
     digestHour: "20:00",
-    alertEmail: ""
+    alertEmail: "",
+    toggles: {
+      anniversaryOffer: true,
+      birthdayOffer: true,
+      loyaltyExpiryReminder: true,
+      loyaltyEarning: true,
+      membershipPurchase: true,
+      membershipExpiry: true,
+      membershipRenewal: true,
+      onlineRedeemablePurchaseToOwner: true,
+      appointmentCreatedToOwner: true,
+      appointmentConfirmedToCustomer: true,
+      appointmentCancelledToCustomer: true,
+      appointmentReminderBeforeDays: true,
+      appointmentReminderBeforeHours: true,
+      appointmentInvoiceLink: true,
+      appointmentFeedbackLink: true,
+      smsForServiceReminder: true,
+      combineFeedbackAndInvoiceSms: true,
+      messageForAppointments: true,
+      appointmentRescheduledToCustomer: true,
+      appointmentCancelledToOwner: true,
+      onlineAppointmentBookedToOwner: true,
+      appointmentMsgToStaff: true,
+      orderPlacedToStaff: true,
+      orderConfirmed: true,
+      orderRejected: true,
+      orderInvoiceLink: true,
+      messageForOrders: true,
+      orderFeedbackLink: true,
+      referralCodeSMS: true,
+      referrerRewardSMS: true,
+      giftCard: true,
+      giftCardExpiryReminder: true,
+      packagePurchase: true,
+      packageExpiryReminder: true,
+      advanceReceivedInvoice: true,
+      balanceClearedInvoice: true
+    }
   },
   crmSegments: [
     { id: makeId("segment"), name: "VIP Guests", description: "High-value repeat customers", filterType: "HIGH_SPENDERS", serviceId: "", active: true }
@@ -249,7 +287,14 @@ const mergeAdvancedSettings = (raw = {}) => {
   membershipSettings: { ...defaultAdvancedSettings.membershipSettings, ...(raw.membershipSettings || {}) },
   packageSettings: { ...defaultAdvancedSettings.packageSettings, ...(raw.packageSettings || {}) },
   giftCardSettings: { ...defaultAdvancedSettings.giftCardSettings, ...(raw.giftCardSettings || {}) },
-  notificationSettings: { ...defaultAdvancedSettings.notificationSettings, ...(raw.notificationSettings || {}) },
+  notificationSettings: {
+    ...defaultAdvancedSettings.notificationSettings,
+    ...(raw.notificationSettings || {}),
+    toggles: {
+      ...defaultAdvancedSettings.notificationSettings.toggles,
+      ...(raw.notificationSettings?.toggles || {})
+    }
+  },
   crmSegments: Array.isArray(raw.crmSegments) && raw.crmSegments.length ? raw.crmSegments : defaultAdvancedSettings.crmSegments,
   couponSettings: { ...defaultAdvancedSettings.couponSettings, ...(raw.couponSettings || {}) },
   referralSettings: { ...defaultAdvancedSettings.referralSettings, ...(raw.referralSettings || {}) },
@@ -399,7 +444,9 @@ export default function SettingsPage() {
   const settingsPermissions = Array.isArray(auth?.membership?.permissions?.settings)
     ? auth.membership.permissions.settings
     : [];
+  const canViewSettings = settingsPermissions.includes("view") || settingsPermissions.includes("edit");
   const canEditSettings = settingsPermissions.includes("edit");
+  const settingsLocked = canViewSettings && !canEditSettings;
 
   const refreshGiftCardsSummary = useCallback(async () => {
     try {
@@ -414,22 +461,15 @@ export default function SettingsPage() {
   const activeSection = useMemo(() => getSettingsSection(location.pathname), [location.pathname]);
 
   const filteredSections = useMemo(() => {
-    if (!canEditSettings) return [];
+    if (!canViewSettings) return [];
     if (!deferredSearch) return SETTINGS_WORKSPACE_SECTIONS;
     return SETTINGS_WORKSPACE_SECTIONS.filter((item) => `${item.label} ${item.hint}`.toLowerCase().includes(deferredSearch));
-  }, [canEditSettings, deferredSearch]);
-
-  if (!canEditSettings) {
-    return (
-      <div className="settings-workspace-wrapper">
-        <div className="settings-panel-card">
-          <p className="error-text">Access restricted. This settings workspace is only visible for roles with `settings.edit` permission.</p>
-        </div>
-      </div>
-    );
-  }
+  }, [canViewSettings, deferredSearch]);
 
   useEffect(() => {
+    if (!canViewSettings) {
+      return undefined;
+    }
     let active = true;
     const load = async () => {
       try {
@@ -511,7 +551,7 @@ export default function SettingsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [canViewSettings, salonId]);
 
   useEffect(() => {
     let active = true;
@@ -976,14 +1016,14 @@ export default function SettingsPage() {
           <div className="appointment-columns-grid">
             <div className="appointment-col">
               <div>
-                <span className="sub-section-title">Send appointment SMS</span>
+                <span className="sub-section-title">Send appointment email</span>
                 <label className="checkbox-option">
                   <input
                     type="checkbox"
                     checked={generic.sendAppointmentSms}
                     onChange={(e) => updateGeneric("sendAppointmentSms", e.target.checked)}
                   />
-                  Send SMS to Guests
+                  Send email to Guests
                 </label>
               </div>
               <div>
@@ -1072,25 +1112,25 @@ export default function SettingsPage() {
           </div>
           <div className="appointment-grid">
             <div className="appointment-col">
-              <span className="sub-section-title">Send SMS</span>
-              <label className="checkbox-option">
-                <input
-                  type="checkbox"
-                  checked={form.advancedSettings.feedbackSetting.sendSms}
-                  onChange={(e) => updateAdvancedObject("feedbackSetting", { sendSms: e.target.checked })}
-                />
-                Send SMS to Guests
-              </label>
-            </div>
-            <div className="appointment-col">
-              <span className="sub-section-title">Send Whatsapp</span>
+                <span className="sub-section-title">Send feedback email</span>
+                <label className="checkbox-option">
+                  <input
+                    type="checkbox"
+                    checked={form.advancedSettings.feedbackSetting.sendSms}
+                    onChange={(e) => updateAdvancedObject("feedbackSetting", { sendSms: e.target.checked })}
+                  />
+                  Send email to Guests
+                </label>
+              </div>
+              <div className="appointment-col">
+              <span className="sub-section-title">Secondary channel</span>
               <label className="checkbox-option">
                 <input
                   type="checkbox"
                   checked={form.advancedSettings.feedbackSetting.sendWhatsapp}
                   onChange={(e) => updateAdvancedObject("feedbackSetting", { sendWhatsapp: e.target.checked })}
                 />
-                Send WhatsApp message to Guests
+                Keep manual share fallback enabled
               </label>
             </div>
           </div>
@@ -1679,9 +1719,26 @@ export default function SettingsPage() {
     const handleSaveRoster = async () => {
       try {
         setStatus({ error: "", success: "" });
-        await api.patch("/owner/settings", form.advancedSettings);
+        const response = await api.post("/owner/settings", {
+          invoicePrefix: form.invoicePrefix,
+          invoiceFooter: form.invoiceFooter,
+          taxLabel: form.taxLabel,
+          whatsappNumber: form.whatsappNumber,
+          bookingNotes: form.bookingNotes,
+          cancellationPolicy: form.cancellationPolicy,
+          paymentModes,
+          allowNegativeStock: Boolean(form.allowNegativeStock),
+          paymentGatewaySettings: form.paymentGatewaySettings,
+          advancedSettings: form.advancedSettings,
+          smsSettings: form.smsSettings
+        });
+        writeSalonSettingsCache(salonId, response.data || {
+          advancedSettings: form.advancedSettings,
+          invoicePrefix: form.invoicePrefix,
+          invoiceFooter: form.invoiceFooter,
+          taxLabel: form.taxLabel
+        });
         setStatus({ error: "", success: "Roster saved successfully." });
-        if (typeof loadSummary === "function") await loadSummary();
       } catch (error) {
         setStatus({ error: formatApiError(error, "Could not save roster"), success: "" });
       }
@@ -2217,8 +2274,8 @@ export default function SettingsPage() {
         <div className="settings-panel-card">
           <div className="settings-toggle-grid">
             <ToggleRow checked={feedback.enabled} label="Enable feedback" onChange={(value) => updateAdvancedObject("feedbackSetting", { enabled: value })} />
-            <ToggleRow checked={feedback.sendSms} label="Send SMS" onChange={(value) => updateAdvancedObject("feedbackSetting", { sendSms: value })} />
-            <ToggleRow checked={feedback.sendWhatsapp} label="Send WhatsApp" onChange={(value) => updateAdvancedObject("feedbackSetting", { sendWhatsapp: value })} />
+            <ToggleRow checked={feedback.sendSms} label="Send feedback email" onChange={(value) => updateAdvancedObject("feedbackSetting", { sendSms: value })} />
+            <ToggleRow checked={feedback.sendWhatsapp} label="Send follow-up email" onChange={(value) => updateAdvancedObject("feedbackSetting", { sendWhatsapp: value })} />
           </div>
           <div className="settings-form-grid" style={{ marginTop: 18 }}>
             <label className="settings-input-group"><span className="muted">Feedback delay (hours)</span><input type="number" value={feedback.feedbackDelayHours} onChange={(event) => updateAdvancedObject("feedbackSetting", { feedbackDelayHours: Number(event.target.value) })} /></label>
@@ -2368,23 +2425,154 @@ export default function SettingsPage() {
 
   const renderNotificationsSection = () => {
     const config = form.advancedSettings.notificationSettings;
+
+    const handleToggleChange = (key, value) => {
+      const currentToggles = config.toggles || {};
+      updateAdvancedObject("notificationSettings", {
+        toggles: {
+          ...currentToggles,
+          [key]: value
+        }
+      });
+    };
+
+    const categories = [
+      {
+        title: "Occasional",
+        items: [
+          { key: "anniversaryOffer", label: "Anniversary Offer" },
+          { key: "birthdayOffer", label: "Birthday Offer" }
+        ]
+      },
+      {
+        title: "Loyalty",
+        items: [
+          { key: "loyaltyExpiryReminder", label: "Loyalty Expiry Reminder" },
+          { key: "loyaltyEarning", label: "Loyalty Earning" }
+        ]
+      },
+      {
+        title: "Membership",
+        items: [
+          { key: "membershipPurchase", label: "Membership Purchase" },
+          { key: "membershipExpiry", label: "Membership Expiry" },
+          { key: "membershipRenewal", label: "Membership Renewal" },
+          { key: "onlineRedeemablePurchaseToOwner", label: "Online Redeemable purchase to Owner" }
+        ]
+      },
+      {
+        title: "Appointment",
+        items: [
+          { key: "appointmentCreatedToOwner", label: "Appointment Created message to Owner" },
+          { key: "appointmentConfirmedToCustomer", label: "Appointment Confirmed message to Customer" },
+          { key: "appointmentCancelledToCustomer", label: "Appointment Cancelled message to Customer" },
+          { key: "appointmentReminderBeforeDays", label: "Appointment Reminder before days" },
+          { key: "appointmentReminderBeforeHours", label: "Appointment Reminder beforehours" },
+          { key: "appointmentInvoiceLink", label: "Appointment Invoice link" },
+          { key: "appointmentFeedbackLink", label: "Appointment Feedback link" },
+          { key: "smsForServiceReminder", label: "SMS for service reminder" },
+          { key: "combineFeedbackAndInvoiceSms", label: "Combine feedback and invoice sms" },
+          { key: "messageForAppointments", label: "Message for appointments (Keep this default ON for sending any appointment related message)" },
+          { key: "appointmentRescheduledToCustomer", label: "Appointment Resheduled Message to Customer" },
+          { key: "appointmentCancelledToOwner", label: "Appointment Cancelled Message to Owner" },
+          { key: "onlineAppointmentBookedToOwner", label: "Online Appointment Booked message to Owner" },
+          { key: "appointmentMsgToStaff", label: "Appointment Msg to staff" }
+        ]
+      },
+      {
+        title: "Order",
+        items: [
+          { key: "orderPlacedToStaff", label: "Order Placed message to staff" },
+          { key: "orderConfirmed", label: "Order Confirmed" },
+          { key: "orderRejected", label: "Order Rejected" },
+          { key: "orderInvoiceLink", label: "Order Invoice Link" },
+          { key: "messageForOrders", label: "Message for orders ( Keep this default ON for sending any order related message)" },
+          { key: "orderFeedbackLink", label: "Order Feedback link" }
+        ]
+      },
+      {
+        title: "Referral",
+        items: [
+          { key: "referralCodeSMS", label: "referralCodeSMS" },
+          { key: "referrerRewardSMS", label: "referrerRewardSMS" }
+        ]
+      },
+      {
+        title: "Gift Card",
+        items: [
+          { key: "giftCard", label: "Gift Card" },
+          { key: "giftCardExpiryReminder", label: "GiftCard Expiry Reminder" }
+        ]
+      },
+      {
+        title: "Package",
+        items: [
+          { key: "packagePurchase", label: "Package Purchase" },
+          { key: "packageExpiryReminder", label: "Package Expiry Reminder" }
+        ]
+      },
+      {
+        title: "Advance",
+        items: [
+          { key: "advanceReceivedInvoice", label: "Advance Received Invoice" }
+        ]
+      },
+      {
+        title: "Balance",
+        items: [
+          { key: "balanceClearedInvoice", label: "Balance Cleared Invoice" }
+        ]
+      }
+    ];
+
     return (
       <>
-        <SectionHeader title="Notification Settings" description="Define how business alerts travel across email, SMS, WhatsApp, and digest windows." badges={[`${summary.notifications.filter((row) => !row.isRead).length} unread live alerts`]} action={<Link className="secondary-button" to="/admin/notifications">Open Notifications</Link>} />
-        <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
-          Staff/customer notification creation respects these channel toggles, while digest hour stays available for batching/reporting workflows.
-        </div>
-        <div className="settings-panel-card">
+        <SectionHeader title="Notification Settings" description="Define how business alerts travel across live channels like SMS." badges={[`${summary.notifications.filter((row) => !row.isRead).length} unread live alerts`]} action={<Link className="secondary-button" to="/admin/notifications">Open Notifications</Link>} />
+        
+        <div className="settings-panel-card" style={{ marginBottom: 20 }}>
           <div className="settings-toggle-grid">
             <ToggleRow checked={config.emailEnabled} label="Email alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { emailEnabled: value })} />
-            <ToggleRow checked={config.smsEnabled} label="SMS alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { smsEnabled: value })} />
-            <ToggleRow checked={config.whatsappEnabled} label="WhatsApp alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { whatsappEnabled: value })} />
+            <ToggleRow checked={config.smsEnabled} label="Transaction email alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { smsEnabled: value })} />
+            <ToggleRow checked={config.whatsappEnabled} label="Follow-up email alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { whatsappEnabled: value })} />
             <ToggleRow checked={config.pushEnabled} label="Push alerts" onChange={(value) => updateAdvancedObject("notificationSettings", { pushEnabled: value })} />
             <label className="settings-input-group"><span className="muted">Digest hour</span><input type="time" value={config.digestHour} onChange={(event) => updateAdvancedObject("notificationSettings", { digestHour: event.target.value })} /></label>
-            <div className="settings-input-group" style={{ alignSelf: "end" }}><span className="muted" style={{ fontSize: 12 }}>Digest hour is stored for scheduled notification batching and reporting visibility.</span></div>
+            <div className="settings-input-group" style={{ alignSelf: "end" }}><span className="muted" style={{ fontSize: 12 }}>Digest hour is stored for scheduled notification batching.</span></div>
             <label className="settings-input-group"><span className="muted">Alert email</span><input value={config.alertEmail} onChange={(event) => updateAdvancedObject("notificationSettings", { alertEmail: event.target.value })} /></label>
           </div>
         </div>
+
+        {categories.map((category) => (
+          <div key={category.title} style={{ marginBottom: 24 }}>
+            <h4 style={{ margin: "0 0 10px 0", fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{category.title}</h4>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+              {category.items.map((item, index) => {
+                const isChecked = config.toggles ? (config.toggles[item.key] !== false) : true;
+                return (
+                  <div key={item.key} style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 120px",
+                    alignItems: "center",
+                    padding: "12px 16px",
+                    borderBottom: index === category.items.length - 1 ? "none" : "1px solid #f1f5f9",
+                    fontSize: 14,
+                    color: "#0f172a"
+                  }}>
+                    <div style={{ fontWeight: 500, color: "#334155" }}>{item.label}</div>
+                    <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => handleToggleChange(item.key, e.target.checked)}
+                        style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#3b82f6" }}
+                      />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>SMS</span>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </>
     );
   };
@@ -2507,10 +2695,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-        <div className="muted" style={{ margin: "12px 0", fontSize: 12 }}>
-          Yeh gift card templates POS module mai use honge jab customer gift card redeem karega. Full management aur reporting `/admin/gift-cards` module me available hai.
-        </div>
-        <div className="settings-panel-card">
+                <div className="settings-panel-card">
           <div className="item-head" style={{ marginBottom: 12 }}>
             <div>
               <h3 style={{ margin: 0 }}>Live Gift Cards</h3>
@@ -2548,9 +2733,9 @@ export default function SettingsPage() {
 
   const renderSmsSection = () => (
     <>
-      <SectionHeader title="SMS Center" description="Configure SMS gateway credentials, sender identity, and message-routing defaults without leaving settings." badges={[form.smsSettings.gatewayProvider.replace("_PLACEHOLDER", ""), form.smsSettings.senderId || "No Sender ID"]} action={<Link className="secondary-button" to="/admin/whatsapp">Open Messaging</Link>} />
+      <SectionHeader title="Messaging Center" description="Configure SMTP or delivery-provider credentials, sender identity, and message-routing defaults without leaving settings." badges={[form.smsSettings.gatewayProvider.replace("_PLACEHOLDER", ""), form.smsSettings.senderId || "No Sender ID"]} action={<Link className="secondary-button" to="/admin/whatsapp">Open Messaging</Link>} />
       <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
-        Gateway/provider details are synced into the live messaging configuration used by notification and WhatsApp automation defaults.
+        Gateway/provider details are synced into the live messaging configuration used by notification, reminder, and manual outreach defaults.
       </div>
       <div className="settings-panel-card">
         <div className="settings-form-grid">
@@ -2947,12 +3132,20 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-workspace-wrapper">
-
-
+      {!canViewSettings ? (
+        <div className="settings-panel-card">
+          <p className="error-text">Access restricted. This settings workspace requires `settings.view` permission.</p>
+        </div>
+      ) : null}
+      {settingsLocked ? (
+        <div className="settings-panel-card">
+          <p className="success-text">Read-only mode enabled. This role can review settings but cannot save changes without `settings.edit` permission.</p>
+        </div>
+      ) : null}
       {status.error ? <div className="settings-panel-card"><p className="error-text">{status.error}</p></div> : null}
       {status.success ? <div className="settings-panel-card"><p className="success-text">{status.success}</p></div> : null}
 
-      {status.loading ? (
+      {!canViewSettings ? null : status.loading ? (
         <PageLoader title="Loading settings workspace" message="Bringing together generic settings, staff controls, incentives, tax mappings, and communication defaults." />
       ) : (
         <div className="settings-layout">
@@ -2979,8 +3172,8 @@ export default function SettingsPage() {
             {renderSection()}
             
             <div className="settings-footer-actions" style={{ marginTop: "32px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
-              <button type="button" className="btn-reset" onClick={handleReset}>Reset</button>
-              <button type="button" className="btn-update" onClick={saveWorkspace} disabled={saving}>{saving ? "Saving..." : "Update"}</button>
+              <button type="button" className="btn-reset" onClick={handleReset} disabled={settingsLocked}>Reset</button>
+              <button type="button" className="btn-update" onClick={saveWorkspace} disabled={saving || settingsLocked}>{saving ? "Saving..." : "Update"}</button>
             </div>
           </section>
         </div>

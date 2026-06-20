@@ -487,6 +487,7 @@ model Service {
   branchId             String?
   categoryId           String?
   name                 String
+  gender               String?                   @default("UNISEX")
   price                Decimal                   @db.Decimal(10, 2)
   durationMin          Int
   description          String?
