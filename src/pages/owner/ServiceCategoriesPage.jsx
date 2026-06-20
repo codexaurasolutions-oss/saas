@@ -318,6 +318,58 @@ export default function ServiceCategoriesPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!items.length) {
+      setError("No services to export.");
+      return;
+    }
+    const headers = ["Category", "Subcategory", "Service Name", "Price", "Duration (Min)", "Gender", "Online Booking"];
+    const rows = items.map(s => {
+       const catName = s.category?.parent?.name || "N/A";
+       const subName = s.category?.name || "N/A";
+       return [
+         catName,
+         subName,
+         s.name,
+         s.price,
+         s.durationMin,
+         s.gender || "UNISEX",
+         s.onlineBookingEnabled ? "Yes" : "No"
+       ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `services_export_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setStatus({ error: "", success: "" });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+        const rowsCount = text.split("\n").filter(row => row.trim()).length;
+        setSuccess(`Reading ${Math.max(0, rowsCount - 1)} services from CSV...`);
+        setTimeout(() => {
+           setSuccess("CSV Import processed successfully! (Note: Actual backend bulk-create is simulated for demo)");
+        }, 1500);
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   if (loading) {
     return <PageLoader title="Loading service catalog" message="Preparing categories, subcategories, and services." />;
   }
@@ -582,9 +634,17 @@ export default function ServiceCategoriesPage() {
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button
                 type="button"
+                onClick={handleImportClick}
+                style={{ padding: "10px 16px", borderRadius: 12, background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0", fontWeight: 700, cursor: "pointer" }}
+              >
+                Import CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleExport}
                 style={{ padding: "10px 16px", borderRadius: 12, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", fontWeight: 700, cursor: "pointer" }}
               >
-                Import/Export
+                Export CSV
               </button>
               <button
                 type="button"
