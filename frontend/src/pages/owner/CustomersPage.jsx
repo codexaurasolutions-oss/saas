@@ -1653,21 +1653,6 @@ export default function CustomersPage() {
                 </div>
               )}
 
-              {selectedPlan && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ fontWeight: 600, color: "#64748b", fontSize: "0.9rem" }}>Selected services</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {(selectedPlan.services || []).map((s, idx) => (
-                      <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff" }}>
-                        <span style={{ fontSize: "0.9rem", color: "#0f172a", fontWeight: 500 }}>{s.service?.name || s.name}</span>
-                        <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>Included</span>
-                      </div>
-                    ))}
-                    {(selectedPlan.services || []).length === 0 && <div style={{ padding: "12px 16px", border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: "0.9rem" }}>No services included in this membership</div>}
-                  </div>
-                </div>
-              )}
-
               <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
                 <div style={{ flex: 1, minWidth: 150 }}>
                   <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#475569", display: "block", marginBottom: 6 }}>Name</label>
