@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Edit2, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
@@ -1799,31 +1800,65 @@ export default function SettingsPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>Apply Shift for</span>
             <input
               type="number"
               min="1"
               disabled={!rosterModuleEnabled}
               value={roster.applyFor || 1}
               onChange={(event) => updateAdvancedObject("rosterManagement", { applyFor: Number(event.target.value) || 1 })}
-              style={{ width: 70, padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
+              style={{ width: 60, padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14, textAlign: "center" }}
             />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>Days:</span>
             <select
               disabled={!rosterModuleEnabled}
               value={roster.useShiftId}
               onChange={(event) => updateAdvancedObject("rosterManagement", { useShiftId: event.target.value })}
-              style={{ minWidth: 220, padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14, background: "#fff" }}
+              style={{ minWidth: 200, padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14, background: "#fff" }}
             >
-              <option value="">Select shift</option>
+              <option value="">Select shift template</option>
               {shifts.filter((shift) => shift.active !== false).map((shift) => <option key={shift.id} value={shift.id}>{shift.name || "Unnamed Shift"}</option>)}
             </select>
           </div>
           <div style={{ flex: 1 }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <button type="button" onClick={() => handleDateNav(-1)} disabled={!rosterModuleEnabled} style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>&larr;</button>
-            <button type="button" onClick={() => updateAdvancedObject("rosterManagement", { selectedDate: new Date().toISOString().split("T")[0] })} disabled={!rosterModuleEnabled} style={{ padding: "6px 12px", border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#2563eb" }}>TODAY</button>
-            <span style={{ padding: "6px 10px", fontSize: 14, fontWeight: 600, color: "#0f172a", minWidth: 110, textAlign: "center" }}>{formatDate(roster.selectedDate)}</span>
-            <button type="button" onClick={() => handleDateNav(1)} disabled={!rosterModuleEnabled} style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>&rarr;</button>
-            <button type="button" onClick={applyShiftTemplate} disabled={!rosterModuleEnabled} style={{ marginLeft: 8, padding: "6px 12px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>Apply</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => handleDateNav(-1)}
+              disabled={!rosterModuleEnabled}
+              title="Previous Day"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", color: "#475569" }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => updateAdvancedObject("rosterManagement", { selectedDate: new Date().toISOString().split("T")[0] })}
+              disabled={!rosterModuleEnabled}
+              style={{ height: 34, padding: "0 12px", border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              TODAY
+            </button>
+            <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 600, color: "#0f172a", minWidth: 110, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              {formatDate(roster.selectedDate)}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleDateNav(1)}
+              disabled={!rosterModuleEnabled}
+              title="Next Day"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, border: "1px solid #cbd5e1", background: "#fff", borderRadius: 6, cursor: "pointer", color: "#475569" }}
+            >
+              <ChevronRight size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={applyShiftTemplate}
+              disabled={!rosterModuleEnabled}
+              style={{ marginLeft: 8, height: 34, padding: "0 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              Apply
+            </button>
           </div>
         </div>
 
@@ -1990,7 +2025,7 @@ export default function SettingsPage() {
                   <div
                     key={row.id}
                     style={{
-                      padding: "12px 16px",
+                      padding: "14px 16px",
                       borderBottom: "1px solid #f1f5f9",
                       cursor: "pointer",
                       background: selectedTaxId === row.id ? "#eff6ff" : "white",
@@ -2003,11 +2038,20 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedTaxId(row.id); setDraftTax(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.label || "Untitled Tax"}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.code} | {row.rate}% {row.active ? "â— Active" : "â—‹ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{row.code}</span>
+                        <span>·</span>
+                        <span>{row.rate}%</span>
+                        <span>·</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.active ? "#22c55e" : "#94a3b8" }} />
+                          {row.active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); startEdit(row); }} title="Edit tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}>âœŽ</button>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteTax(row.id); }} title="Delete tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#dc2626", padding: 0 }}>âœ•</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); startEdit(row); }} title="Edit tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569", padding: 0 }}><Edit2 size={13} /></button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteTax(row.id); }} title="Delete tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626", padding: 0 }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -2381,11 +2425,14 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedFeedbackTypeId(row.id); setDraftFeedbackType(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.name}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.active ? "â€¢ Active" : "â—‹ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.active ? "#22c55e" : "#94a3b8" }} />
+                        <span>{row.active ? "Active" : "Inactive"}</span>
+                      </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} title="Edit type" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569", padding: 0 }}><Edit2 size={13} /></button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626", padding: 0 }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -3128,13 +3175,20 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedPnlCategoryId(row.id); setDraftPnlCategory(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.name || "Untitled Category"}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                        #{row.sequenceNumber || 0} | {row.type || "Expense"} {row.active ? "â€¢ Active" : "â€¢ Inactive"}
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>#{row.sequenceNumber || 0}</span>
+                        <span>·</span>
+                        <span>{row.type || "Expense"}</span>
+                        <span>·</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.active ? "#22c55e" : "#94a3b8" }} />
+                          {row.active ? "Active" : "Inactive"}
+                        </span>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} title="Edit category" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569", padding: 0 }}><Edit2 size={13} /></button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} title="Delete category" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626", padding: 0 }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -3404,9 +3458,16 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedCouponId(row.id); setDraftCoupon(null); }}>
                       <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{row.code || "Untitled Coupon"}</div>
-                      <div style={{ fontSize: 12, color: "#475569", marginTop: 3 }}>{row.title || "No title"}{row.isArchived ? " â€¢ Archived" : " â€¢ Active"}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{row.title || "No title"}</span>
+                        <span>·</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.isArchived ? "#ef4444" : "#22c55e" }} />
+                          {row.isArchived ? "Archived" : "Active"}
+                        </span>
+                      </div>
                       <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                        {row.discountType === "PERCENT" ? `${row.discountValue}% off` : `â‚¹${Number(row.discountValue || 0) || 0} off`} | Min bill {formatMoney(Number(row.minBillAmount || 0))}
+                        {row.discountType === "PERCENT" ? `${row.discountValue}% off` : `₹${row.discountValue || 0} off`} | Min bill {formatMoney(Number(row.minBillAmount || 0))}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
@@ -3414,17 +3475,17 @@ export default function SettingsPage() {
                         type="button"
                         onClick={(event) => { event.stopPropagation(); startEdit(row); }}
                         title="Edit coupon"
-                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}
+                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569", padding: 0 }}
                       >
-                        âœŽ
+                        <Edit2 size={13} />
                       </button>
                       <button
                         type="button"
                         onClick={(event) => { event.stopPropagation(); toggleArchived(row); }}
                         title={row.isArchived ? "Restore coupon" : "Archive coupon"}
-                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: row.isArchived ? "#eff6ff" : "#fef2f2", border: `1px solid ${row.isArchived ? "#bfdbfe" : "#fecaca"}`, borderRadius: 6, cursor: "pointer", fontSize: 13, color: row.isArchived ? "#1d4ed8" : "#dc2626", padding: 0 }}
+                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: row.isArchived ? "#eff6ff" : "#fef2f2", border: `1px solid ${row.isArchived ? "#bfdbfe" : "#fecaca"}`, borderRadius: 6, cursor: "pointer", color: row.isArchived ? "#1d4ed8" : "#dc2626", padding: 0 }}
                       >
-                        {row.isArchived ? "â†º" : "â¨¯"}
+                        {row.isArchived ? <RefreshCw size={13} /> : <Trash2 size={13} />}
                       </button>
                     </div>
                   </div>
@@ -3696,11 +3757,18 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedPnlIncomeTaxId(row.id); setDraftPnlIncomeTax(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.slabFrom} - {row.slabTo}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.rate}% {row.active ? "â€¢ Active" : "â—‹ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{row.rate}%</span>
+                        <span>·</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.active ? "#22c55e" : "#94a3b8" }} />
+                          {row.active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} title="Edit slab" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569", padding: 0 }}><Edit2 size={13} /></button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} title="Delete slab" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626", padding: 0 }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}

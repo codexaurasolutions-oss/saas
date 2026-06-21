@@ -294,11 +294,189 @@ export default function MembershipsPage() {
         actions={customerId ? <Link to={`/admin/customers/${customerId}/history`} className="module-tab">Back to CRM</Link> : null}
       />
       <div className="settings-section-grid">
-        {(activeSection === "memberships") && !customerMembershipMode && (
-          <div style={{ background: "transparent", border: "none", padding: "0" }}>
-            <h3 style={{ color: "#2563eb", margin: "0 0 14px 0", fontSize: "0.88rem", fontWeight: 700, paddingBottom: "8px", borderBottom: "1px solid #f1f5f9" }}>
-              {membershipEditMode ? "Edit Membership Plan" : "Create New Membership Plan"}
-            </h3>
+        {/* ================= COLUMN 1: LIST COLUMN (LEFT SIDE) ================= */}
+        {/* Membership list (if activeSection is memberships) */}
+        {activeSection === "memberships" && (
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+            {customerMembershipMode ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", height: "100%" }}>
+                <h3 style={{ margin: "0 0 12px", fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>Assigned Memberships</h3>
+                {loading ? <PageLoader compact title="Loading memberships" /> : null}
+                <div className="list-stack" style={{ overflowY: "auto", flex: 1 }}>
+                  {(selectedCustomerHistory?.memberships || []).map((item) => (
+                    <div key={item.id} className="list-item" style={{ padding: "12px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "white" }}>
+                      <div className="item-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <strong style={{ fontSize: "0.85rem", color: "#0f172a" }}>{item.membershipPlan?.name}</strong>
+                        <span className="badge" style={{ fontSize: "0.7rem", background: "#eff6ff", color: "#1d4ed8", padding: "2px 8px", borderRadius: "20px" }}>{item.status}</span>
+                      </div>
+                      <div className="item-meta" style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px" }}>
+                        Ends {String(item.endsAt).slice(0, 10)} | Wallet {formatMoney(Number(item.remainingWalletValue || 0))}
+                      </div>
+                      <div className="inline-actions" style={{ marginTop: "10px" }}>
+                        <button type="button" className="secondary-button" onClick={() => setMembershipLifecycleForm((current) => ({ ...current, customerMembershipId: item.id }))} style={{ padding: "4px 8px", fontSize: "0.75rem" }}>Manage Lifecycle</button>
+                      </div>
+                    </div>
+                  ))}
+                  {!loading && !selectedCustomerHistory?.memberships?.length && <EmptyState title="No memberships assigned yet" message="Assign a membership to start tracking customer benefits." />}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+                <div>
+                  <h3 style={{ margin: "0 0 12px", fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>Membership Plans</h3>
+                  {loading ? <PageLoader compact title="Loading plans" /> : null}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "calc(100vh - 280px)", overflowY: "auto", paddingRight: "4px" }}>
+                    {memberships.map((item) => {
+                      const isSelected = editableMembershipId === item.id;
+                      const typeLabel = item.benefitType === "DISCOUNT_PERCENT" ? "Percentage" : "Fixed";
+                      return (
+                        <Link
+                          key={item.id}
+                          to={`/admin/memberships/${item.id}/edit`}
+                          style={{
+                            display: "block",
+                            padding: "16px 20px",
+                            borderRadius: "8px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "14px",
+                            transition: "all 0.2s",
+                            background: isSelected ? "#3b82f6" : "#f1f5f9",
+                            color: isSelected ? "white" : "#1e293b",
+                            border: isSelected ? "1px solid #3b82f6" : "1px solid #e2e8f0",
+                            boxShadow: isSelected ? "0 4px 6px -1px rgba(59, 130, 246, 0.2)" : "none"
+                          }}
+                        >
+                          {item.name} ({typeLabel})
+                        </Link>
+                      );
+                    })}
+                    {!loading && !memberships.length && <EmptyState title="No membership plans yet" message="Create your first membership plan to launch recurring loyalty offers." />}
+                  </div>
+                </div>
+                <div style={{ marginTop: "20px" }}>
+                  <Link
+                    to="/admin/memberships/create"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      padding: "12px",
+                      background: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      textDecoration: "none",
+                      boxShadow: "0 2px 4px rgba(59, 130, 246, 0.3)",
+                      textAlign: "center",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    Create New Plan
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Package list (if activeSection is packages) */}
+        {activeSection === "packages" && (
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+            {customerPackageMode ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", height: "100%" }}>
+                <h3 style={{ margin: "0 0 12px", fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>Assigned Packages</h3>
+                {loading ? <PageLoader compact title="Loading packages" /> : null}
+                <div className="list-stack" style={{ overflowY: "auto", flex: 1 }}>
+                  {(selectedCustomerHistory?.packages || []).map((item) => (
+                    <div key={item.id} className="list-item" style={{ padding: "12px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "white" }}>
+                      <div className="item-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <strong style={{ fontSize: "0.85rem", color: "#0f172a" }}>{item.package?.name}</strong>
+                        <span className="badge" style={{ fontSize: "0.7rem", background: "#eff6ff", color: "#1d4ed8", padding: "2px 8px", borderRadius: "20px" }}>{item.status}</span>
+                      </div>
+                      <div className="item-meta" style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px" }}>
+                        Remaining {item.remainingSessions} | Ends {String(item.endsAt).slice(0, 10)}
+                      </div>
+                      <div className="inline-actions" style={{ marginTop: "10px" }}>
+                        <button type="button" className="secondary-button" onClick={() => setPackageLifecycleForm((current) => ({ ...current, customerPackageId: item.id }))} style={{ padding: "4px 8px", fontSize: "0.75rem" }}>Manage Lifecycle</button>
+                      </div>
+                    </div>
+                  ))}
+                  {!loading && !selectedCustomerHistory?.packages?.length && <EmptyState title="No packages assigned yet" message="Assign a package to start tracking customer prepaid sessions." />}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+                <div>
+                  <h3 style={{ margin: "0 0 12px", fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>Packages</h3>
+                  {loading ? <PageLoader compact title="Loading packages" /> : null}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "calc(100vh - 280px)", overflowY: "auto", paddingRight: "4px" }}>
+                    {packages.map((item) => {
+                      const isSelected = editablePackageId === item.id;
+                      return (
+                        <Link
+                          key={item.id}
+                          to={`/admin/packages/${item.id}/edit`}
+                          style={{
+                            display: "block",
+                            padding: "16px 20px",
+                            borderRadius: "8px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "14px",
+                            transition: "all 0.2s",
+                            background: isSelected ? "#3b82f6" : "#f1f5f9",
+                            color: isSelected ? "white" : "#1e293b",
+                            border: isSelected ? "1px solid #3b82f6" : "1px solid #e2e8f0",
+                            boxShadow: isSelected ? "0 4px 6px -1px rgba(59, 130, 246, 0.2)" : "none"
+                          }}
+                        >
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                    {!loading && !packages.length && <EmptyState title="No packages yet" message="Create your first package to launch prepaid session bundles." />}
+                  </div>
+                </div>
+                <div style={{ marginTop: "20px" }}>
+                  <Link
+                    to="/admin/packages/create"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      padding: "12px",
+                      background: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      textDecoration: "none",
+                      boxShadow: "0 2px 4px rgba(59, 130, 246, 0.3)",
+                      textAlign: "center",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    Create New Package
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================= COLUMN 2: FORM/ASSIGN COLUMN (RIGHT SIDE) ================= */}
+        {/* Membership Create/Edit Form (if activeSection is memberships & not customerMembershipMode) */}
+        {activeSection === "memberships" && !customerMembershipMode && (
+          <div style={{ background: "white", padding: "24px 32px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", height: "100%", boxSizing: "border-box", overflowY: "auto" }}>
+            <h2 style={{ color: "#0f172a", margin: "0 0 16px 0", fontSize: "1.25rem", fontWeight: 700, paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>
+              {membershipEditMode ? "Update Membership Plan" : "Create Membership Plan"}
+            </h2>
             
             <form onSubmit={async (event) => {
               event.preventDefault();
@@ -316,7 +494,6 @@ export default function MembershipsPage() {
                   benefitType: isFixed ? "WALLET_VALUE" : "DISCOUNT_PERCENT",
                   walletValue: isFixed ? Number(membershipForm.walletValue || 0) : 0,
                   discountValue: !isFixed ? Number(membershipForm.discountValue || 0) : 0,
-                  // Pass new fields incase backend accepts them, otherwise they are ignored safely
                   renewalReminder: Number(membershipForm.renewalReminder || 0),
                   isSharable: membershipForm.isSharable,
                   applySelectedDays: membershipForm.applySelectedDays,
@@ -340,25 +517,25 @@ export default function MembershipsPage() {
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "8px" }}>Membership Type:</label>
                 <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.9rem", color: "#0f172a" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", color: "#475569", fontWeight: 500 }}>
                     <input 
                       type="radio" 
                       name="membershipType" 
                       value="Fixed" 
                       checked={membershipForm.membershipType === "Fixed"} 
                       onChange={() => setMembershipForm({ ...membershipForm, membershipType: "Fixed" })}
-                      style={{ accentColor: "#e11d48", width: "16px", height: "16px" }}
+                      style={{ width: "18px", height: "18px", accentColor: "#3b82f6", cursor: "pointer" }}
                     />
                     Fixed
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.9rem", color: "#0f172a" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", color: "#475569", fontWeight: 500 }}>
                     <input 
                       type="radio" 
                       name="membershipType" 
                       value="Percentage" 
                       checked={membershipForm.membershipType === "Percentage"} 
                       onChange={() => setMembershipForm({ ...membershipForm, membershipType: "Percentage" })}
-                      style={{ accentColor: "#e11d48", width: "16px", height: "16px" }}
+                      style={{ width: "18px", height: "18px", accentColor: "#3b82f6", cursor: "pointer" }}
                     />
                     Percentage
                   </label>
@@ -366,30 +543,31 @@ export default function MembershipsPage() {
               </div>
 
               {/* Name & Active */}
-              <div style={{ display: "flex", gap: "24px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "250px" }}>
+              <div style={{ display: "flex", gap: "24px", alignItems: "center", width: "100%" }}>
+                <div style={{ flex: 1 }}>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Name</label>
                   <input 
                     type="text" 
                     placeholder="Enter Name" 
                     value={membershipForm.name} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, name: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none", background: "white" }}
                   />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "24px" }}>
                   <input 
                     type="checkbox" 
+                    id="membership-active-checkbox"
                     checked={membershipForm.isActive} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, isActive: e.target.checked })}
-                    style={{ accentColor: "#3b82f6", width: "16px", height: "16px", cursor: "pointer" }}
+                    style={{ accentColor: "#3b82f6", width: "18px", height: "18px", cursor: "pointer" }}
                   />
-                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f172a" }}>Active</span>
+                  <label htmlFor="membership-active-checkbox" style={{ fontSize: "0.88rem", fontWeight: 600, color: "#475569", cursor: "pointer" }}>Active</label>
                 </div>
               </div>
 
-              {/* Fees, Validity, Renewal Reminder, Standard Discount */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
+              {/* Fees, Validity, Renewal Reminder */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", width: "100%" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Fees</label>
                   <input 
@@ -397,7 +575,7 @@ export default function MembershipsPage() {
                     placeholder="Enter Fee" 
                     value={membershipForm.price} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, price: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
                 <div>
@@ -407,7 +585,7 @@ export default function MembershipsPage() {
                     placeholder="In Days" 
                     value={membershipForm.validityDays} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, validityDays: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
                 <div>
@@ -417,64 +595,60 @@ export default function MembershipsPage() {
                     placeholder="In Days" 
                     value={membershipForm.renewalReminder} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, renewalReminder: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
-                {membershipForm.membershipType === "Percentage" && (
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Standard Discount '%'</label>
-                    <input 
-                      type="number" 
-                      placeholder="Enter %" 
-                      value={membershipForm.discountValue} 
-                      onChange={(e) => setMembershipForm({ ...membershipForm, discountValue: e.target.value })} 
-                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
-                    />
-                  </div>
-                )}
               </div>
 
-              {/* Benefit Amount (Fixed Only) */}
-              {membershipForm.membershipType === "Fixed" && (
-                <div style={{ width: "200px" }}>
+              {/* Benefit Amount or Standard Discount */}
+              {membershipForm.membershipType === "Fixed" ? (
+                <div style={{ width: "calc(33.33% - 11px)" }}>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Benefit Amount</label>
                   <input 
                     type="number" 
-                    placeholder="Enter Amount" 
+                    placeholder="Enter Benefit" 
                     value={membershipForm.walletValue} 
                     onChange={(e) => setMembershipForm({ ...membershipForm, walletValue: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
+                  />
+                </div>
+              ) : (
+                <div style={{ width: "calc(33.33% - 11px)" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Standard Discount '%'</label>
+                  <input 
+                    type="number" 
+                    placeholder="Enter Discount" 
+                    value={membershipForm.discountValue} 
+                    onChange={(e) => setMembershipForm({ ...membershipForm, discountValue: e.target.value })} 
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
               )}
 
               {/* Toggles */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", width: "fit-content" }}>
-                  <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 600 }}>Membership Sharable</span>
-                  <div style={{ position: "relative", width: "36px", height: "20px", background: membershipForm.isSharable ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.3s" }}>
-                    <div style={{ position: "absolute", top: "2px", left: membershipForm.isSharable ? "18px" : "2px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.3s" }}></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => setMembershipForm(cur => ({ ...cur, isSharable: !cur.isSharable }))}>
+                  <span style={{ fontSize: "0.88rem", color: "#475569", fontWeight: 600 }}>Membership Sharable</span>
+                  <div style={{ position: "relative", width: "40px", height: "22px", background: membershipForm.isSharable ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.2s" }}>
+                    <div style={{ position: "absolute", top: "3px", left: membershipForm.isSharable ? "21px" : "3px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.2s" }}></div>
                   </div>
-                  <input type="checkbox" checked={membershipForm.isSharable} onChange={e => setMembershipForm({...membershipForm, isSharable: e.target.checked})} style={{ display: "none" }} />
-                </label>
-                
+                </div>
+
                 {membershipForm.membershipType === "Percentage" && (
                   <>
-                    <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", width: "fit-content" }}>
-                      <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 600 }}>Apply Membership For Selected Days</span>
-                      <div style={{ position: "relative", width: "36px", height: "20px", background: membershipForm.applySelectedDays ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.3s" }}>
-                        <div style={{ position: "absolute", top: "2px", left: membershipForm.applySelectedDays ? "18px" : "2px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.3s" }}></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => setMembershipForm(cur => ({ ...cur, applySelectedDays: !cur.applySelectedDays }))}>
+                      <span style={{ fontSize: "0.88rem", color: "#475569", fontWeight: 600 }}>Apply Membership For Selected Days</span>
+                      <div style={{ position: "relative", width: "40px", height: "22px", background: membershipForm.applySelectedDays ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.2s" }}>
+                        <div style={{ position: "absolute", top: "3px", left: membershipForm.applySelectedDays ? "21px" : "3px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.2s" }}></div>
                       </div>
-                      <input type="checkbox" checked={membershipForm.applySelectedDays} onChange={e => setMembershipForm({...membershipForm, applySelectedDays: e.target.checked})} style={{ display: "none" }} />
-                    </label>
+                    </div>
 
-                    <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", width: "fit-content" }}>
-                      <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 600 }}>Apply Membership On Selected Services</span>
-                      <div style={{ position: "relative", width: "36px", height: "20px", background: membershipForm.applySelectedServices ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.3s" }}>
-                        <div style={{ position: "absolute", top: "2px", left: membershipForm.applySelectedServices ? "18px" : "2px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.3s" }}></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => setMembershipForm(cur => ({ ...cur, applySelectedServices: !cur.applySelectedServices }))}>
+                      <span style={{ fontSize: "0.88rem", color: "#475569", fontWeight: 600 }}>Apply Membership On Selected Services</span>
+                      <div style={{ position: "relative", width: "40px", height: "22px", background: membershipForm.applySelectedServices ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.2s" }}>
+                        <div style={{ position: "absolute", top: "3px", left: membershipForm.applySelectedServices ? "21px" : "3px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.2s" }}></div>
                       </div>
-                      <input type="checkbox" checked={membershipForm.applySelectedServices} onChange={e => setMembershipForm({...membershipForm, applySelectedServices: e.target.checked})} style={{ display: "none" }} />
-                    </label>
+                    </div>
                   </>
                 )}
               </div>
@@ -497,12 +671,7 @@ export default function MembershipsPage() {
                         <button 
                           type="button" 
                           key={service.id} 
-                          onClick={() => {
-                            setMembershipForm(cur => ({
-                              ...cur,
-                              serviceIds: isSelected ? cur.serviceIds.filter(id => id !== service.id) : [...cur.serviceIds, service.id]
-                            }));
-                          }}
+                          onClick={() => toggleMembershipService(service.id)}
                           style={{
                             padding: "6px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
                             background: isSelected ? "#3b82f6" : "white",
@@ -514,7 +683,6 @@ export default function MembershipsPage() {
                         </button>
                       );
                     })}
-                    {services.filter(s => s.name.toLowerCase().includes(serviceSearch.toLowerCase())).length === 0 && <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>No services found</span>}
                   </div>
                 </div>
               )}
@@ -522,33 +690,36 @@ export default function MembershipsPage() {
               <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "10px 0" }} />
 
               {/* Bottom Totals */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div style={{ alignSelf: "flex-end", fontSize: "0.9rem", color: "#475569", fontWeight: 600 }}>
-                  Total Amount To Pay: <span style={{ color: "#0f172a", fontWeight: 800 }}>{formatMoney(membershipForm.price || 0)}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "0.95rem", color: "#475569", fontWeight: 600 }}>
+                  Total Amount To Pay: <span style={{ color: "#0f172a", fontWeight: 800, marginLeft: "6px" }}>{formatMoney(Number(membershipForm.price || 0))}</span>
                 </div>
                 
                 {membershipForm.membershipType === "Fixed" && (
-                  <div style={{ background: "#e2e8f0", padding: "12px", borderRadius: "4px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.9rem", color: "#334155" }}>Final benefit amount is: <strong style={{ color: "#3b82f6" }}>{formatMoney(membershipForm.walletValue || 0)}</strong></span>
+                  <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "14px 16px", borderRadius: "8px", display: "flex", justifyContent: "center", alignItems: "center", marginTop: "8px" }}>
+                    <span style={{ fontSize: "0.95rem", color: "#1e3a8a", fontWeight: 600 }}>
+                      Final benefit amount is: <strong style={{ color: "#2563eb", fontWeight: 800, marginLeft: "4px" }}>{formatMoney(Number(membershipForm.price || 0) + Number(membershipForm.walletValue || 0))}</strong>
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "10px" }}>
-                <button type="button" onClick={() => setMembershipForm(emptyMembership)} style={{ padding: "8px 24px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 32px", borderRadius: "6px", border: "none", background: "#3b82f6", color: "white", fontWeight: 600, cursor: "pointer", transition: "opacity 0.2s" }}>Save</button>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                <button type="button" onClick={() => setMembershipForm(emptyMembership)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "10px 32px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "white", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>Save</button>
               </div>
 
             </form>
           </div>
         )}
 
-        {(activeSection === "packages") && !customerPackageMode && (
-          <div style={{ background: "transparent", border: "none", padding: "0" }}>
-            <h3 style={{ color: "#2563eb", margin: "0 0 14px 0", fontSize: "0.88rem", fontWeight: 700, paddingBottom: "8px", borderBottom: "1px solid #f1f5f9" }}>
-              {packageEditMode ? "Edit Package" : "Package"}
-            </h3>
+        {/* Package Create/Edit Form (if activeSection is packages & not customerPackageMode) */}
+        {activeSection === "packages" && !customerPackageMode && (
+          <div style={{ background: "white", padding: "24px 32px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", height: "100%", boxSizing: "border-box", overflowY: "auto" }}>
+            <h2 style={{ color: "#0f172a", margin: "0 0 16px 0", fontSize: "1.25rem", fontWeight: 700, paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>
+              {packageEditMode ? "Update Package" : "Create Package"}
+            </h2>
             <form onSubmit={async (event) => {
               event.preventDefault();
               setStatus({ error: "", success: "" });
@@ -586,29 +757,30 @@ export default function MembershipsPage() {
             }} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
               {/* Name & Active */}
-              <div style={{ display: "flex", gap: "24px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "250px" }}>
+              <div style={{ display: "flex", gap: "24px", alignItems: "center", width: "100%" }}>
+                <div style={{ flex: 1 }}>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Package name</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Bridal Package" 
                     value={packageForm.name} 
                     onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none", background: "white" }}
                   />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "24px" }}>
                   <input 
                     type="checkbox" 
+                    id="package-active-checkbox"
                     defaultChecked={true}
-                    style={{ accentColor: "#3b82f6", width: "16px", height: "16px", cursor: "pointer" }}
+                    style={{ accentColor: "#3b82f6", width: "18px", height: "18px", cursor: "pointer" }}
                   />
-                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f172a" }}>Active</span>
+                  <label htmlFor="package-active-checkbox" style={{ fontSize: "0.88rem", fontWeight: 600, color: "#475569", cursor: "pointer" }}>Active</label>
                 </div>
               </div>
 
               {/* Price, Total Sessions, Validity */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", width: "100%" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Price</label>
                   <input 
@@ -617,7 +789,7 @@ export default function MembershipsPage() {
                     placeholder="0" 
                     value={packageForm.price} 
                     onChange={(e) => setPackageForm({ ...packageForm, price: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
                 <div>
@@ -628,7 +800,7 @@ export default function MembershipsPage() {
                     placeholder="5" 
                     value={packageForm.totalSessions} 
                     onChange={(e) => setPackageForm({ ...packageForm, totalSessions: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
                 <div>
@@ -639,23 +811,22 @@ export default function MembershipsPage() {
                     placeholder="60" 
                     value={packageForm.validityDays} 
                     onChange={(e) => setPackageForm({ ...packageForm, validityDays: e.target.value })} 
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
               </div>
 
               {/* Toggles */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", width: "fit-content" }}>
-                  <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 600 }}>Does this package include physical products?</span>
-                  <div style={{ position: "relative", width: "36px", height: "20px", background: packageForm.includeProducts ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.3s" }}>
-                    <div style={{ position: "absolute", top: "2px", left: packageForm.includeProducts ? "18px" : "2px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.3s" }}></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => setPackageForm(cur => ({ ...cur, includeProducts: !cur.includeProducts }))}>
+                  <span style={{ fontSize: "0.88rem", color: "#475569", fontWeight: 600 }}>Does this package include physical products?</span>
+                  <div style={{ position: "relative", width: "40px", height: "22px", background: packageForm.includeProducts ? "#3b82f6" : "#cbd5e1", borderRadius: "20px", transition: "background 0.2s" }}>
+                    <div style={{ position: "absolute", top: "3px", left: packageForm.includeProducts ? "21px" : "3px", width: "16px", height: "16px", background: "white", borderRadius: "50%", transition: "left 0.2s" }}></div>
                   </div>
-                  <input type="checkbox" checked={packageForm.includeProducts} onChange={e => setPackageForm({...packageForm, includeProducts: e.target.checked})} style={{ display: "none" }} />
-                </label>
+                </div>
               </div>
 
-              {/* Service Selection */}
+              {/* Included Services Selection */}
               <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                 <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "8px" }}>Included Services</label>
                 <input 
@@ -684,11 +855,10 @@ export default function MembershipsPage() {
                       </button>
                     );
                   })}
-                  {services.filter(s => s.name.toLowerCase().includes(serviceSearch.toLowerCase())).length === 0 && <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>No services found</span>}
                 </div>
               </div>
 
-              {/* Product Selection */}
+              {/* Included Products Selection */}
               {packageForm.includeProducts && (
                 <div style={{ background: "#fdf8f5", padding: "16px", borderRadius: "8px", border: "1px solid #f0e1df" }}>
                   <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "8px" }}>Included Products</label>
@@ -718,7 +888,6 @@ export default function MembershipsPage() {
                         </button>
                       );
                     })}
-                    {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>No products found</span>}
                   </div>
                 </div>
               )}
@@ -726,186 +895,123 @@ export default function MembershipsPage() {
               <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "10px 0" }} />
 
               {/* Bottom Totals */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div style={{ alignSelf: "flex-end", fontSize: "0.9rem", color: "#475569", fontWeight: 600 }}>
-                  Total Amount To Pay: <span style={{ color: "#0f172a", fontWeight: 800 }}>{formatMoney(packageForm.price || 0)}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "0.95rem", color: "#475569", fontWeight: 600 }}>
+                  Total Amount To Pay: <span style={{ color: "#0f172a", fontWeight: 800, marginLeft: "6px" }}>{formatMoney(Number(packageForm.price || 0))}</span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "10px" }}>
-                <button type="button" onClick={() => setPackageForm(emptyPackage)} style={{ padding: "8px 24px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 32px", borderRadius: "6px", border: "none", background: "#3b82f6", color: "white", fontWeight: 600, cursor: "pointer", transition: "opacity 0.2s" }}>Save</button>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                <button type="button" onClick={() => setPackageForm(emptyPackage)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "10px 32px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "white", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>Save</button>
               </div>
 
             </form>
           </div>
         )}
 
-      {(activeSection === "memberships") && <div className="panel-card">
-          <h3>{customerMembershipMode ? "Assigned Memberships" : "Membership Plans"}</h3>
-          {loading ? <PageLoader compact title="Loading memberships" message="Preparing plans, assignments, and customer usage balances." /> : null}
-          <div className="list-stack">
-            {(customerMembershipMode ? (selectedCustomerHistory?.memberships || []) : memberships).map((item) => (
-              <div key={item.id} className="list-item">
-                <div className="item-head">
-                  <strong>{customerMembershipMode ? item.membershipPlan?.name : item.name}</strong>
-                  <span className="badge">{customerMembershipMode ? item.status : Number(item.price || 0).toFixed(2)}</span>
+        {/* Assign Membership Form (if activeSection is memberships & customerMembershipMode is true) */}
+        {activeSection === "memberships" && customerMembershipMode && (
+          <div style={{ background: "white", padding: "24px 32px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", height: "100%", boxSizing: "border-box" }}>
+            <h3 style={{ color: "#0f172a", margin: "0 0 16px 0", fontSize: "1.25rem", fontWeight: 700, paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>Assign Membership</h3>
+            <div style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, marginBottom: "16px" }}>{customerScopeLabel}</div>
+            <form onSubmit={async (event) => {
+              event.preventDefault();
+              setStatus({ error: "", success: "" });
+              try {
+                await api.post("/owner/memberships/assign", {
+                  ...assignMembershipForm,
+                  customerId: customerId || assignMembershipForm.customerId,
+                  startsAt: assignMembershipForm.startsAt || undefined
+                });
+                await loadAll(customerId || assignMembershipForm.customerId);
+                setAssignMembershipForm({ customerId: customerId || "", membershipPlanId: "", startsAt: "" });
+                setStatus({ error: "", success: "Membership assigned." });
+              } catch (error) {
+                setStatus({ error: formatApiError(error, "Could not assign membership"), success: "" });
+              }
+            }} style={{ display: "grid", gap: "16px", maxWidth: "480px" }}>
+              {!customerId && (
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Customer</label>
+                  <select value={assignMembershipForm.customerId} onChange={async (event) => {
+                    const nextCustomerId = event.target.value;
+                    setAssignMembershipForm((current) => ({ ...current, customerId: nextCustomerId }));
+                    if (nextCustomerId) await loadAll(nextCustomerId);
+                  }} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                    <option value="">Select customer</option>
+                    {loading ? <option value="" disabled>Loading customers...</option> : null}
+                    {customerOptions}
+                  </select>
                 </div>
-                <div className="item-meta">
-                  {customerMembershipMode
-                    ? `Ends ${String(item.endsAt).slice(0, 10)} | Wallet ${Number(item.remainingWalletValue || 0).toFixed(2)}`
-                    : `${item.benefitType} | ${item.validityDays} days`}
-                </div>
-                {(customerMembershipMode ? item.membershipPlan?.description : item.description) ? (
-                  <p className="muted" style={{ margin: "8px 0 0" }}>{customerMembershipMode ? item.membershipPlan.description : item.description}</p>
-                ) : null}
-                {cleanBenefits(customerMembershipMode ? item.membershipPlan?.benefits : item.benefits).length ? (
-                  <div className="badge-row" style={{ marginTop: 10 }}>
-                    {cleanBenefits(customerMembershipMode ? item.membershipPlan?.benefits : item.benefits).map((benefit) => (
-                      <span key={`${benefit.label}-${benefit.value}`} className="badge">{benefit.label}{benefit.value ? `: ${benefit.value}` : ""}</span>
-                    ))}
-                  </div>
-                ) : null}
-                {!customerMembershipMode && (
-                  <div className="inline-actions" style={{ marginTop: 10 }}>
-                    <Link to={`/admin/memberships/${item.id}/edit`} className="cta-secondary">Edit</Link>
-                  </div>
-                )}
-                {customerMembershipMode && (
-                  <div className="inline-actions" style={{ marginTop: 10 }}>
-                    <button type="button" className="secondary-button" onClick={() => setMembershipLifecycleForm((current) => ({ ...current, customerMembershipId: item.id }))}>Manage Lifecycle</button>
-                  </div>
-                )}
+              )}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Membership plan</label>
+                <select value={assignMembershipForm.membershipPlanId} onChange={(event) => setAssignMembershipForm((current) => ({ ...current, membershipPlanId: event.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                  <option value="">Select membership plan</option>
+                  {memberships.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
               </div>
-            ))}
-            {customerMembershipMode && !loading && !selectedCustomerHistory?.memberships?.length && <EmptyState title="No memberships assigned yet" message="Assign a membership to start tracking customer benefits and renewal activity." />}
-            {!customerMembershipMode && !loading && !memberships.length && <EmptyState title="No membership plans yet" message="Create your first membership plan to launch recurring loyalty offers." />}
-          </div>
-        </div>}
-
-        {(activeSection === "packages") && <div className="panel-card">
-          <h3>{customerPackageMode ? "Assigned Packages" : "Packages"}</h3>
-          <div className="list-stack">
-            {(customerPackageMode ? (selectedCustomerHistory?.packages || []) : packages).map((item) => (
-              <div key={item.id} className="list-item">
-                <div className="item-head">
-                  <strong>{customerPackageMode ? item.package?.name : item.name}</strong>
-                  <span className="badge">{customerPackageMode ? item.status : Number(item.price || 0).toFixed(2)}</span>
-                </div>
-                <div className="item-meta">
-                  {customerPackageMode
-                    ? `Remaining ${item.remainingSessions} | Ends ${String(item.endsAt).slice(0, 10)}`
-                    : `${item.totalSessions} sessions | ${item.validityDays} days`}
-                </div>
-                {!customerPackageMode && (
-                  <div className="inline-actions" style={{ marginTop: 10 }}>
-                    <Link to={`/admin/packages/${item.id}/edit`} className="cta-secondary">Edit</Link>
-                  </div>
-                )}
-                {customerPackageMode && (
-                  <div className="inline-actions" style={{ marginTop: 10 }}>
-                    <button type="button" className="secondary-button" onClick={() => setPackageLifecycleForm((current) => ({ ...current, customerPackageId: item.id }))}>Manage Lifecycle</button>
-                  </div>
-                )}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Starts At</label>
+                <input type="date" value={assignMembershipForm.startsAt} onChange={(event) => setAssignMembershipForm((current) => ({ ...current, startsAt: event.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
               </div>
-            ))}
-            {customerPackageMode && !loading && !selectedCustomerHistory?.packages?.length && <EmptyState title="No packages assigned yet" message="Assign a package to start tracking prepaid sessions for this customer." />}
-            {!customerPackageMode && !loading && !packages.length && <EmptyState title="No packages yet" message="Create your first package to launch prepaid session bundles." />}
+              <button style={{ padding: "10px 24px", background: "#3b82f6", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer", marginTop: "8px" }}>Assign Membership</button>
+            </form>
           </div>
-        </div>}
+        )}
 
-        {(activeSection === "memberships") && <div className="panel-card">
-          <h3>Assign Membership</h3>
-          <div className="item-meta" style={{ marginBottom: 10 }}>{customerScopeLabel}</div>
-          <form onSubmit={async (event) => {
-            event.preventDefault();
-            setStatus({ error: "", success: "" });
-            try {
-              await api.post("/owner/memberships/assign", {
-                ...assignMembershipForm,
-                customerId: customerId || assignMembershipForm.customerId,
-                startsAt: assignMembershipForm.startsAt || undefined
-              });
-              await loadAll(customerId || assignMembershipForm.customerId);
-              setAssignMembershipForm({ customerId: customerId || "", membershipPlanId: "", startsAt: "" });
-              setStatus({ error: "", success: "Membership assigned." });
-            } catch (error) {
-              setStatus({ error: formatApiError(error, "Could not assign membership"), success: "" });
-            }
-          }} style={{ display: "grid", gap: 10 }}>
-            {!customerId && (
-              <label>
-              <span className="muted">Customer</span>
-              <select value={assignMembershipForm.customerId} onChange={async (event) => {
-                const nextCustomerId = event.target.value;
-                setAssignMembershipForm((current) => ({ ...current, customerId: nextCustomerId }));
-                if (nextCustomerId) await loadAll(nextCustomerId);
-              }}>
-                <option value="">Select customer</option>
-                {loading ? <option value="" disabled>Loading customers...</option> : null}
-                {!loading && !customers.length ? <option value="" disabled>No customers found</option> : null}
-                {customerOptions}
-              </select>
-            </label>
-            )}
-            <label>
-              <span className="muted">Membership plan</span>
-              <select value={assignMembershipForm.membershipPlanId} onChange={(event) => setAssignMembershipForm((current) => ({ ...current, membershipPlanId: event.target.value }))}>
-              <option value="">Select membership plan</option>
-              {memberships.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-            </label>
-            <input type="date" value={assignMembershipForm.startsAt} onChange={(event) => setAssignMembershipForm((current) => ({ ...current, startsAt: event.target.value }))} />
-            <button>Assign Membership</button>
-          </form>
-        </div>}
-
-        {(activeSection === "packages") && <div className="panel-card">
-          <h3>Assign Package</h3>
-          <div className="item-meta" style={{ marginBottom: 10 }}>{customerScopeLabel}</div>
-          <form onSubmit={async (event) => {
-            event.preventDefault();
-            setStatus({ error: "", success: "" });
-            try {
-              await api.post("/owner/packages/assign", {
-                ...assignPackageForm,
-                customerId: customerId || assignPackageForm.customerId,
-                startsAt: assignPackageForm.startsAt || undefined
-              });
-              await loadAll(customerId || assignPackageForm.customerId);
-              setAssignPackageForm({ customerId: customerId || "", packageId: "", startsAt: "" });
-              setStatus({ error: "", success: "Package assigned." });
-            } catch (error) {
-              setStatus({ error: formatApiError(error, "Could not assign package"), success: "" });
-            }
-          }} style={{ display: "grid", gap: 10 }}>
-            {!customerId && (
-              <label>
-              <span className="muted">Customer</span>
-              <select value={assignPackageForm.customerId} onChange={async (event) => {
-                const nextCustomerId = event.target.value;
-                setAssignPackageForm((current) => ({ ...current, customerId: nextCustomerId }));
-                if (nextCustomerId) await loadAll(nextCustomerId);
-              }}>
-                <option value="">Select customer</option>
-                {loading ? <option value="" disabled>Loading customers...</option> : null}
-                {!loading && !customers.length ? <option value="" disabled>No customers found</option> : null}
-                {customerOptions}
-              </select>
-            </label>
-            )}
-            <label>
-              <span className="muted">Package</span>
-              <select value={assignPackageForm.packageId} onChange={(event) => setAssignPackageForm((current) => ({ ...current, packageId: event.target.value }))}>
-              <option value="">Select package</option>
-              {packages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-            </label>
-            <input type="date" value={assignPackageForm.startsAt} onChange={(event) => setAssignPackageForm((current) => ({ ...current, startsAt: event.target.value }))} />
-            <button>Assign Package</button>
-          </form>
-        </div>}
+        {/* Assign Package Form (if activeSection is packages & customerPackageMode is true) */}
+        {activeSection === "packages" && customerPackageMode && (
+          <div style={{ background: "white", padding: "24px 32px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", height: "100%", boxSizing: "border-box" }}>
+            <h3 style={{ color: "#0f172a", margin: "0 0 16px 0", fontSize: "1.25rem", fontWeight: 700, paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>Assign Package</h3>
+            <div style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, marginBottom: "16px" }}>{customerScopeLabel}</div>
+            <form onSubmit={async (event) => {
+              event.preventDefault();
+              setStatus({ error: "", success: "" });
+              try {
+                await api.post("/owner/packages/assign", {
+                  ...assignPackageForm,
+                  customerId: customerId || assignPackageForm.customerId,
+                  startsAt: assignPackageForm.startsAt || undefined
+                });
+                await loadAll(customerId || assignPackageForm.customerId);
+                setAssignPackageForm({ customerId: customerId || "", packageId: "", startsAt: "" });
+                setStatus({ error: "", success: "Package assigned." });
+              } catch (error) {
+                setStatus({ error: formatApiError(error, "Could not assign package"), success: "" });
+              }
+            }} style={{ display: "grid", gap: "16px", maxWidth: "480px" }}>
+              {!customerId && (
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Customer</label>
+                  <select value={assignPackageForm.customerId} onChange={async (event) => {
+                    const nextCustomerId = event.target.value;
+                    setAssignPackageForm((current) => ({ ...current, customerId: nextCustomerId }));
+                    if (nextCustomerId) await loadAll(nextCustomerId);
+                  }} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                    <option value="">Select customer</option>
+                    {loading ? <option value="" disabled>Loading customers...</option> : null}
+                    {customerOptions}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Package</label>
+                <select value={assignPackageForm.packageId} onChange={(event) => setAssignPackageForm((current) => ({ ...current, packageId: event.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                  <option value="">Select package</option>
+                  {packages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", fontWeight: 600, marginBottom: "6px" }}>Starts At</label>
+                <input type="date" value={assignPackageForm.startsAt} onChange={(event) => setAssignPackageForm((current) => ({ ...current, startsAt: event.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
+              </div>
+              <button style={{ padding: "10px 24px", background: "#3b82f6", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer", marginTop: "8px" }}>Assign Package</button>
+            </form>
+          </div>
+        )}
       </div>
 
       {activeSection === "packages" && (

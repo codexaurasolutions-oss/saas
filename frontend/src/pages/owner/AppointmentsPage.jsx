@@ -130,33 +130,48 @@ export default function AppointmentsPage() {
   const [salonSettings, setSalonSettings] = useState(null);
 
   const { TIME_SLOTS, TIME_SLOT_INDEX, currentStartHour } = useMemo(() => {
+    const parseHour = (timeStr) => {
+      if (!timeStr) return NaN;
+      const valStr = timeStr.trim().toLowerCase();
+      const [timePart] = valStr.split(" ");
+      const [hStr] = timePart.split(":");
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return NaN;
+      if (valStr.includes("pm") && h < 12) h += 12;
+      if (valStr.includes("am") && h === 12) h = 0;
+      return h;
+    };
+
     let startHour = 9;
     let endHour = 21;
 
+    // Use Salon Settings business timings as the baseline
+    const bizStart = salonSettings?.advancedSettings?.genericSettings?.businessStart;
+    const bizEnd = salonSettings?.advancedSettings?.genericSettings?.businessEnd;
+    const parsedBizStart = parseHour(bizStart);
+    const parsedBizEnd = parseHour(bizEnd);
+
+    if (!isNaN(parsedBizStart)) {
+      startHour = parsedBizStart;
+    }
+    if (!isNaN(parsedBizEnd)) {
+      endHour = parsedBizEnd;
+    }
+
+    // Expand bounds if any working staff member has a shift extending beyond the business hours
     const rosterRows = salonSettings?.advancedSettings?.rosterManagement?.rows || [];
     const workingRows = rosterRows.filter(r => r.isWorking !== false && r.fromTime && r.toTime);
     if (workingRows.length > 0) {
-      let minHour = 24;
-      let maxHour = 0;
+      let minHour = startHour;
+      let maxHour = endHour;
       workingRows.forEach(row => {
-        const parseHour = (timeStr) => {
-          if (!timeStr) return NaN;
-          const valStr = timeStr.trim().toLowerCase();
-          const [timePart] = valStr.split(" ");
-          const [hStr] = timePart.split(":");
-          let h = parseInt(hStr, 10);
-          if (isNaN(h)) return NaN;
-          if (valStr.includes("pm") && h < 12) h += 12;
-          if (valStr.includes("am") && h === 12) h = 0;
-          return h;
-        };
         const fromH = parseHour(row.fromTime);
         const toH = parseHour(row.toTime);
         if (!isNaN(fromH) && fromH < minHour) minHour = fromH;
         if (!isNaN(toH) && toH > maxHour) maxHour = toH;
       });
-      if (minHour < 24) startHour = minHour;
-      if (maxHour > 0) endHour = maxHour;
+      startHour = minHour;
+      endHour = maxHour;
     }
 
     const slots = [];
