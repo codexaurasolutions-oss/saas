@@ -129,6 +129,7 @@ export default function CustomersPage() {
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [followUpForm, setFollowUpForm] = useState({ date: "", time: "", message: "", type: "email", staffUserId: "" });
   const [invoiceSuccessData, setInvoiceSuccessData] = useState(null); // { type, name, invoice }
+  const [membershipError, setMembershipError] = useState("");
   const actionMenuRef = useRef(null);
   const [formData, setFormData] = useState({
     phone: "",
@@ -263,6 +264,23 @@ export default function CustomersPage() {
 
   const handleAssignMembership = async () => {
     if (!selectedPlan || !selectedCustomer) return;
+    const priceVal = Number(membershipForm.price || 0);
+    if (priceVal <= 0) {
+      setMembershipError("Please enter a valid membership price greater than 0.");
+      return;
+    }
+    const onlineVal = Number(membershipForm.online || 0);
+    const offlineVal = Number(membershipForm.offline || 0);
+    const advanceVal = Number(membershipForm.advance || 0);
+    const totalPayment = onlineVal + offlineVal + advanceVal;
+    if (totalPayment <= 0) {
+      setMembershipError("Please enter a payment amount (Online, Offline, or Advance).");
+      return;
+    }
+    if (totalPayment > priceVal) {
+      setMembershipError("Total payment amount cannot exceed the membership price.");
+      return;
+    }
     try {
       const payload = {
         customerId: selectedCustomer.id,
@@ -1543,7 +1561,7 @@ export default function CustomersPage() {
                               );
                             })
                           )}
-                          <button className="cust-assign-btn" onClick={() => { fetchMembershipPlans(); fetchStaffUsers(); fetchServices(); setSelectedPlan(null); setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "", purchaseDate: new Date().toISOString().slice(0, 10) }); setMembershipSearch(""); setCustomServices([]); setShowAssignMembershipModal(true); }}>
+                          <button className="cust-assign-btn" onClick={() => { fetchMembershipPlans(); fetchStaffUsers(); fetchServices(); setSelectedPlan(null); setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "", purchaseDate: new Date().toISOString().slice(0, 10) }); setMembershipSearch(""); setCustomServices([]); setMembershipError(""); setShowAssignMembershipModal(true); }}>
                             <CreditCard size={16} /> Assign Membership
                           </button>
                         </div>
@@ -1903,7 +1921,11 @@ export default function CustomersPage() {
                                 ...prev,
                                 validityDays: String(plan.validityDays || ""),
                                 price: String(plan.price || ""),
+                                online: "",
+                                offline: "",
+                                advance: "",
                               }));
+                              setMembershipError("");
                             }} 
                             style={{ 
                               background: isSelected ? "#eff6ff" : "#fff", 
@@ -2010,7 +2032,20 @@ export default function CustomersPage() {
                             type="number" 
                             placeholder="Online amount" 
                             value={membershipForm.online} 
-                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, online: e.target.value }))} 
+                            onChange={(e) => {
+                              setMembershipError("");
+                              const val = e.target.value;
+                              if (val === "") {
+                                setMembershipForm((prev) => ({ ...prev, online: "" }));
+                                return;
+                              }
+                              const num = Number(val);
+                              const price = Number(membershipForm.price || 0);
+                              const offline = Number(membershipForm.offline || 0);
+                              const advance = Number(membershipForm.advance || 0);
+                              const maxAllowed = Math.max(0, price - (offline + advance));
+                              setMembershipForm((prev) => ({ ...prev, online: String(Math.max(0, Math.min(num, maxAllowed))) }));
+                            }} 
                             style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
                           />
                         </div>
@@ -2020,7 +2055,20 @@ export default function CustomersPage() {
                             type="number" 
                             placeholder="Offline amount" 
                             value={membershipForm.offline} 
-                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, offline: e.target.value }))} 
+                            onChange={(e) => {
+                              setMembershipError("");
+                              const val = e.target.value;
+                              if (val === "") {
+                                setMembershipForm((prev) => ({ ...prev, offline: "" }));
+                                return;
+                              }
+                              const num = Number(val);
+                              const price = Number(membershipForm.price || 0);
+                              const online = Number(membershipForm.online || 0);
+                              const advance = Number(membershipForm.advance || 0);
+                              const maxAllowed = Math.max(0, price - (online + advance));
+                              setMembershipForm((prev) => ({ ...prev, offline: String(Math.max(0, Math.min(num, maxAllowed))) }));
+                            }} 
                             style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
                           />
                         </div>
@@ -2030,7 +2078,20 @@ export default function CustomersPage() {
                             type="number" 
                             placeholder="Advance" 
                             value={membershipForm.advance} 
-                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, advance: e.target.value }))} 
+                            onChange={(e) => {
+                              setMembershipError("");
+                              const val = e.target.value;
+                              if (val === "") {
+                                setMembershipForm((prev) => ({ ...prev, advance: "" }));
+                                return;
+                              }
+                              const num = Number(val);
+                              const price = Number(membershipForm.price || 0);
+                              const online = Number(membershipForm.online || 0);
+                              const offline = Number(membershipForm.offline || 0);
+                              const maxAllowed = Math.max(0, price - (online + offline));
+                              setMembershipForm((prev) => ({ ...prev, advance: String(Math.max(0, Math.min(num, maxAllowed))) }));
+                            }} 
                             style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
                           />
                         </div>
@@ -2042,6 +2103,11 @@ export default function CustomersPage() {
                           {formatMoney(assignMembershipBalanceVal)}
                         </span>
                       </div>
+                      {membershipError && (
+                        <div style={{ color: "#ef4444", fontSize: "0.82rem", fontWeight: 600, marginTop: "12px", background: "#fef2f2", padding: "8px 12px", borderRadius: 8, border: "1px solid #fca5a5", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <AlertCircle size={14} /> {membershipError}
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-group" style={{ marginTop: "12px", margin: 0 }}>

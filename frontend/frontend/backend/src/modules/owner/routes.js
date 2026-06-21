@@ -517,6 +517,12 @@ ownerRouter.post("/services", requireSalonPermission("services", "create"), vali
   const branchId = normalizeBranchId(req.body.branchId);
   if (branchId) await ensureBranch(req.salonId, branchId);
   const categoryId = req.body.categoryId || null;
+  const salonSettings = await prisma.salonSetting.findFirst({ where: { salonId: req.salonId, branchId: null } });
+  const taxRows = Array.isArray(salonSettings?.advancedSettings?.taxMapping?.rates)
+    ? salonSettings.advancedSettings.taxMapping.rates
+    : [];
+  const defaultServiceTax = taxRows.find((row) => row?.active !== false && Array.isArray(row?.applicableFor) && row.applicableFor.includes("SERVICE"));
+  const explicitTaxRate = req.body.taxRate != null ? toAmount(req.body.taxRate) : null;
   const { gender, ...createData } = req.body;
   res.status(201).json(await prisma.service.create({
     data: {
@@ -525,7 +531,7 @@ ownerRouter.post("/services", requireSalonPermission("services", "create"), vali
       categoryId,
       price: toAmount(req.body.price),
       durationMin: Number(req.body.durationMin),
-      taxRate: req.body.taxRate != null ? toAmount(req.body.taxRate) : null,
+      taxRate: explicitTaxRate ?? (defaultServiceTax?.rate != null ? toAmount(defaultServiceTax.rate) : null),
       commissionPct: req.body.commissionPct != null ? toAmount(req.body.commissionPct) : null,
       salonId: req.salonId
     },
@@ -538,6 +544,12 @@ ownerRouter.patch("/services/:id", requireSalonPermission("services", "edit"), v
   const branchId = normalizeBranchId(req.body.branchId);
   if (branchId) await ensureBranch(req.salonId, branchId);
   const { gender, ...updateData } = req.body;
+  const salonSettings = await prisma.salonSetting.findFirst({ where: { salonId: req.salonId, branchId: null } });
+  const taxRows = Array.isArray(salonSettings?.advancedSettings?.taxMapping?.rates)
+    ? salonSettings.advancedSettings.taxMapping.rates
+    : [];
+  const defaultServiceTax = taxRows.find((taxRow) => taxRow?.active !== false && Array.isArray(taxRow?.applicableFor) && taxRow.applicableFor.includes("SERVICE"));
+  const explicitTaxRate = req.body.taxRate != null ? toAmount(req.body.taxRate) : null;
   res.json(await prisma.service.update({
     where: { id: req.params.id },
     data: {
@@ -546,7 +558,7 @@ ownerRouter.patch("/services/:id", requireSalonPermission("services", "edit"), v
       categoryId: req.body.categoryId !== undefined ? req.body.categoryId : row.categoryId,
       price: toAmount(req.body.price),
       durationMin: Number(req.body.durationMin),
-      taxRate: req.body.taxRate != null ? toAmount(req.body.taxRate) : null,
+      taxRate: explicitTaxRate ?? (defaultServiceTax?.rate != null ? toAmount(defaultServiceTax.rate) : row.taxRate),
       commissionPct: req.body.commissionPct != null ? toAmount(req.body.commissionPct) : null
     },
     include: { branch: true, category: true }
@@ -727,10 +739,10 @@ ownerRouter.get("/customers", requireSalonPermission("customers", "view"), async
       ...(branchId ? { invoices: { some: { branchId } } } : {}),
       ...(query ? {
         OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } },
-          { source: { contains: query, mode: "insensitive" } }
+          { name: { contains: query } },
+          { phone: { contains: query } },
+          { email: { contains: query } },
+          { source: { contains: query } }
         ]
       } : {}),
       ...(filter === "high_spender" ? { totalSpend: { gte: 10000 } } : {}),
@@ -773,6 +785,10 @@ ownerRouter.get("/customers", requireSalonPermission("customers", "view"), async
       }
     }, 0);
 
+    const namePart = (row.name || "GUEST").trim().split(" ")[0].replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const phonePart = (row.phone || "0000").replace(/[^0-9]/g, "").slice(-4);
+    const referralCode = `${namePart}${phonePart}`;
+
     const { invoices, timelineEntries, ...rest } = row;
     return {
       ...rest,
@@ -780,7 +796,8 @@ ownerRouter.get("/customers", requireSalonPermission("customers", "view"), async
       membershipCount: row._count?.memberships || 0,
       packageCount: row._count?.packages || 0,
       advanceAmount,
-      balanceAmount
+      balanceAmount,
+      referralCode
     };
   });
   res.json(mapped);
@@ -833,9 +850,57 @@ ownerRouter.get("/customers/:id", requireSalonPermission("customers", "view"), a
   if (!customer) return res.status(404).json({ message: "Customer not found" });
   
   const balanceAmount = customer.invoices.reduce((sum, inv) => sum + Number(inv.balanceAmount || 0), 0);
-  const timelineEntries = await prisma.customerTimeline.findMany({
-    where: { customerId: req.params.id, eventType: "ADVANCE_PAYMENT" }
+  const [advanceTimelineEntries, followUpEntries, staffDirectory] = await Promise.all([
+    prisma.customerTimeline.findMany({
+      where: { customerId: req.params.id, eventType: "ADVANCE_PAYMENT" }
+    }),
+    prisma.customerTimeline.findMany({
+      where: { customerId: req.params.id, eventType: "FOLLOW_UP" },
+      orderBy: { createdAt: "desc" }
+    }),
+    prisma.userSalon.findMany({
+      where: { salonId: req.salonId, isArchived: false },
+      include: { user: true }
+    })
+  ]);
+  const staffNameMap = new Map(staffDirectory.map((row) => [row.id, row.user?.name || row.user?.email || row.id]));
+  const followUps = followUpEntries.map((entry) => {
+    try {
+      const details = JSON.parse(entry.details || "{}");
+      const staffName = details.staffName || (details.staffUserId ? staffNameMap.get(details.staffUserId) : "");
+      return {
+        id: entry.id,
+        createdAt: entry.createdAt,
+        eventType: entry.eventType,
+        title: entry.title,
+        message: details.message || entry.title,
+        note: details.message || entry.title,
+        date: details.date || "",
+        time: details.time || "",
+        type: details.type || "call",
+        status: details.status || "SCHEDULED",
+        staffUserId: details.staffUserId || "",
+        staffName: staffName || "",
+        scheduledFor: details.time ? `${details.date || ""}T${details.time}` : (details.date || "")
+      };
+    } catch (e) {
+      return {
+        id: entry.id,
+        createdAt: entry.createdAt,
+        eventType: entry.eventType,
+        title: entry.title,
+        message: entry.title,
+        note: entry.title,
+        date: "",
+        time: "",
+        type: "call",
+        status: "SCHEDULED",
+        staffUserId: "",
+        staffName: ""
+      };
+    }
   });
+  const timelineEntries = advanceTimelineEntries;
   const advanceAmount = timelineEntries.reduce((sum, entry) => {
     try {
       const details = JSON.parse(entry.details || "{}");
@@ -850,12 +915,68 @@ ownerRouter.get("/customers/:id", requireSalonPermission("customers", "view"), a
   });
 
   const totalOrders = customer.invoices.length;
+  const namePart = (customer.name || "GUEST").trim().split(" ")[0].replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  const phonePart = (customer.phone || "0000").replace(/[^0-9]/g, "").slice(-4);
+  const referralCode = `${namePart}${phonePart}`;
+
   res.json({
     ...customer,
     totalOrders,
     advanceAmount,
     balanceAmount,
-    familyMembers
+    familyMembers,
+    referralCode,
+    followUps
+  });
+});
+
+ownerRouter.post("/follow-ups", requireSalonPermission("customers", "edit"), validate(schemas.customerFollowUp), async (req, res) => {
+  const customer = await prisma.customer.findFirst({
+    where: { id: req.body.customerId, salonId: req.salonId }
+  });
+  if (!customer) return res.status(404).json({ message: "Customer not found" });
+
+  const staffUser = await prisma.userSalon.findFirst({
+    where: { id: req.body.staffUserId, salonId: req.salonId, isArchived: false },
+    include: { user: true }
+  });
+  if (!staffUser) return res.status(400).json({ message: "Assigned staff not found for this salon" });
+
+  const title = `Follow-up scheduled (${String(req.body.type || "call").toUpperCase()})`;
+  const details = {
+    date: req.body.date,
+    time: req.body.time || "",
+    message: req.body.message,
+    type: req.body.type,
+    status: "SCHEDULED",
+    staffUserId: staffUser.id,
+    staffName: staffUser.user?.name || staffUser.user?.email || staffUser.id
+  };
+
+  const timeline = await prisma.customerTimeline.create({
+    data: {
+      customerId: customer.id,
+      eventType: "FOLLOW_UP",
+      title,
+      details: JSON.stringify(details),
+      referenceId: customer.id
+    }
+  });
+
+  await createAuditLog({
+    salonId: req.salonId,
+    actorUserId: req.user.userId,
+    actorMembershipId: req.user.membershipId,
+    module: "CRM",
+    action: "FOLLOW_UP_CREATED",
+    entityType: "CustomerTimeline",
+    entityId: timeline.id,
+    summary: `Follow-up scheduled for ${customer.name || customer.phone || customer.id}`
+  });
+
+  res.status(201).json({
+    ...timeline,
+    ...details
   });
 });
 
