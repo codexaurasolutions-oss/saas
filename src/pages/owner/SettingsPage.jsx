@@ -450,6 +450,11 @@ export default function SettingsPage() {
   const [cardForm, setCardForm] = useState({ name: "", description: "", active: true, amount: "", validityDays: 30, renewalReminderDays: 7 });
   const [selectedFeedbackTypeId, setSelectedFeedbackTypeId] = useState(null);
   const [draftFeedbackType, setDraftFeedbackType] = useState(null);
+  const [buttonColor, setButtonColor] = useState("#3b82f6");
+  const [sidebarColor, setSidebarColor] = useState("#0f172a");
+  const [navbarColor, setNavbarColor] = useState("#ffffff");
+  const [fontColor, setFontColor] = useState("#1e293b");
+  const [activeThemePreset, setActiveThemePreset] = useState("classic");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
   const rosterInitializedRef = useRef(false);
   const salonId = auth?.salonId || auth?.membership?.salonId || auth?.membership?.salon?.id || "global";
@@ -1974,7 +1979,7 @@ export default function SettingsPage() {
         </div>
 
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-          {/* LEFT PANEL — Tax List */}
+          {/* LEFT PANEL â€” Tax List */}
           <div style={{ width: 260, flexShrink: 0 }}>
             <div className="settings-panel-card" style={{ padding: 0 }}>
               <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f1f5f9" }}>
@@ -1998,11 +2003,11 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedTaxId(row.id); setDraftTax(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.label || "Untitled Tax"}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.code} | {row.rate}% {row.active ? "● Active" : "○ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.code} | {row.rate}% {row.active ? "â— Active" : "â—‹ Inactive"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); startEdit(row); }} title="Edit tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}>✎</button>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteTax(row.id); }} title="Delete tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#dc2626", padding: 0 }}>✕</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); startEdit(row); }} title="Edit tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}>âœŽ</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteTax(row.id); }} title="Delete tax" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#dc2626", padding: 0 }}>âœ•</button>
                     </div>
                   </div>
                 ))}
@@ -2011,7 +2016,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* RIGHT PANEL — Form */}
+          {/* RIGHT PANEL â€” Form */}
           <div style={{ flex: 1, minWidth: 0 }}>
             {editing ? (
               <div className="settings-panel-card">
@@ -2376,11 +2381,11 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedFeedbackTypeId(row.id); setDraftFeedbackType(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.name}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.active ? "• Active" : "○ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.active ? "â€¢ Active" : "â—‹ Inactive"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>✎</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>✕</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
                     </div>
                   </div>
                 ))}
@@ -3124,12 +3129,12 @@ export default function SettingsPage() {
                     <div style={{ flex: 1 }} onClick={() => { setSelectedPnlCategoryId(row.id); setDraftPnlCategory(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.name || "Untitled Category"}</div>
                       <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                        #{row.sequenceNumber || 0} | {row.type || "Expense"} {row.active ? "• Active" : "• Inactive"}
+                        #{row.sequenceNumber || 0} | {row.type || "Expense"} {row.active ? "â€¢ Active" : "â€¢ Inactive"}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>✎</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>✕</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
                     </div>
                   </div>
                 ))}
@@ -3399,9 +3404,9 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedCouponId(row.id); setDraftCoupon(null); }}>
                       <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{row.code || "Untitled Coupon"}</div>
-                      <div style={{ fontSize: 12, color: "#475569", marginTop: 3 }}>{row.title || "No title"}{row.isArchived ? " • Archived" : " • Active"}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 3 }}>{row.title || "No title"}{row.isArchived ? " â€¢ Archived" : " â€¢ Active"}</div>
                       <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                        {row.discountType === "PERCENT" ? `${row.discountValue}% off` : `₹${Number(row.discountValue || 0) || 0} off`} | Min bill {formatMoney(Number(row.minBillAmount || 0))}
+                        {row.discountType === "PERCENT" ? `${row.discountValue}% off` : `â‚¹${Number(row.discountValue || 0) || 0} off`} | Min bill {formatMoney(Number(row.minBillAmount || 0))}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
@@ -3411,7 +3416,7 @@ export default function SettingsPage() {
                         title="Edit coupon"
                         style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 13, color: "#475569", padding: 0 }}
                       >
-                        ✎
+                        âœŽ
                       </button>
                       <button
                         type="button"
@@ -3419,7 +3424,7 @@ export default function SettingsPage() {
                         title={row.isArchived ? "Restore coupon" : "Archive coupon"}
                         style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: row.isArchived ? "#eff6ff" : "#fef2f2", border: `1px solid ${row.isArchived ? "#bfdbfe" : "#fecaca"}`, borderRadius: 6, cursor: "pointer", fontSize: 13, color: row.isArchived ? "#1d4ed8" : "#dc2626", padding: 0 }}
                       >
-                        {row.isArchived ? "↺" : "⨯"}
+                        {row.isArchived ? "â†º" : "â¨¯"}
                       </button>
                     </div>
                   </div>
@@ -3477,7 +3482,7 @@ export default function SettingsPage() {
                     </select>
                   </label>
                   <label className="settings-input-group">
-                    <span className="muted">Benefit Value in {formatMoney(1).replace(/1/g, "") || "₹"}</span>
+                    <span className="muted">Benefit Value in {formatMoney(1).replace(/1/g, "") || "â‚¹"}</span>
                     <input
                       type="number"
                       min="0"
@@ -3691,11 +3696,11 @@ export default function SettingsPage() {
                   >
                     <div style={{ flex: 1 }} onClick={() => { setSelectedPnlIncomeTaxId(row.id); setDraftPnlIncomeTax(null); }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{row.slabFrom} - {row.slabTo}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.rate}% {row.active ? "• Active" : "○ Inactive"}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{row.rate}% {row.active ? "â€¢ Active" : "â—‹ Inactive"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>✎</button>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>✕</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); startEdit(row); }} style={{ width: 28, height: 28, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", color: "#475569" }}>âœŽ</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); deleteRow(row.id); }} style={{ width: 28, height: 28, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, cursor: "pointer", color: "#dc2626" }}>âœ•</button>
                     </div>
                   </div>
                 ))}
@@ -3794,6 +3799,171 @@ export default function SettingsPage() {
     );
   };
 
+  const renderUiSettingsSection = () => {
+    const presets = [
+      { id: "classic", name: "Classic Indigo", button: "#3b82f6", sidebar: "#0f172a", navbar: "#ffffff", font: "#1e293b" },
+      { id: "ocean", name: "Ocean Breeze", button: "#0ea5e9", sidebar: "#0c4a6e", navbar: "#f0f9ff", font: "#0369a1" },
+      { id: "emerald", name: "Emerald Forest", button: "#10b981", sidebar: "#064e3b", navbar: "#f0fdf4", font: "#047857" },
+      { id: "midnight", name: "Midnight Premium", button: "#8b5cf6", sidebar: "#111827", navbar: "#1f2937", font: "#f9fafb" },
+      { id: "rose", name: "Rose Gold", button: "#ec4899", sidebar: "#4c0519", navbar: "#fff1f2", font: "#be185d" }
+    ];
+
+    const applyPreset = (preset) => {
+      setActiveThemePreset(preset.id);
+      setButtonColor(preset.button);
+      setSidebarColor(preset.sidebar);
+      setNavbarColor(preset.navbar);
+      setFontColor(preset.font);
+    };
+
+    return (
+      <>
+        <SectionHeader
+          title="UI Settings"
+          description="Customize the brand identity, dashboard layout color schemes, and fonts of your partner portal."
+          badges={["Live Preview Active", "Theme Customizer"]}
+        />
+        <div className="muted" style={{ marginBottom: 20, fontSize: 12 }}>
+          Choose preset colors or pick your own custom palette. Changes are reflected in the instant interactive dashboard mockup below.
+        </div>
+
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 320 }}>
+            {/* Color Selectors Card */}
+            <div className="settings-panel-card" style={{ marginBottom: 20 }}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Theme Colors</h3>
+              
+              <div className="settings-form-grid">
+                <label className="settings-input-group">
+                  <span className="muted">Button Color</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="color" value={buttonColor} onChange={(e) => { setButtonColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
+                    <input type="text" value={buttonColor} onChange={(e) => { setButtonColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
+                  </div>
+                </label>
+                <label className="settings-input-group">
+                  <span className="muted">Sidebar Color</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="color" value={sidebarColor} onChange={(e) => { setSidebarColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
+                    <input type="text" value={sidebarColor} onChange={(e) => { setSidebarColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
+                  </div>
+                </label>
+                <label className="settings-input-group">
+                  <span className="muted">Navbar Color</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="color" value={navbarColor} onChange={(e) => { setNavbarColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
+                    <input type="text" value={navbarColor} onChange={(e) => { setNavbarColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
+                  </div>
+                </label>
+                <label className="settings-input-group">
+                  <span className="muted">Font & Icon Color</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="color" value={fontColor} onChange={(e) => { setFontColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
+                    <input type="text" value={fontColor} onChange={(e) => { setFontColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Presets Card */}
+            <div className="settings-panel-card">
+              <h3 style={{ margin: "0 0 16px 0", fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Brand Presets</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
+                {presets.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => applyPreset(p)}
+                    style={{
+                      padding: "12px 14px",
+                      border: activeThemePreset === p.id ? "2px solid #3b82f6" : "1px solid #e2e8f0",
+                      borderRadius: 10,
+                      background: "#ffffff",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      alignItems: "flex-start",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{p.name}</div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.sidebar, border: "1px solid #cbd5e1" }} />
+                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.navbar, border: "1px solid #cbd5e1" }} />
+                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.button, border: "1px solid #cbd5e1" }} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ width: 340, flexShrink: 0 }}>
+            {/* Live Preview Card */}
+            <div className="settings-panel-card" style={{ padding: 0, overflow: "hidden", border: "1px solid #cbd5e1", borderRadius: 12 }}>
+              <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #cbd5e1", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Live Interactive Preview</span>
+                <span style={{ fontSize: 10, background: "#dbeafe", color: "#2563eb", padding: "2px 8px", borderRadius: 20, fontWeight: 700 }}>Active</span>
+              </div>
+
+              {/* Mockup Container */}
+              <div style={{ height: 260, display: "flex", background: "#f1f5f9" }}>
+                {/* Mockup Sidebar */}
+                <div style={{ width: 70, background: sidebarColor, display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 4px", gap: 12, transition: "background 0.3s ease" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.2)", marginBottom: 8 }} />
+                  <div style={{ width: 36, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
+                  <div style={{ width: 36, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
+                  <div style={{ width: 36, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
+                  <div style={{ width: 36, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
+                </div>
+
+                {/* Mockup Main */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  {/* Mockup Navbar */}
+                  <div style={{ height: 40, background: navbarColor, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", borderBottom: "1px solid #e2e8f0", transition: "background 0.3s ease" }}>
+                    <div style={{ width: 48, height: 8, borderRadius: 4, background: "#cbd5e1" }} />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#cbd5e1" }} />
+                      <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#cbd5e1" }} />
+                    </div>
+                  </div>
+
+                  {/* Mockup Content */}
+                  <div style={{ flex: 1, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: fontColor, transition: "color 0.3s ease", marginBottom: 4 }}>
+                        Dashboard Title
+                      </div>
+                      <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.4 }}>
+                        Manage invoices, check ins, and appointments.
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" style={{ flex: 1, padding: "8px", background: buttonColor, color: "#ffffff", border: "none", borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "background 0.3s ease" }}>
+                        Primary Action
+                      </button>
+                      <button type="button" style={{ flex: 1, padding: "8px", background: "#ffffff", color: "#475569", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                        Secondary
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ padding: 14, borderTop: "1px solid #e2e8f0", display: "flex", gap: 10, justifyContent: "flex-end", background: "#ffffff" }}>
+                <button type="button" onClick={() => applyPreset(presets[0])} style={{ padding: "8px 16px", background: "white", border: "1px solid #cbd5e1", borderRadius: 8, fontWeight: 600, color: "#475569", fontSize: 12, cursor: "pointer" }}>Reset Defaults</button>
+                <button type="button" style={{ padding: "8px 16px", background: buttonColor, color: "white", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "background 0.3s ease" }}>Save Palette</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   const renderSection = () => {
     switch (activeSection.key) {
       case "generic":
@@ -3847,6 +4017,8 @@ export default function SettingsPage() {
         return renderIncentiveSection();
       case "footer-content":
         return renderFooterSection();
+      case "ui-settings":
+        return renderUiSettingsSection();
       default:
         return renderGenericSection();
     }
