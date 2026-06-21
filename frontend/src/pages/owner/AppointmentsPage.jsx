@@ -139,10 +139,19 @@ export default function AppointmentsPage() {
       let minHour = 24;
       let maxHour = 0;
       workingRows.forEach(row => {
-        const fromParts = row.fromTime.split(":");
-        const toParts = row.toTime.split(":");
-        const fromH = parseInt(fromParts[0], 10);
-        const toH = parseInt(toParts[0], 10);
+        const parseHour = (timeStr) => {
+          if (!timeStr) return NaN;
+          const valStr = timeStr.trim().toLowerCase();
+          const [timePart] = valStr.split(" ");
+          const [hStr] = timePart.split(":");
+          let h = parseInt(hStr, 10);
+          if (isNaN(h)) return NaN;
+          if (valStr.includes("pm") && h < 12) h += 12;
+          if (valStr.includes("am") && h === 12) h = 0;
+          return h;
+        };
+        const fromH = parseHour(row.fromTime);
+        const toH = parseHour(row.toTime);
         if (!isNaN(fromH) && fromH < minHour) minHour = fromH;
         if (!isNaN(toH) && toH > maxHour) maxHour = toH;
       });
@@ -176,25 +185,25 @@ export default function AppointmentsPage() {
     if (!staffRow) return true;
     if (staffRow.isWorking === false) return false;
 
-    const getMinutes = (timeStr, isTwelveHour = false) => {
+    const getMinutes = (timeStr) => {
       if (!timeStr) return 0;
-      if (isTwelveHour) {
-        const [timePart, ampm] = timeStr.split(" ");
-        const [hStr, mStr] = timePart.split(":");
-        let h = parseInt(hStr, 10);
-        const m = parseInt(mStr, 10);
-        if (ampm === "PM" && h < 12) h += 12;
-        if (ampm === "AM" && h === 12) h = 0;
-        return h * 60 + m;
-      } else {
-        const [hStr, mStr] = timeStr.split(":");
-        return parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-      }
+      const clean = timeStr.trim().toLowerCase();
+      const isPM = clean.includes("pm");
+      const isAM = clean.includes("am");
+      const cleanTime = clean.replace("am", "").replace("pm", "").trim();
+      const [hStr, mStr] = cleanTime.split(":");
+      let h = parseInt(hStr, 10);
+      let m = parseInt(mStr, 10);
+      if (isNaN(h)) h = 0;
+      if (isNaN(m)) m = 0;
+      if (isPM && h < 12) h += 12;
+      if (isAM && h === 12) h = 0;
+      return h * 60 + m;
     };
 
-    const slotMinutes = getMinutes(slot, true);
-    const startMinutes = getMinutes(staffRow.fromTime, false);
-    const endMinutes = getMinutes(staffRow.toTime, false);
+    const slotMinutes = getMinutes(slot);
+    const startMinutes = getMinutes(staffRow.fromTime);
+    const endMinutes = getMinutes(staffRow.toTime);
 
     return slotMinutes >= startMinutes && slotMinutes < endMinutes;
   };

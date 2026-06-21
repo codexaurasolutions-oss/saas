@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Search, Filter, Plus, Download, Upload, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, X, ChevronDown, Trash2, GitMerge, MessageCircle, User, FileText, CreditCard, Gift, Wallet, AlertCircle, Package, Users, UserCog, Tag, Phone, StickyNote, Edit3, CheckCircle, Circle } from "lucide-react";
+import { Search, Filter, Plus, Download, Upload, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, X, ChevronDown, Trash2, GitMerge, MessageCircle, User, FileText, CreditCard, Gift, Wallet, AlertCircle, Package, Users, UserCog, Tag, Phone, StickyNote, Edit3, CheckCircle, Circle, Eye } from "lucide-react";
 import { api } from "../../api/client";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
@@ -2740,7 +2740,9 @@ export default function CustomersPage() {
           >
             <style>{`@keyframes modalPop { from { transform:scale(.92); opacity:0; } to { transform:scale(1); opacity:1; } }`}</style>
             <div style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", padding: "30px 24px 24px", textAlign: "center", position: "relative" }}>
-              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", fontSize: "1.8rem" }}>✅</div>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                <CheckCircle size={28} style={{ color: "#fff" }} />
+              </div>
               <div style={{ color: "#fff", fontSize: "1.25rem", fontWeight: 800, letterSpacing: "-0.01em" }}>{invoiceSuccessData.type} Assigned!</div>
               <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.85rem", marginTop: 6, fontWeight: 500 }}>{invoiceSuccessData.name}</div>
               <button onClick={() => setInvoiceSuccessData(null)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "rgba(255,255,255,0.8)", fontSize: "1.5rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.15)"} onMouseLeave={(e) => e.currentTarget.style.background = "none"}>×</button>
@@ -2749,7 +2751,7 @@ export default function CustomersPage() {
               {invoiceSuccessData.invoice ? (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
-                    <span style={{ fontSize: "1.4rem" }}>🧾</span>
+                    <FileText size={20} style={{ color: "#0284c7" }} />
                     <div>
                       <div style={{ fontWeight: 750, fontSize: "0.9rem", color: "#0369a1" }}>Invoice Generated</div>
                       <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: 2 }}>{invoiceSuccessData.invoice.invoiceNumber} · ₹{Number(invoiceSuccessData.invoice.total || 0).toLocaleString("en-IN")}</div>
@@ -2768,7 +2770,7 @@ export default function CustomersPage() {
                       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(14,165,233,0.3)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(14,165,233,0.2)"; }}
                     >
-                      👁️ View Invoice
+                      <Eye size={16} /> View Invoice
                     </button>
                     <button
                       onClick={async () => {
@@ -2779,7 +2781,7 @@ export default function CustomersPage() {
                       onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.transform = "none"; }}
                     >
-                      ⬇️ Download PDF
+                      <Download size={16} /> Download PDF
                     </button>
                     <button onClick={() => setInvoiceSuccessData(null)} style={{ background: "transparent", color: "#64748b", border: "none", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#0f172a"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}>Close</button>
                   </div>
