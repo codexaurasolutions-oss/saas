@@ -123,7 +123,7 @@ export default function CustomersPage() {
   const [familySearchLoading, setFamilySearchLoading] = useState(false);
   const [selectedFamilyGuest, setSelectedFamilyGuest] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
-  const [followUpForm, setFollowUpForm] = useState({ date: "", time: "", message: "", type: "call" });
+  const [followUpForm, setFollowUpForm] = useState({ date: "", time: "", message: "", type: "email", staffUserId: "" });
   const [invoiceSuccessData, setInvoiceSuccessData] = useState(null); // { type, name, invoice }
   const actionMenuRef = useRef(null);
   const [formData, setFormData] = useState({
@@ -542,23 +542,32 @@ export default function CustomersPage() {
   };
 
   const handleAddFollowUp = async () => {
-    if (!followUpForm.date || !followUpForm.message || !selectedCustomer) return;
+    if (!followUpForm.date || !followUpForm.message || !followUpForm.staffUserId || !selectedCustomer) return;
     try {
       await api.post("/owner/follow-ups", {
         customerId: selectedCustomer.id,
+        staffUserId: followUpForm.staffUserId,
         date: followUpForm.date,
         time: followUpForm.time || undefined,
         message: followUpForm.message,
         type: followUpForm.type,
       });
       setShowFollowUpModal(false);
-      setFollowUpForm({ date: "", time: "", message: "", type: "call" });
+      setFollowUpForm({ date: "", time: "", message: "", type: "email", staffUserId: "" });
       const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       alert("Failed to add follow-up");
       console.error(e);
     }
+  };
+
+  const openFollowUpModal = async () => {
+    if (staffUsers.length === 0) {
+      await fetchStaffUsers();
+    }
+    setFollowUpForm({ date: "", time: "", message: "", type: "email", staffUserId: "" });
+    setShowFollowUpModal(true);
   };
 
   const handleExport = async (format) => {
@@ -1758,7 +1767,7 @@ export default function CustomersPage() {
                               </div>
                             ))
                           )}
-                          <button className="cust-assign-btn" onClick={() => setShowFollowUpModal(true)}>
+                          <button className="cust-assign-btn" onClick={openFollowUpModal}>
                             <Phone size={16} /> Add Follow Up
                           </button>
                         </div>
@@ -2577,13 +2586,20 @@ export default function CustomersPage() {
                 </div>
               </div>
               <div className="form-group">
+                <label>Assigned Staff *</label>
+                <select value={followUpForm.staffUserId} onChange={(e) => setFollowUpForm(prev => ({ ...prev, staffUserId: e.target.value }))}>
+                  <option value="">Select Staff</option>
+                  {staffUsers.map((s) => (
+                    <option key={s.id} value={s.id}>{s.user?.name || s.name || s.user?.email || s.id}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Type</label>
                 <select value={followUpForm.type} onChange={(e) => setFollowUpForm(prev => ({ ...prev, type: e.target.value }))}>
-                  <option value="call">Call</option>
                   <option value="sms">SMS</option>
                   <option value="whatsapp">WhatsApp</option>
                   <option value="email">Email</option>
-                  <option value="visit">Visit</option>
                 </select>
               </div>
               <div className="form-group">
@@ -2599,7 +2615,7 @@ export default function CustomersPage() {
             </div>
             <div className="modal-footer">
               <button className="crm-btn" onClick={() => setShowFollowUpModal(false)}>Cancel</button>
-              <button className="crm-btn" onClick={handleAddFollowUp} disabled={!followUpForm.date || !followUpForm.message}>Schedule</button>
+              <button className="crm-btn" onClick={handleAddFollowUp} disabled={!followUpForm.date || !followUpForm.message || !followUpForm.staffUserId}>Schedule</button>
             </div>
           </div>
         </div>
