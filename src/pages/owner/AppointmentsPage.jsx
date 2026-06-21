@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Search, X, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, X, ArrowLeft, CheckCircle2, Calendar, XCircle, PlusCircle, Trash2, User } from "lucide-react";
 import { api } from "../../api/client";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { formatApiError } from "../../utils/apiError";
@@ -131,12 +131,84 @@ export default function AppointmentsPage() {
   });
 
   const spBodyRef = useRef(null);
+  const [contextMenu, setContextMenu] = useState(null);
 
   useEffect(() => {
     if (status.error && spBodyRef.current) {
       spBodyRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [status.error]);
+
+  const handleCheckInAction = async (apptId) => {
+    try {
+      await api.patch(`/owner/appointments/${apptId}/status`, { status: "CHECKED_IN" });
+      setStatus({ error: "", success: "Appointment checked in." });
+      await loadAppointments();
+    } catch (error) {
+      setStatus({ error: formatApiError(error, "Could not check in appointment"), success: "" });
+    }
+    setContextMenu(null);
+  };
+
+  const handleRescheduleAction = (appt) => {
+    handleAppointmentClick({ stopPropagation: () => {} }, appt);
+    setContextMenu(null);
+  };
+
+  const handleCancelAction = async (apptId) => {
+    try {
+      await api.patch(`/owner/appointments/${apptId}/status`, { status: "CANCELLED", note: "Cancelled from context menu" });
+      setStatus({ error: "", success: "Appointment cancelled." });
+      await loadAppointments();
+    } catch (error) {
+      setStatus({ error: formatApiError(error, "Could not cancel appointment"), success: "" });
+    }
+    setContextMenu(null);
+  };
+
+  const handleNewBookingAction = (staffId, slot) => {
+    handleCellClick(staffId, slot);
+    setContextMenu(null);
+  };
+
+  const handleDeleteAction = async (apptId) => {
+    if (window.confirm("Are you sure you want to delete this appointment?")) {
+      try {
+        await api.delete(`/owner/appointments/${apptId}`);
+        setStatus({ error: "", success: "Appointment deleted successfully." });
+        await loadAppointments();
+      } catch (error) {
+        setStatus({ error: formatApiError(error, "Could not delete appointment"), success: "" });
+      }
+    }
+    setContextMenu(null);
+  };
+
+  const handleViewProfileAction = (customerId) => {
+    if (customerId) {
+      navigate(`/admin/customers/${customerId}`);
+    }
+    setContextMenu(null);
+  };
+
+  const handleContextMenuOpen = (event, appt, staffId, slot) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const menuWidth = 220;
+    const menuHeight = 250;
+    let x = event.clientX;
+    let y = event.clientY;
+    
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - 10;
+    }
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - 10;
+    }
+    
+    setContextMenu({ x, y, appt, staffId, slot });
+  };
 
   const loadContext = async () => {
     try {
@@ -1037,6 +1109,75 @@ export default function AppointmentsPage() {
         .gender-chip:hover {
           transform: translateY(-1px);
         }
+        .context-menu-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 999;
+          background: transparent;
+        }
+        .context-menu {
+          position: fixed;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+          width: 220px;
+          max-height: 240px;
+          overflow-y: auto;
+          padding: 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .context-menu::-webkit-scrollbar {
+          width: 5px;
+        }
+        .context-menu::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .context-menu::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 99px;
+        }
+        .context-menu-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 10px;
+          color: #334155;
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 150ms ease;
+          border: 1px solid transparent;
+        }
+        .context-menu-item:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          color: #0f172a;
+        }
+        .context-menu-icon-wrapper {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #eff6ff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #3b82f6;
+          flex-shrink: 0;
+        }
+        .context-menu-item.danger .context-menu-icon-wrapper {
+          background: #fee2e2;
+          color: #ef4444;
+        }
+        .context-menu-item.danger:hover {
+          background: #fef2f2;
+          border-color: #fca5a5;
+          color: #991b1b;
+        }
       `}</style>
 
       <div className="calendar-toolbar">
@@ -1084,6 +1225,7 @@ export default function AppointmentsPage() {
                           key={`${slot}-${staff.id}`}
                           className="calendar-cell"
                           onClick={() => handleCellClick(staff.id, slot)}
+                          onContextMenu={(event) => handleContextMenuOpen(event, null, staff.id, slot)}
                         />
                       );
                     }
@@ -1137,6 +1279,7 @@ export default function AppointmentsPage() {
                                   event.stopPropagation();
                                   handleAppointmentClick(event, appt);
                                 }}
+                                onContextMenu={(event) => handleContextMenuOpen(event, appt, staff.id, slot)}
                                 title={`${appt.customer?.name || "Walk-in"} • ${serviceName} • ${totalDurationMin} min`}
                               >
                                 <div style={{ fontWeight: 600 }}>{appt.customer?.name || "Walk-in"}</div>
@@ -1429,6 +1572,79 @@ export default function AppointmentsPage() {
             // navigate(`/admin/pos-dashboard/${invoiceId}?from=/admin/appointments`);
           }}
         />
+      )}
+
+      {contextMenu && (
+        <>
+          <div className="context-menu-backdrop" onClick={() => setContextMenu(null)} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }} />
+          <div 
+            className="context-menu" 
+            style={{ 
+              left: contextMenu.x, 
+              top: contextMenu.y 
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {contextMenu.appt ? (
+              <>
+                {contextMenu.appt.status !== "CHECKED_IN" && contextMenu.appt.status !== "COMPLETED" && (
+                  <div className="context-menu-item" onClick={() => handleCheckInAction(contextMenu.appt.id)}>
+                    <div className="context-menu-icon-wrapper">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <span>Check In</span>
+                  </div>
+                )}
+                
+                <div className="context-menu-item" onClick={() => handleRescheduleAction(contextMenu.appt)}>
+                  <div className="context-menu-icon-wrapper">
+                    <Calendar size={16} />
+                  </div>
+                  <span>Reschedule Booking</span>
+                </div>
+
+                {contextMenu.appt.status !== "CANCELLED" && (
+                  <div className="context-menu-item" onClick={() => handleCancelAction(contextMenu.appt.id)}>
+                    <div className="context-menu-icon-wrapper">
+                      <XCircle size={16} />
+                    </div>
+                    <span>Cancel Booking</span>
+                  </div>
+                )}
+
+                <div className="context-menu-item" onClick={() => handleNewBookingAction(contextMenu.staffId, contextMenu.slot)}>
+                  <div className="context-menu-icon-wrapper">
+                    <PlusCircle size={16} />
+                  </div>
+                  <span>New Booking</span>
+                </div>
+
+                <div className="context-menu-item danger" onClick={() => handleDeleteAction(contextMenu.appt.id)}>
+                  <div className="context-menu-icon-wrapper">
+                    <Trash2 size={16} />
+                  </div>
+                  <span>Delete Service</span>
+                </div>
+
+                {contextMenu.appt.customerId && (
+                  <div className="context-menu-item" onClick={() => handleViewProfileAction(contextMenu.appt.customerId)}>
+                    <div className="context-menu-icon-wrapper">
+                      <User size={16} />
+                    </div>
+                    <span>View Profile</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="context-menu-item" onClick={() => handleNewBookingAction(contextMenu.staffId, contextMenu.slot)}>
+                <div className="context-menu-icon-wrapper">
+                  <PlusCircle size={16} />
+                </div>
+                <span>New Booking</span>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
