@@ -26,6 +26,7 @@ const fieldLabelAliases = {
   salonId: "Salon ID",
   planId: "Plan ID",
   customerId: "Customer",
+  staffUserId: "Assigned Staff",
   packageId: "Package",
   membershipPlanId: "Membership Plan",
   customRoleId: "Custom Role",
@@ -350,6 +351,16 @@ export const schemas = {
       skinNotes: optionalString
     }).refine((body) => Object.keys(body).length > 0, {
       message: "At least one customer field is required"
+    })
+  }),
+  customerFollowUp: z.object({
+    body: z.object({
+      customerId: idSchema,
+      staffUserId: idSchema,
+      date: requiredDateString,
+      time: optionalString,
+      message: z.string().min(1),
+      type: z.enum(["call", "sms", "whatsapp", "email", "visit"])
     })
   }),
   serviceCategory: z.object({ body: z.object({ name: z.string().min(2), parentId: z.string().nullable().optional() }) }),
@@ -700,7 +711,12 @@ export const schemas = {
       validityDays: z.number().optional(),
       customServices: z.array(z.any()).optional(),
       isCustom: z.boolean().optional(),
-      name: z.string().optional()
+      name: z.string().optional(),
+      online: z.number().optional().nullable(),
+      offline: z.number().optional().nullable(),
+      balance: z.number().optional().nullable(),
+      advance: z.number().optional().nullable(),
+      remarks: z.string().optional().nullable()
     })
   }),
   packagePlan: z.object({
@@ -743,7 +759,14 @@ export const schemas = {
       validityDays: z.number().optional(),
       customServices: z.array(z.any()).optional(),
       isCustom: z.boolean().optional(),
-      name: z.string().optional()
+      name: z.string().optional(),
+      online: z.number().optional().nullable(),
+      offline: z.number().optional().nullable(),
+      balance: z.number().optional().nullable(),
+      advance: z.number().optional().nullable(),
+      remarks: z.string().optional().nullable(),
+      notes: z.string().optional().nullable(),
+      remark: z.string().optional().nullable()
     })
   }),
   packageRedeem: z.object({

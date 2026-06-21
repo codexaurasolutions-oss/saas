@@ -20,7 +20,8 @@ export const SETTINGS_WORKSPACE_SECTIONS = [
   { key: "pnl-categories", label: "PNL Categories", to: "/admin/settings/pnl-categories", hint: "Profit buckets" },
   { key: "pnl-income-taxes", label: "PNL Income Taxes", to: "/admin/settings/pnl-income-taxes", hint: "Tax buckets" },
   { key: "incentive", label: "Incentive", to: "/admin/settings/incentive", hint: "Payout defaults" },
-  { key: "footer-content", label: "Footer Content", to: "/admin/settings/footer-content", hint: "Brand footer" }
+  { key: "footer-content", label: "Footer Content", to: "/admin/settings/footer-content", hint: "Brand footer" },
+  { key: "ui-settings", label: "UI Settings", to: "/admin/settings/ui-settings", hint: "Theme customizer" }
 ];
 
 const legacyPathMap = {

@@ -107,60 +107,6 @@ export default function AppointmentsPage() {
   const navigate = useNavigate();
   const { formatMoney } = useSalonSettings();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [salonSettings, setSalonSettings] = useState(null);
-
-  // Dynamic start and end hours based on roster management settings
-  const { APPOINTMENT_START_HOUR, APPOINTMENT_END_HOUR } = useMemo(() => {
-    let start = 9;
-    let end = 21;
-
-    const rosterRows = salonSettings?.advancedSettings?.rosterManagement?.rows;
-    if (Array.isArray(rosterRows) && rosterRows.length > 0) {
-      const workingRows = rosterRows.filter(row => row.isWorking);
-      if (workingRows.length > 0) {
-        let minHour = 24;
-        let maxHour = 0;
-
-        workingRows.forEach(row => {
-          if (row.fromTime) {
-            const h = parseInt(row.fromTime.split(":")[0], 10);
-            if (!isNaN(h) && h < minHour) {
-              minHour = h;
-            }
-          }
-          if (row.toTime) {
-            const h = parseInt(row.toTime.split(":")[0], 10);
-            if (!isNaN(h) && h > maxHour) {
-              maxHour = h;
-            }
-          }
-        });
-
-        if (minHour < 24) start = minHour;
-        if (maxHour > 0) end = maxHour;
-      }
-    }
-    return { APPOINTMENT_START_HOUR: start, APPOINTMENT_END_HOUR: end };
-  }, [salonSettings]);
-
-  const TIME_SLOTS = useMemo(() => {
-    const slots = [];
-    for (let h = APPOINTMENT_START_HOUR; h <= APPOINTMENT_END_HOUR; h++) {
-      const ampm = h >= 12 ? "PM" : "AM";
-      const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-      const hourText = String(hour12).padStart(2, "0");
-      [0, 15, 30, 45].forEach((minutes) => {
-        if (h === APPOINTMENT_END_HOUR && minutes > 0) return;
-        slots.push(`${hourText}:${String(minutes).padStart(2, "0")} ${ampm}`);
-      });
-    }
-    return slots;
-  }, [APPOINTMENT_START_HOUR, APPOINTMENT_END_HOUR]);
-
-  const TIME_SLOT_INDEX = useMemo(() => {
-    return new Map(TIME_SLOTS.map((slot, index) => [slot, index]));
-  }, [TIME_SLOTS]);
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingAppointmentId, setEditingAppointmentId] = useState(null);
@@ -344,10 +290,7 @@ export default function AppointmentsPage() {
 
   const loadContext = async () => {
     try {
-      const [contextResponse, settingsResponse] = await Promise.all([
-        api.get("/owner/pos/context"),
-        api.get("/owner/settings")
-      ]);
+      const contextResponse = await api.get("/owner/pos/context");
       setCustomers(contextResponse.data.customers || []);
       setServices(contextResponse.data.services || []);
       const staff = contextResponse.data.staffUsers || [];
@@ -359,7 +302,6 @@ export default function AppointmentsPage() {
         ...current,
         branchId: current.branchId || defaultBranch?.id || ""
       }));
-      setSalonSettings(settingsResponse.data || null);
     } catch (error) {
       console.error(error);
     }
@@ -387,7 +329,7 @@ export default function AppointmentsPage() {
             const h = new Date(row.startAt).getHours();
             if (h < earliestHour) earliestHour = h;
           });
-          if (earliestHour >= APPOINTMENT_START_HOUR && earliestHour < APPOINTMENT_END_HOUR) {
+          if (earliestHour >= 9 && earliestHour <= 20) {
             const calendarBody = document.querySelector('.sp-calendar-body');
             if (calendarBody) {
               const rowIndex = (earliestHour - APPOINTMENT_START_HOUR) * (60 / APPOINTMENT_SLOT_MINUTES);

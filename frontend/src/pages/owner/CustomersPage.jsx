@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { Search, Filter, Plus, Download, Upload, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, X, ChevronDown, Trash2, GitMerge, MessageCircle, User, FileText, CreditCard, Gift, Wallet, AlertCircle, Package, Users, UserCog, Tag, Phone, StickyNote, Edit3, CheckCircle, Circle } from "lucide-react";
 import { api } from "../../api/client";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
@@ -69,9 +68,6 @@ const isWithinDateRange = (value, start, end) => {
 };
 
 export default function CustomersPage() {
-  const navigate = useNavigate();
-  const importFileRef = useRef(null);
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState(new Set());
   const { formatMoney } = useSalonSettings();
   const [rows, setRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,7 +96,7 @@ export default function CustomersPage() {
   const [pkgServiceSearch, setPkgServiceSearch] = useState("");
   const [memServiceSearch, setMemServiceSearch] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [membershipForm, setMembershipForm] = useState({ validityDays: "", price: "", staffId: "", online: "", offline: "", purchaseDate: new Date().toISOString().slice(0, 10) });
+  const [membershipForm, setMembershipForm] = useState({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "", purchaseDate: new Date().toISOString().slice(0, 10) });
   const [membershipSearch, setMembershipSearch] = useState("");
   const [showAddAdvanceModal, setShowAddAdvanceModal] = useState(false);
   const [advanceForm, setAdvanceForm] = useState({ amount: "", mode: "Online", remark: "" });
@@ -110,6 +106,7 @@ export default function CustomersPage() {
   const [customerAdvances, setCustomerAdvances] = useState([]);
   const [updateForm, setUpdateForm] = useState({ name: "", phone: "", email: "", gender: "", dateOfBirth: "", anniversary: "" });
   const [nowTime] = useState(getNow);
+  const assignMembershipBalanceVal = Number(membershipForm.price || 0) - (Number(membershipForm.online || 0) + Number(membershipForm.offline || 0) + Number(membershipForm.advance || 0));
   const [notes, setNotes] = useState("");
   const [showGiftCardModal, setShowGiftCardModal] = useState(false);
   const [giftCardForm, setGiftCardForm] = useState({ code: "", title: "", amount: "", validityDays: 30 });
@@ -121,6 +118,10 @@ export default function CustomersPage() {
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [familyForm, setFamilyForm] = useState({ name: "", phone: "", relation: "" });
   const [familyError, setFamilyError] = useState("");
+  const [familySearchQuery, setFamilySearchQuery] = useState("");
+  const [familySearchResults, setFamilySearchResults] = useState([]);
+  const [familySearchLoading, setFamilySearchLoading] = useState(false);
+  const [selectedFamilyGuest, setSelectedFamilyGuest] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [followUpForm, setFollowUpForm] = useState({ date: "", time: "", message: "", type: "call" });
   const [invoiceSuccessData, setInvoiceSuccessData] = useState(null); // { type, name, invoice }
@@ -181,7 +182,7 @@ export default function CustomersPage() {
     setShowAddAdvanceModal(false);
     setSelectedPlan(null);
     setAdvanceForm({ amount: "", mode: "Online", remark: "" });
-    setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "" });
+    setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "" });
     setNotes("");
     try {
       const res = await api.get(`/owner/customers/${row.id}`);
@@ -267,6 +268,9 @@ export default function CustomersPage() {
         staffId: membershipForm.staffId || undefined,
         online: membershipForm.online ? Number(membershipForm.online) : undefined,
         offline: membershipForm.offline ? Number(membershipForm.offline) : undefined,
+        balance: assignMembershipBalanceVal,
+        advance: membershipForm.advance ? Number(membershipForm.advance) : undefined,
+        remarks: membershipForm.remarks || undefined,
         startsAt: membershipForm.purchaseDate || undefined,
       };
       if (selectedPlan.id === "CUSTOM") {
@@ -277,7 +281,7 @@ export default function CustomersPage() {
       const res = await api.post("/owner/memberships/assign", payload);
       setShowAssignMembershipModal(false);
       setSelectedPlan(null);
-      setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", purchaseDate: new Date().toISOString().slice(0, 10) });
+      setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "", purchaseDate: new Date().toISOString().slice(0, 10) });
       const detail = await api.get(`/owner/customers/${selectedCustomer.id}`);
       setCustomerDetail(detail.data);
       const invoice = res.data?.invoice || null;
@@ -439,39 +443,101 @@ export default function CustomersPage() {
     }
   };
 
+  const handleFamilySearch = async (queryVal) => {
+    setFamilySearchQuery(queryVal);
+    if (!queryVal.trim()) {
+      setFamilySearchResults([]);
+      return;
+    }
+    setFamilySearchLoading(true);
+    try {
+      const response = await api.get("/owner/customers", { params: { q: queryVal } });
+      const filtered = (response.data || []).filter(c => c.id !== selectedCustomer?.id);
+      setFamilySearchResults(filtered);
+    } catch (e) {
+      console.error("Failed to search guests", e);
+    } finally {
+      setFamilySearchLoading(false);
+    }
+  };
+
+  const handleSelectFamilyGuest = (guest) => {
+    setSelectedFamilyGuest(guest);
+    setFamilyForm(prev => ({
+      ...prev,
+      name: guest.name || "",
+      phone: guest.phone || "",
+    }));
+    setFamilySearchResults([]);
+    setFamilySearchQuery("");
+  };
+
   const handleAddFamilyMember = async () => {
     setFamilyError("");
     if (!selectedCustomer) {
       setFamilyError("No customer selected");
       return;
     }
-    if (!familyForm.name || familyForm.name.trim().length < 2) {
-      setFamilyError("Name must be at least 2 characters");
+    if (!selectedFamilyGuest) {
+      setFamilyError("Please search and select a guest");
       return;
     }
-    const phoneDigits = normalizeIndianPhoneInputDigits(familyForm.phone);
-    if (phoneDigits.length !== 10) {
-      setFamilyError("Phone number must be exactly 10 digits");
+    if (!familyForm.relation || !familyForm.relation.trim()) {
+      setFamilyError("Relation is required");
       return;
     }
-    if (!familyForm.relation) {
-      setFamilyError("Please select a relation");
-      return;
-    }
+
     try {
-      await api.post("/owner/customers", {
-        phone: `+91${phoneDigits}`,
-        name: familyForm.name.trim(),
-        gender: "female",
-        notes: `familyMemberOf:${selectedCustomer.id} relation:${familyForm.relation || "other"}`,
+      const existingNotes = selectedFamilyGuest.notes || "";
+      const familyTag = `familyMemberOf:${selectedCustomer.id} relation:${familyForm.relation.trim().toLowerCase()}`;
+      
+      let updatedNotes = existingNotes;
+      if (!existingNotes.includes(`familyMemberOf:${selectedCustomer.id}`)) {
+        updatedNotes = existingNotes ? `${existingNotes} ${familyTag}` : familyTag;
+      } else {
+        const regex = new RegExp(`familyMemberOf:${selectedCustomer.id}\\s+relation:\\S+`, 'g');
+        if (regex.test(existingNotes)) {
+          updatedNotes = existingNotes.replace(regex, familyTag);
+        } else {
+          updatedNotes = `${existingNotes} ${familyTag}`;
+        }
+      }
+
+      await api.patch(`/owner/customers/${selectedFamilyGuest.id}`, {
+        notes: updatedNotes
       });
+
       setShowFamilyModal(false);
+      setSelectedFamilyGuest(null);
+      setFamilySearchQuery("");
+      setFamilySearchResults([]);
       setFamilyForm({ name: "", phone: "", relation: "" });
       setFamilyError("");
+      
       const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
       setCustomerDetail(res.data);
     } catch (e) {
       setFamilyError(formatApiError(e, "Failed to add family member"));
+    }
+  };
+
+  const handleRemoveFamilyMember = async (fm) => {
+    if (!selectedCustomer) return;
+    if (!window.confirm(`Are you sure you want to unlink ${fm.name} from family members?`)) return;
+    try {
+      const existingNotes = fm.notes || "";
+      const regex = new RegExp(`familyMemberOf:${selectedCustomer.id}\\s+relation:\\S+`, 'g');
+      const updatedNotes = existingNotes.replace(regex, "").trim();
+
+      await api.patch(`/owner/customers/${fm.id}`, {
+        notes: updatedNotes
+      });
+
+      const res = await api.get(`/owner/customers/${selectedCustomer.id}`);
+      setCustomerDetail(res.data);
+    } catch (e) {
+      alert("Failed to remove family member");
+      console.error(e);
     }
   };
 
@@ -502,60 +568,6 @@ export default function CustomersPage() {
     } catch {
       alert("Could not export customers");
     }
-  };
-
-  const handleImportFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    setLoading(true);
-    try {
-      const res = await api.post("/owner/customers/import", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      });
-      alert(res.data.message || "Import completed successfully!");
-      await load();
-    } catch (error) {
-      alert(formatApiError(error, "Failed to import customers"));
-    } finally {
-      setLoading(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleExportSelected = () => {
-    if (selectedCustomerIds.size === 0) return;
-    const selectedCustomers = rows.filter(r => selectedCustomerIds.has(r.id));
-    const headers = ["Name", "Phone", "Email", "Gender", "DateOfBirth", "Anniversary", "TotalOrders", "TotalSpend", "AverageSpend", "Advance", "Balance", "ReferralCode"];
-    const csvContent = [
-      headers.join(","),
-      ...selectedCustomers.map(c => [
-        `"${c.name || ''}"`,
-        `"${c.phone || ''}"`,
-        `"${c.email || ''}"`,
-        `"${c.gender || ''}"`,
-        `"${c.dateOfBirth ? new Date(c.dateOfBirth).toISOString().slice(0, 10) : ''}"`,
-        `"${c.anniversary ? new Date(c.anniversary).toISOString().slice(0, 10) : ''}"`,
-        c.totalOrders || 0,
-        c.totalSpend || 0,
-        c.averageSpend || 0,
-        c.advanceAmount || 0,
-        c.balanceAmount || 0,
-        `"${c.referralCode || ''}"`
-      ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Selected_Customers_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleAddGuest = async (event) => {
@@ -1469,11 +1481,16 @@ export default function CustomersPage() {
                                       Wallet Balance: {formatMoney(m.remainingWalletValue)}
                                     </div>
                                   )}
+                                  {m.remarks && (
+                                    <div style={{ marginTop: "8px", fontSize: "0.78rem", color: "#64748b", borderTop: "1px dashed #e2e8f0", paddingTop: "6px", fontStyle: "italic" }}>
+                                      Note: {m.remarks}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })
                           )}
-                          <button className="cust-assign-btn" onClick={() => { fetchMembershipPlans(); fetchStaffUsers(); fetchServices(); setSelectedPlan(null); setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", purchaseDate: new Date().toISOString().slice(0, 10) }); setMembershipSearch(""); setCustomServices([]); setShowAssignMembershipModal(true); }}>
+                          <button className="cust-assign-btn" onClick={() => { fetchMembershipPlans(); fetchStaffUsers(); fetchServices(); setSelectedPlan(null); setMembershipForm({ validityDays: "", price: "", staffId: "", online: "", offline: "", balance: "", advance: "", remarks: "", purchaseDate: new Date().toISOString().slice(0, 10) }); setMembershipSearch(""); setCustomServices([]); setShowAssignMembershipModal(true); }}>
                             <CreditCard size={16} /> Assign Membership
                           </button>
                         </div>
@@ -1630,17 +1647,31 @@ export default function CustomersPage() {
                               <div>No family members linked yet</div>
                             </div>
                           ) : (
-                            (customerDetail.familyMembers || []).map((fm) => (
-                              <div key={fm.id} className="cust-membership-card">
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                  <div>
-                                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>{fm.name}</div>
-                                    <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{fm.phone}</div>
+                            (customerDetail.familyMembers || []).map((fm) => {
+                              const fmNotes = fm.notes || "";
+                              const match = fmNotes.match(new RegExp(`familyMemberOf:${selectedCustomer.id}\\s+relation:(\\S+)`));
+                              const relation = match && match[1] ? match[1].charAt(0).toUpperCase() + match[1].slice(1) : "Linked";
+                              return (
+                                <div key={fm.id} className="cust-membership-card">
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>{fm.name}</div>
+                                      <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{fm.phone}</div>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                      <span className="cust-mem-status ACTIVE" style={{ textTransform: "capitalize" }}>{relation}</span>
+                                      <button 
+                                        onClick={() => handleRemoveFamilyMember(fm)} 
+                                        style={{ border: "none", background: "none", color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                                        title="Unlink family member"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <span className="cust-mem-status ACTIVE">Linked</span>
                                 </div>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                           <button className="cust-assign-btn" onClick={() => setShowFamilyModal(true)}>
                             <Users size={16} /> Add Family Member
@@ -1915,6 +1946,60 @@ export default function CustomersPage() {
                           style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.9rem", boxSizing: "border-box", outline: "none" }} 
                         />
                       </div>
+                    </div>
+
+                    <div style={{ marginTop: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>Payment Breakdown</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr", gap: "12px" }}>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569", display: "block", marginBottom: "4px" }}>Online Payment</label>
+                          <input 
+                            type="number" 
+                            placeholder="Online amount" 
+                            value={membershipForm.online} 
+                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, online: e.target.value }))} 
+                            style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
+                          />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569", display: "block", marginBottom: "4px" }}>Offline Payment</label>
+                          <input 
+                            type="number" 
+                            placeholder="Offline amount" 
+                            value={membershipForm.offline} 
+                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, offline: e.target.value }))} 
+                            style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
+                          />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569", display: "block", marginBottom: "4px" }}>Advance</label>
+                          <input 
+                            type="number" 
+                            placeholder="Advance" 
+                            value={membershipForm.advance} 
+                            onChange={(e) => setMembershipForm((prev) => ({ ...prev, advance: e.target.value }))} 
+                            style={{ width: "100%", padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.85rem", boxSizing: "border-box", outline: "none" }} 
+                          />
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", padding: "10px 14px", borderRadius: 8, marginTop: "12px", border: "1px solid #e2e8f0" }}>
+                        <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#64748b" }}>Remaining Balance:</span>
+                        <span style={{ fontSize: "0.95rem", fontWeight: 800, color: assignMembershipBalanceVal > 0 ? "#ef4444" : "#10b981" }}>
+                          {formatMoney(assignMembershipBalanceVal)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginTop: "12px", margin: 0 }}>
+                      <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Remarks / Notes</label>
+                      <textarea 
+                        placeholder="Add membership notes or comments..." 
+                        value={membershipForm.remarks} 
+                        onChange={(e) => setMembershipForm((prev) => ({ ...prev, remarks: e.target.value }))} 
+                        rows={2}
+                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.9rem", boxSizing: "border-box", outline: "none", resize: "none", fontFamily: "inherit" }} 
+                      />
                     </div>
                   </>
                 ) : (
@@ -2386,14 +2471,14 @@ export default function CustomersPage() {
 
       {/* Add Family Member Modal */}
       {showFamilyModal && (
-        <div className="modal-overlay" onClick={() => { setShowFamilyModal(false); setFamilyError(""); }}>
+        <div className="modal-overlay" onClick={() => { setShowFamilyModal(false); setFamilyError(""); setSelectedFamilyGuest(null); setFamilySearchQuery(""); setFamilySearchResults([]); }}>
           <div className="modal-content" style={{ width: "min(90vw, 440px)" }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3>Add Family Member</h3>
                 <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "2px" }}>Link to {selectedCustomer?.name}</div>
               </div>
-              <button className="modal-close" onClick={() => { setShowFamilyModal(false); setFamilyError(""); }}><X size={20} /></button>
+              <button className="modal-close" onClick={() => { setShowFamilyModal(false); setFamilyError(""); setSelectedFamilyGuest(null); setFamilySearchQuery(""); setFamilySearchResults([]); }}><X size={20} /></button>
             </div>
             <div className="modal-body">
               {familyError && (
@@ -2401,43 +2486,69 @@ export default function CustomersPage() {
                   <AlertCircle size={14} /> {familyError}
                 </div>
               )}
-              <div className="form-group">
-                <label>Name *</label>
+              <div className="form-group" style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontWeight: 600, fontSize: "0.85rem", color: "#334155" }}>Guest *</label>
+                {!selectedFamilyGuest ? (
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="text"
+                      value={familySearchQuery}
+                      onChange={(e) => handleFamilySearch(e.target.value)}
+                      placeholder="Search By Name Or No."
+                      style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.95rem", boxSizing: "border-box" }}
+                    />
+                    {familySearchLoading && (
+                      <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#64748b" }}>Searching...</div>
+                    )}
+                    {familySearchResults.length > 0 && (
+                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #cbd5e1", borderRadius: 8, marginTop: "4px", maxHeight: "200px", overflowY: "auto", zIndex: 1000, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)" }}>
+                        {familySearchResults.map((guest) => (
+                          <div
+                            key={guest.id}
+                            onClick={() => handleSelectFamilyGuest(guest)}
+                            style={{ padding: "10px 12px", cursor: "pointer", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                            onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+                          >
+                            <div>
+                              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1e293b" }}>{guest.name}</div>
+                              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{guest.phone}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f172a" }}>{selectedFamilyGuest.name}</div>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{selectedFamilyGuest.phone}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedFamilyGuest(null); setFamilyForm(prev => ({ ...prev, name: "", phone: "" })); }}
+                      style={{ padding: "4px 8px", background: "#fee2e2", border: "none", color: "#991b1b", borderRadius: 4, fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="form-group" style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontWeight: 600, fontSize: "0.85rem", color: "#334155" }}>Relation *</label>
                 <input
                   type="text"
-                  value={familyForm.name}
-                  onChange={(e) => { setFamilyForm(prev => ({ ...prev, name: e.target.value })); setFamilyError(""); }}
-                  placeholder="Family member name"
-                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.95rem", boxSizing: "border-box" }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone *</label>
-                <IndianPhoneInput
-                  value={familyForm.phone}
-                  onChange={(v) => { setFamilyForm(prev => ({ ...prev, phone: v })); setFamilyError(""); }}
-                  placeholder="9876543210"
-                />
-              </div>
-              <div className="form-group">
-                <label>Relation *</label>
-                <select
                   value={familyForm.relation}
                   onChange={(e) => { setFamilyForm(prev => ({ ...prev, relation: e.target.value })); setFamilyError(""); }}
+                  placeholder="Mother,Father,Brother...Etc"
                   style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.95rem", boxSizing: "border-box" }}
-                >
-                  <option value="">Select Relation</option>
-                  <option value="spouse">Spouse</option>
-                  <option value="parent">Parent</option>
-                  <option value="child">Child</option>
-                  <option value="sibling">Sibling</option>
-                  <option value="other">Other</option>
-                </select>
+                />
               </div>
             </div>
             <div className="modal-footer">
-              <button className="crm-btn" onClick={() => { setShowFamilyModal(false); setFamilyError(""); }}>Cancel</button>
-              <button className="crm-btn" onClick={handleAddFamilyMember}>Add Member</button>
+              <button className="crm-btn" onClick={() => { setShowFamilyModal(false); setFamilyError(""); setSelectedFamilyGuest(null); setFamilySearchQuery(""); setFamilySearchResults([]); }}>Cancel</button>
+              <button className="crm-btn" onClick={handleAddFamilyMember}>+ Add Guest</button>
             </div>
           </div>
         </div>

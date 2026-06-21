@@ -262,7 +262,6 @@ export default function PosPage() {
     pkgPaymentTotal > 0 &&
     form.customerId &&
     form.branchId &&
-    (Number(pkgDraft.online || 0) + Number(pkgDraft.offline || 0) > 0) &&
     (pkgModalPkg?.id !== "CUSTOM" || pkgDraft.customServices.length || pkgDraft.customProducts.length)
   );
 
@@ -479,11 +478,6 @@ export default function PosPage() {
     const online = clampMoneyInput(pkgDraft.online, price);
     const offline = clampMoneyInput(pkgDraft.offline, Math.max(0, price - Number(online || 0)));
     const balance = Math.max(0, Number((price - Number(online || 0) - Number(offline || 0)).toFixed(2)));
-
-    if (Number(online || 0) + Number(offline || 0) <= 0) {
-      setStatus({ error: "Please enter a payment amount (Online or Offline) before purchasing.", success: "" });
-      return;
-    }
 
     // Ensure total payments + balance equals exactly the price
     const totalPaymentsCovered = Number(online) + Number(offline) + Number(balance);
@@ -1765,11 +1759,6 @@ export default function PosPage() {
                   {!pkgDraft.staffId ? (
                     <div style={{ fontSize: "0.82rem", color: "#dc2626", fontWeight: 600 }}>
                       ⚠️ Staff selection is required before purchase.
-                    </div>
-                  ) : null}
-                  {Number(pkgDraft.online || 0) + Number(pkgDraft.offline || 0) <= 0 ? (
-                    <div style={{ fontSize: "0.82rem", color: "#dc2626", fontWeight: 600 }}>
-                      ⚠️ Please enter a payment amount (Online or Offline).
                     </div>
                   ) : null}
                   {status.error ? (
