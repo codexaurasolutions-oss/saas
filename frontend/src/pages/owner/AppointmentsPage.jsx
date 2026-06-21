@@ -127,6 +127,78 @@ export default function AppointmentsPage() {
   const [serviceGenderFilter, setServiceGenderFilter] = useState("FEMALE");
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ error: "", success: "" });
+  const [salonSettings, setSalonSettings] = useState(null);
+
+  const { TIME_SLOTS, TIME_SLOT_INDEX, currentStartHour } = useMemo(() => {
+    let startHour = 9;
+    let endHour = 21;
+
+    const rosterRows = salonSettings?.advancedSettings?.rosterManagement?.rows || [];
+    const workingRows = rosterRows.filter(r => r.isWorking !== false && r.fromTime && r.toTime);
+    if (workingRows.length > 0) {
+      let minHour = 24;
+      let maxHour = 0;
+      workingRows.forEach(row => {
+        const fromParts = row.fromTime.split(":");
+        const toParts = row.toTime.split(":");
+        const fromH = parseInt(fromParts[0], 10);
+        const toH = parseInt(toParts[0], 10);
+        if (!isNaN(fromH) && fromH < minHour) minHour = fromH;
+        if (!isNaN(toH) && toH > maxHour) maxHour = toH;
+      });
+      if (minHour < 24) startHour = minHour;
+      if (maxHour > 0) endHour = maxHour;
+    }
+
+    const slots = [];
+    for (let h = startHour; h <= endHour; h++) {
+      const ampm = h >= 12 ? "PM" : "AM";
+      const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+      const hourText = String(hour12).padStart(2, "0");
+      [0, 15, 30, 45].forEach((minutes) => {
+        if (h === endHour && minutes > 0) return;
+        slots.push(`${hourText}:${String(minutes).padStart(2, "0")} ${ampm}`);
+      });
+    }
+
+    const slotIndexMap = new Map(slots.map((slot, index) => [slot, index]));
+
+    return {
+      TIME_SLOTS: slots,
+      TIME_SLOT_INDEX: slotIndexMap,
+      currentStartHour: startHour
+    };
+  }, [salonSettings]);
+
+  const isStaffWorkingAtSlot = (staffId, slot) => {
+    const rosterRows = salonSettings?.advancedSettings?.rosterManagement?.rows || [];
+    const staffRow = rosterRows.find(r => String(r.id) === String(staffId));
+    if (!staffRow) return true;
+    if (staffRow.isWorking === false) return false;
+
+    const getMinutes = (timeStr, isTwelveHour = false) => {
+      if (!timeStr) return 0;
+      if (isTwelveHour) {
+        const [timePart, ampm] = timeStr.split(" ");
+        const [hStr, mStr] = timePart.split(":");
+        let h = parseInt(hStr, 10);
+        const m = parseInt(mStr, 10);
+        if (ampm === "PM" && h < 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      } else {
+        const [hStr, mStr] = timeStr.split(":");
+        return parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
+      }
+    };
+
+    const slotMinutes = getMinutes(slot, true);
+    const startMinutes = getMinutes(staffRow.fromTime, false);
+    const endMinutes = getMinutes(staffRow.toTime, false);
+
+    return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+  };
+
   const [guestSearchInput, setGuestSearchInput] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
@@ -350,13 +422,17 @@ export default function AppointmentsPage() {
 
   const loadContext = async () => {
     try {
-      const contextResponse = await api.get("/owner/pos/context");
+      const [contextResponse, settingsResponse] = await Promise.all([
+        api.get("/owner/pos/context"),
+        api.get("/owner/settings")
+      ]);
       setCustomers(contextResponse.data.customers || []);
       setServices(contextResponse.data.services || []);
       const staff = contextResponse.data.staffUsers || [];
       setStaffUsers(staff);
       const branches = contextResponse.data.branches || [];
       setBranches(branches);
+      setSalonSettings(settingsResponse.data);
       const defaultBranch = branches.find(b => b.name.toLowerCase().includes("main")) || branches[0];
       setForm((current) => ({
         ...current,
@@ -392,7 +468,7 @@ export default function AppointmentsPage() {
           if (earliestHour >= 9 && earliestHour <= 20) {
             const calendarBody = document.querySelector('.sp-calendar-body');
             if (calendarBody) {
-              const rowIndex = (earliestHour - APPOINTMENT_START_HOUR) * (60 / APPOINTMENT_SLOT_MINUTES);
+              const rowIndex = (earliestHour - currentStartHour) * (60 / APPOINTMENT_SLOT_MINUTES);
               const scrollAmount = rowIndex * 36;
               calendarBody.scrollTo({ top: Math.max(0, scrollAmount - 50), behavior: 'smooth' });
             }
@@ -423,6 +499,12 @@ export default function AppointmentsPage() {
   const setToday = () => setCurrentDate(new Date());
 
   const handleCellClick = (staffId, timeSlot) => {
+    if (!isStaffWorkingAtSlot(staffId, timeSlot)) {
+      setStatus({ error: `Warning: Selected time slot (${timeSlot}) is outside this staff member's scheduled roster hours.`, success: "" });
+    } else {
+      setStatus({ error: "", success: "" });
+    }
+
     const [time, modifier] = timeSlot.split(" ");
     let [hours, minutes] = time.split(":");
     hours = Number.parseInt(hours, 10);
@@ -968,6 +1050,15 @@ export default function AppointmentsPage() {
           cursor: pointer;
         }
         .calendar-cell:hover { background: #f8fafc; }
+        .calendar-cell.off-duty {
+          background: #f1f5f9;
+          background-image: repeating-linear-gradient(45deg, #e2e8f0, #e2e8f0 10px, #f1f5f9 10px, #f1f5f9 20px);
+          cursor: pointer;
+        }
+        .calendar-cell.off-duty:hover {
+          background: #e2e8f0;
+          background-image: repeating-linear-gradient(45deg, #cbd5e1, #cbd5e1 10px, #e2e8f0 10px, #e2e8f0 20px);
+        }
         .appt-stack {
           position: absolute;
           inset: 1px;
@@ -1428,10 +1519,11 @@ export default function AppointmentsPage() {
 
                     const startingAppts = appointmentsByStaffStartSlot.get(staff.id)?.get(slotIndex) || [];
                     if (!startingAppts.length) {
+                      const isWorking = isStaffWorkingAtSlot(staff.id, slot);
                       return (
                         <td
                           key={`${slot}-${staff.id}`}
-                          className="calendar-cell"
+                          className={`calendar-cell${isWorking ? "" : " off-duty"}`}
                           onClick={() => handleCellClick(staff.id, slot)}
                           onContextMenu={(event) => handleContextMenuOpen(event, null, staff.id, slot)}
                         />
