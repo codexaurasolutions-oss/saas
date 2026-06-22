@@ -5,69 +5,86 @@ import Topbar from "./components/Topbar.jsx";
 import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/PageLoader.jsx";
 import { SETTINGS_WORKSPACE_SECTIONS } from "./pages/owner/settingsWorkspaceConfig.js";
-const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage.jsx"));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage.jsx"));
-const OwnerDashboard = lazy(() => import("./pages/owner/Dashboard.jsx"));
-const AppointmentsPage = lazy(() => import("./pages/owner/AppointmentsPage.jsx"));
-const AppointmentDetailPage = lazy(() => import("./pages/owner/AppointmentDetailPage.jsx"));
-const AppointmentEditPage = lazy(() => import("./pages/owner/AppointmentEditPage.jsx"));
-const CustomersPage = lazy(() => import("./pages/owner/CustomersPage.jsx"));
-const CustomerHistoryPage = lazy(() => import("./pages/owner/CustomerHistoryPage.jsx"));
-const CustomerPortalSettingsPage = lazy(() => import("./pages/owner/CustomerPortalSettingsPage.jsx"));
-const LoyaltyPage = lazy(() => import("./pages/owner/LoyaltyPage.jsx"));
-const CouponsPage = lazy(() => import("./pages/owner/CouponsPage.jsx"));
-const FeedbackPage = lazy(() => import("./pages/owner/FeedbackPage.jsx"));
-const EnquiriesPage = lazy(() => import("./pages/owner/EnquiriesPage.jsx"));
-const ExpensesPage = lazy(() => import("./pages/owner/ExpensesPage.jsx"));
-const PayrollPage = lazy(() => import("./pages/owner/PayrollPage.jsx"));
-const NotificationsPage = lazy(() => import("./pages/owner/NotificationsPage.jsx"));
-const OwnerAuditLogsPage = lazy(() => import("./pages/owner/OwnerAuditLogsPage.jsx"));
-const WhatsAppPage = lazy(() => import("./pages/owner/WhatsAppPage.jsx"));
-const BranchesPage = lazy(() => import("./pages/owner/BranchesPage.jsx"));
-const InventoryPage = lazy(() => import("./pages/owner/InventoryPage.jsx"));
-const ProductCategoriesPage = lazy(() => import("./pages/owner/ProductCategoriesPage.jsx"));
-const MembershipsPage = lazy(() => import("./pages/owner/MembershipsPage.jsx"));
-const MyAppointmentsPage = lazy(() => import("./pages/owner/MyAppointmentsPage.jsx"));
-const MyCommissionPage = lazy(() => import("./pages/owner/MyCommissionPage.jsx"));
-const MyDashboardPage = lazy(() => import("./pages/owner/MyDashboardPage.jsx"));
-const MyPayrollPage = lazy(() => import("./pages/owner/MyPayrollPage.jsx"));
-const MyProfilePage = lazy(() => import("./pages/owner/MyProfilePage.jsx"));
-const MySchedulePage = lazy(() => import("./pages/owner/MySchedulePage.jsx"));
-const ServiceCategoriesPage = lazy(() => import("./pages/owner/ServiceCategoriesPage.jsx"));
-const StaffSchedulePage = lazy(() => import("./pages/owner/StaffSchedulePage.jsx"));
-const UsersPage = lazy(() => import("./pages/owner/UsersPage.jsx"));
-const ExpertsPage = lazy(() => import("./pages/owner/ExpertsPage.jsx"));
-const StaffRolesPage = lazy(() => import("./pages/owner/StaffRolesPage.jsx"));
-const ReportsPage = lazy(() => import("./pages/owner/ReportsPage.jsx"));
-const PosPage = lazy(() => import("./pages/owner/PosPage.jsx"));
-const InvoicesPage = lazy(() => import("./pages/owner/InvoicesPage.jsx"));
-const PosDashboardPage = lazy(() => import("./pages/owner/PosDashboardPage.jsx"));
-const PaymentsPage = lazy(() => import("./pages/owner/PaymentsPage.jsx"));
-const TrendsPage = lazy(() => import("./pages/owner/TrendsPage.jsx"));
-const ReportsHubPage = lazy(() => import("./pages/owner/ReportsHubPage.jsx"));
-const SupportTicketsPage = lazy(() => import("./pages/owner/SupportTicketsPage.jsx"));
-const SettingsPage = lazy(() => import("./pages/owner/SettingsPage.jsx"));
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem("page-has-been-force-refreshed") || "false"
+    );
+    try {
+      return await componentImport();
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem("page-has-been-force-refreshed", "true");
+        window.location.reload();
+        return new Promise(() => {}); // Return a pending promise to avoid showing error before reload
+      }
+      throw error;
+    }
+  });
 
-const CustomerLoginPage = lazy(() => import("./pages/customer/CustomerLoginPage.jsx"));
-const CustomerRegisterPage = lazy(() => import("./pages/customer/CustomerRegisterPage.jsx"));
-const CustomerPortalPage = lazy(() => import("./pages/customer/CustomerPortalPage.jsx"));
+const LoginPage = lazyWithRetry(() => import("./pages/LoginPage.jsx"));
+const ForgotPasswordPage = lazyWithRetry(() => import("./pages/ForgotPasswordPage.jsx"));
+const ResetPasswordPage = lazyWithRetry(() => import("./pages/ResetPasswordPage.jsx"));
+const OwnerDashboard = lazyWithRetry(() => import("./pages/owner/Dashboard.jsx"));
+const AppointmentsPage = lazyWithRetry(() => import("./pages/owner/AppointmentsPage.jsx"));
+const AppointmentDetailPage = lazyWithRetry(() => import("./pages/owner/AppointmentDetailPage.jsx"));
+const AppointmentEditPage = lazyWithRetry(() => import("./pages/owner/AppointmentEditPage.jsx"));
+const CustomersPage = lazyWithRetry(() => import("./pages/owner/CustomersPage.jsx"));
+const CustomerHistoryPage = lazyWithRetry(() => import("./pages/owner/CustomerHistoryPage.jsx"));
+const CustomerPortalSettingsPage = lazyWithRetry(() => import("./pages/owner/CustomerPortalSettingsPage.jsx"));
+const LoyaltyPage = lazyWithRetry(() => import("./pages/owner/LoyaltyPage.jsx"));
+const CouponsPage = lazyWithRetry(() => import("./pages/owner/CouponsPage.jsx"));
+const FeedbackPage = lazyWithRetry(() => import("./pages/owner/FeedbackPage.jsx"));
+const EnquiriesPage = lazyWithRetry(() => import("./pages/owner/EnquiriesPage.jsx"));
+const ExpensesPage = lazyWithRetry(() => import("./pages/owner/ExpensesPage.jsx"));
+const PayrollPage = lazyWithRetry(() => import("./pages/owner/PayrollPage.jsx"));
+const NotificationsPage = lazyWithRetry(() => import("./pages/owner/NotificationsPage.jsx"));
+const OwnerAuditLogsPage = lazyWithRetry(() => import("./pages/owner/OwnerAuditLogsPage.jsx"));
+const WhatsAppPage = lazyWithRetry(() => import("./pages/owner/WhatsAppPage.jsx"));
+const BranchesPage = lazyWithRetry(() => import("./pages/owner/BranchesPage.jsx"));
+const InventoryPage = lazyWithRetry(() => import("./pages/owner/InventoryPage.jsx"));
+const ProductCategoriesPage = lazyWithRetry(() => import("./pages/owner/ProductCategoriesPage.jsx"));
+const MembershipsPage = lazyWithRetry(() => import("./pages/owner/MembershipsPage.jsx"));
+const MyAppointmentsPage = lazyWithRetry(() => import("./pages/owner/MyAppointmentsPage.jsx"));
+const MyCommissionPage = lazyWithRetry(() => import("./pages/owner/MyCommissionPage.jsx"));
+const MyDashboardPage = lazyWithRetry(() => import("./pages/owner/MyDashboardPage.jsx"));
+const MyPayrollPage = lazyWithRetry(() => import("./pages/owner/MyPayrollPage.jsx"));
+const MyProfilePage = lazyWithRetry(() => import("./pages/owner/MyProfilePage.jsx"));
+const MySchedulePage = lazyWithRetry(() => import("./pages/owner/MySchedulePage.jsx"));
+const ServiceCategoriesPage = lazyWithRetry(() => import("./pages/owner/ServiceCategoriesPage.jsx"));
+const StaffSchedulePage = lazyWithRetry(() => import("./pages/owner/StaffSchedulePage.jsx"));
+const UsersPage = lazyWithRetry(() => import("./pages/owner/UsersPage.jsx"));
+const ExpertsPage = lazyWithRetry(() => import("./pages/owner/ExpertsPage.jsx"));
+const StaffRolesPage = lazyWithRetry(() => import("./pages/owner/StaffRolesPage.jsx"));
+const ReportsPage = lazyWithRetry(() => import("./pages/owner/ReportsPage.jsx"));
+const PosPage = lazyWithRetry(() => import("./pages/owner/PosPage.jsx"));
+const InvoicesPage = lazyWithRetry(() => import("./pages/owner/InvoicesPage.jsx"));
+const PosDashboardPage = lazyWithRetry(() => import("./pages/owner/PosDashboardPage.jsx"));
+const PaymentsPage = lazyWithRetry(() => import("./pages/owner/PaymentsPage.jsx"));
+const TrendsPage = lazyWithRetry(() => import("./pages/owner/TrendsPage.jsx"));
+const ReportsHubPage = lazyWithRetry(() => import("./pages/owner/ReportsHubPage.jsx"));
+const SupportTicketsPage = lazyWithRetry(() => import("./pages/owner/SupportTicketsPage.jsx"));
+const SettingsPage = lazyWithRetry(() => import("./pages/owner/SettingsPage.jsx"));
 
-const OrdersPage = lazy(() => import("./pages/owner/OrdersPage.jsx"));
-const CampaignsPage = lazy(() => import("./pages/owner/CampaignsPage.jsx"));
-const CampaignTemplatesPage = lazy(() => import("./pages/owner/CampaignTemplatesPage.jsx"));
-const MessageTemplatesPage = lazy(() => import("./pages/owner/MessageTemplatesPage.jsx"));
+const CustomerLoginPage = lazyWithRetry(() => import("./pages/customer/CustomerLoginPage.jsx"));
+const CustomerRegisterPage = lazyWithRetry(() => import("./pages/customer/CustomerRegisterPage.jsx"));
+const CustomerPortalPage = lazyWithRetry(() => import("./pages/customer/CustomerPortalPage.jsx"));
 
-const StorefrontLayout = lazy(() => import("./pages/storefront/StorefrontLayout.jsx"));
-const HomePage = lazy(() => import("./pages/storefront/HomePage.jsx"));
-const CollectionsPage = lazy(() => import("./pages/storefront/CollectionsPage.jsx"));
-const CategoryDetailPage = lazy(() => import("./pages/storefront/CategoryDetailPage.jsx"));
-const ProductDetailPage = lazy(() => import("./pages/storefront/ProductDetailPage.jsx"));
-const CartPage = lazy(() => import("./pages/storefront/CartPage.jsx"));
-const CheckoutPage = lazy(() => import("./pages/storefront/CheckoutPage.jsx"));
-const LegalContentPage = lazy(() => import("./pages/shared/LegalContentPage.jsx"));
-const WebsiteEditorPage = lazy(() => import("./pages/owner/WebsiteEditorPage.jsx"));
-const ManagePage = lazy(() => import("./pages/owner/ManagePage.jsx"));
+const OrdersPage = lazyWithRetry(() => import("./pages/owner/OrdersPage.jsx"));
+const CampaignsPage = lazyWithRetry(() => import("./pages/owner/CampaignsPage.jsx"));
+const CampaignTemplatesPage = lazyWithRetry(() => import("./pages/owner/CampaignTemplatesPage.jsx"));
+const MessageTemplatesPage = lazyWithRetry(() => import("./pages/owner/MessageTemplatesPage.jsx"));
+
+const StorefrontLayout = lazyWithRetry(() => import("./pages/storefront/StorefrontLayout.jsx"));
+const HomePage = lazyWithRetry(() => import("./pages/storefront/HomePage.jsx"));
+const CollectionsPage = lazyWithRetry(() => import("./pages/storefront/CollectionsPage.jsx"));
+const CategoryDetailPage = lazyWithRetry(() => import("./pages/storefront/CategoryDetailPage.jsx"));
+const ProductDetailPage = lazyWithRetry(() => import("./pages/storefront/ProductDetailPage.jsx"));
+const CartPage = lazyWithRetry(() => import("./pages/storefront/CartPage.jsx"));
+const CheckoutPage = lazyWithRetry(() => import("./pages/storefront/CheckoutPage.jsx"));
+const LegalContentPage = lazyWithRetry(() => import("./pages/shared/LegalContentPage.jsx"));
+const WebsiteEditorPage = lazyWithRetry(() => import("./pages/owner/WebsiteEditorPage.jsx"));
+const ManagePage = lazyWithRetry(() => import("./pages/owner/ManagePage.jsx"));
 
 const RouteFallback = () => (
   <div className="page-shell">
