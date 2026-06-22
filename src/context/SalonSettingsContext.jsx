@@ -80,6 +80,7 @@ export const SalonSettingsProvider = ({ children }) => {
     const ui = settings?.advancedSettings?.uiSettings || {};
     const sidebar = ui.sidebarColor || "";
     const button = ui.buttonColor || "";
+    const buttonHover = ui.buttonHoverColor || "";
     const navbar = ui.navbarColor || "";
     const font = ui.fontColor || "";
 
@@ -96,6 +97,12 @@ export const SalonSettingsProvider = ({ children }) => {
       root.style.removeProperty("--button-bg");
       root.style.removeProperty("--button-bg-solid");
       root.style.removeProperty("--accent");
+    }
+
+    if (buttonHover) {
+      root.style.setProperty("--button-bg-hover", buttonHover);
+    } else {
+      root.style.removeProperty("--button-bg-hover");
     }
 
     if (navbar) root.style.setProperty("--navbar-bg", navbar);

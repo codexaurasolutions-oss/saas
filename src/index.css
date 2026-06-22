@@ -139,8 +139,17 @@ button {
 }
 
 button:hover {
+  background: var(--button-bg-hover, var(--button-bg, linear-gradient(135deg, #0f766e, #0ea5e9)));
   filter: brightness(1.05);
   transform: translateY(-1px);
+}
+
+button.secondary-button:hover {
+  background: white;
+}
+
+button.danger-button:hover {
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
 }
 
 button.secondary-button {

@@ -261,6 +261,7 @@ const defaultAdvancedSettings = {
   uiSettings: {
     activeThemePreset: "classic",
     buttonColor: "",
+    buttonHoverColor: "",
     sidebarColor: "",
     navbarColor: "",
     fontColor: ""
@@ -464,6 +465,10 @@ export default function SettingsPage() {
     const cached = readSalonSettingsCache(salonId);
     return cached?.advancedSettings?.uiSettings?.buttonColor || "#3b82f6";
   });
+  const [buttonHoverColor, setButtonHoverColor] = useState(() => {
+    const cached = readSalonSettingsCache(salonId);
+    return cached?.advancedSettings?.uiSettings?.buttonHoverColor || "#2563eb";
+  });
   const [sidebarColor, setSidebarColor] = useState(() => {
     const cached = readSalonSettingsCache(salonId);
     return cached?.advancedSettings?.uiSettings?.sidebarColor || "#0f172a";
@@ -477,6 +482,8 @@ export default function SettingsPage() {
     return cached?.advancedSettings?.uiSettings?.fontColor || "#1e293b";
   });
   const [activeThemePreset, setActiveThemePreset] = useState("classic");
+  const [isPreviewHovered, setIsPreviewHovered] = useState(false);
+  const [isSaveHovered, setIsSaveHovered] = useState(false);
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
   const rosterInitializedRef = useRef(false);
   const giftCardInitializedRef = useRef(false);
@@ -624,6 +631,7 @@ export default function SettingsPage() {
       const ui = form.advancedSettings.uiSettings;
       if (ui.activeThemePreset) setActiveThemePreset(ui.activeThemePreset);
       if (ui.buttonColor) setButtonColor(ui.buttonColor);
+      if (ui.buttonHoverColor) setButtonHoverColor(ui.buttonHoverColor);
       if (ui.sidebarColor) setSidebarColor(ui.sidebarColor);
       if (ui.navbarColor) setNavbarColor(ui.navbarColor);
       if (ui.fontColor) setFontColor(ui.fontColor);
@@ -706,6 +714,9 @@ export default function SettingsPage() {
       root.style.setProperty("--button-bg-solid", buttonColor);
       root.style.setProperty("--accent", buttonColor);
     }
+    if (buttonHoverColor) {
+      root.style.setProperty("--button-bg-hover", buttonHoverColor);
+    }
     if (navbarColor) root.style.setProperty("--navbar-bg", navbarColor);
     if (fontColor) root.style.setProperty("--font-color", fontColor);
 
@@ -724,6 +735,12 @@ export default function SettingsPage() {
         root.style.removeProperty("--button-bg-solid");
         root.style.removeProperty("--accent");
       }
+
+      if (ui.buttonHoverColor) {
+        root.style.setProperty("--button-bg-hover", ui.buttonHoverColor);
+      } else {
+        root.style.removeProperty("--button-bg-hover");
+      }
       
       if (ui.navbarColor) root.style.setProperty("--navbar-bg", ui.navbarColor);
       else root.style.removeProperty("--navbar-bg");
@@ -731,7 +748,7 @@ export default function SettingsPage() {
       if (ui.fontColor) root.style.setProperty("--font-color", ui.fontColor);
       else root.style.removeProperty("--font-color");
     };
-  }, [buttonColor, sidebarColor, navbarColor, fontColor, salonId]);
+  }, [buttonColor, buttonHoverColor, sidebarColor, navbarColor, fontColor, salonId]);
 
   useEffect(() => {
     if (!summary.staffRows.length) return;
@@ -843,6 +860,7 @@ export default function SettingsPage() {
       uiSettings: {
         activeThemePreset,
         buttonColor,
+        buttonHoverColor,
         sidebarColor,
         navbarColor,
         fontColor
@@ -4230,16 +4248,17 @@ export default function SettingsPage() {
 
   const renderUiSettingsSection = () => {
     const presets = [
-      { id: "classic", name: "Classic Indigo", button: "#3b82f6", sidebar: "#0f172a", navbar: "#ffffff", font: "#1e293b" },
-      { id: "ocean", name: "Ocean Breeze", button: "#0ea5e9", sidebar: "#0c4a6e", navbar: "#f0f9ff", font: "#0369a1" },
-      { id: "emerald", name: "Emerald Forest", button: "#10b981", sidebar: "#064e3b", navbar: "#f0fdf4", font: "#047857" },
-      { id: "midnight", name: "Midnight Premium", button: "#8b5cf6", sidebar: "#111827", navbar: "#1f2937", font: "#f9fafb" },
-      { id: "rose", name: "Rose Gold", button: "#ec4899", sidebar: "#4c0519", navbar: "#fff1f2", font: "#be185d" }
+      { id: "classic", name: "Classic Indigo", button: "#3b82f6", buttonHover: "#2563eb", sidebar: "#0f172a", navbar: "#ffffff", font: "#1e293b" },
+      { id: "ocean", name: "Ocean Breeze", button: "#0ea5e9", buttonHover: "#0284c7", sidebar: "#0c4a6e", navbar: "#f0f9ff", font: "#0369a1" },
+      { id: "emerald", name: "Emerald Forest", button: "#10b981", buttonHover: "#059669", sidebar: "#064e3b", navbar: "#f0fdf4", font: "#047857" },
+      { id: "midnight", name: "Midnight Premium", button: "#8b5cf6", buttonHover: "#7c3aed", sidebar: "#111827", navbar: "#1f2937", font: "#f9fafb" },
+      { id: "rose", name: "Rose Gold", button: "#ec4899", buttonHover: "#db2777", sidebar: "#4c0519", navbar: "#fff1f2", font: "#be185d" }
     ];
 
     const applyPreset = (preset) => {
       setActiveThemePreset(preset.id);
       setButtonColor(preset.button);
+      setButtonHoverColor(preset.buttonHover || preset.button);
       setSidebarColor(preset.sidebar);
       setNavbarColor(preset.navbar);
       setFontColor(preset.font);
@@ -4268,6 +4287,13 @@ export default function SettingsPage() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <input type="color" value={buttonColor} onChange={(e) => { setButtonColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
                     <input type="text" value={buttonColor} onChange={(e) => { setButtonColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
+                  </div>
+                </label>
+                <label className="settings-input-group">
+                  <span className="muted">Button Hover Color</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="color" value={buttonHoverColor} onChange={(e) => { setButtonHoverColor(e.target.value); setActiveThemePreset("custom"); }} style={{ width: 42, height: 42, padding: 0, border: "1px solid #cbd5e1", borderRadius: 8, cursor: "pointer", background: "none" }} />
+                    <input type="text" value={buttonHoverColor} onChange={(e) => { setButtonHoverColor(e.target.value); setActiveThemePreset("custom"); }} style={{ flex: 1, textTransform: "uppercase" }} />
                   </div>
                 </label>
                 <label className="settings-input-group">
@@ -4319,9 +4345,10 @@ export default function SettingsPage() {
                   >
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>{p.name}</div>
                     <div style={{ display: "flex", gap: 4 }}>
-                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.sidebar, border: "1px solid #cbd5e1" }} />
-                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.navbar, border: "1px solid #cbd5e1" }} />
-                      <span style={{ width: 14, height: 14, borderRadius: "50%", background: p.button, border: "1px solid #cbd5e1" }} />
+                      <span title="Sidebar Color" style={{ width: 14, height: 14, borderRadius: "50%", background: p.sidebar, border: "1px solid #cbd5e1" }} />
+                      <span title="Navbar Color" style={{ width: 14, height: 14, borderRadius: "50%", background: p.navbar, border: "1px solid #cbd5e1" }} />
+                      <span title="Button Color" style={{ width: 14, height: 14, borderRadius: "50%", background: p.button, border: "1px solid #cbd5e1" }} />
+                      <span title="Button Hover Color" style={{ width: 14, height: 14, borderRadius: "50%", background: p.buttonHover, border: "1px solid #cbd5e1" }} />
                     </div>
                   </button>
                 ))}
@@ -4371,7 +4398,23 @@ export default function SettingsPage() {
                     </div>
 
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button type="button" style={{ flex: 1, padding: "8px", background: buttonColor, color: "#ffffff", border: "none", borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "background 0.3s ease" }}>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setIsPreviewHovered(true)}
+                        onMouseLeave={() => setIsPreviewHovered(false)}
+                        style={{
+                          flex: 1,
+                          padding: "8px",
+                          background: isPreviewHovered ? (buttonHoverColor || buttonColor) : buttonColor,
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: 6,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "background 0.3s ease"
+                        }}
+                      >
                         Primary Action
                       </button>
                       <button type="button" style={{ flex: 1, padding: "8px", background: "#ffffff", color: "#475569", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
@@ -4384,7 +4427,27 @@ export default function SettingsPage() {
 
               <div style={{ padding: 14, borderTop: "1px solid #e2e8f0", display: "flex", gap: 10, justifyContent: "flex-end", background: "#ffffff" }}>
                 <button type="button" onClick={() => applyPreset(presets[0])} style={{ padding: "8px 16px", background: "white", border: "1px solid #cbd5e1", borderRadius: 8, fontWeight: 600, color: "#475569", fontSize: 12, cursor: "pointer" }}>Reset Defaults</button>
-                <button type="button" onClick={saveWorkspace} disabled={saving} style={{ padding: "8px 16px", background: buttonColor, color: "white", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "background 0.3s ease", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving..." : "Save Palette"}</button>
+                <button
+                  type="button"
+                  onClick={saveWorkspace}
+                  disabled={saving}
+                  onMouseEnter={() => setIsSaveHovered(true)}
+                  onMouseLeave={() => setIsSaveHovered(false)}
+                  style={{
+                    padding: "8px 16px",
+                    background: isSaveHovered ? (buttonHoverColor || buttonColor) : buttonColor,
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    transition: "background 0.3s ease",
+                    opacity: saving ? 0.7 : 1
+                  }}
+                >
+                  {saving ? "Saving..." : "Save Palette"}
+                </button>
               </div>
             </div>
           </div>
