@@ -300,7 +300,11 @@ export default function PosPage() {
       list = list.filter(s => s.name.toLowerCase().includes(serviceSearch.toLowerCase()));
     }
     if (serviceCategoryFilter) {
-      list = list.filter(s => normalizeCategoryId(s) === serviceCategoryFilter);
+      list = list.filter(s => {
+        const catId = s.categoryId || s.category?.id || "";
+        const parentId = s.category?.parentId || "";
+        return catId === serviceCategoryFilter || parentId === serviceCategoryFilter;
+      });
     }
     const grouped = {};
     list.forEach(s => {

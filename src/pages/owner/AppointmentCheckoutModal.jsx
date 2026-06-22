@@ -113,7 +113,20 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
     let list = posContext.services || [];
     if (posGender) list = list.filter((service) => !service.gender || ["UNISEX", "BOTH", "ALL"].includes(service.gender.toUpperCase()) || service.gender.toUpperCase() === posGender);
     if (search) list = list.filter((service) => service.name.toLowerCase().includes(search.toLowerCase()));
-    if (categoryFilter) list = list.filter((service) => service.category?.name === categoryFilter);
+    if (categoryFilter) {
+      const matchedCat = posContext.serviceCategories?.find(
+        (cat) => cat.name.toLowerCase() === categoryFilter.toLowerCase()
+      );
+      const childCategoryIds = matchedCat?.children?.map((child) => child.id) || [];
+      list = list.filter((service) => {
+        const sCatName = service.category?.name || "";
+        const sCatId = service.categoryId || service.category?.id || "";
+        return (
+          sCatName.toLowerCase() === categoryFilter.toLowerCase() ||
+          childCategoryIds.includes(sCatId)
+        );
+      });
+    }
 
     const grouped = {};
     list.forEach((service) => {
@@ -130,7 +143,7 @@ export default function AppointmentCheckoutModal({ appointment, onClose, onCompl
     // Note: Products usually don't have gender, so we don't filter products by posGender here, 
     // but the UI will still show the Female/Male buttons as requested by the user.
     if (search) list = list.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
-    if (categoryFilter) list = list.filter((p) => p.category?.name === categoryFilter);
+    if (categoryFilter) list = list.filter((p) => p.category?.name?.toLowerCase() === categoryFilter.toLowerCase());
 
     const grouped = {};
     list.forEach((product) => {
