@@ -765,7 +765,7 @@ export default function SettingsPage() {
           staffName: row.user?.name || row.phone || "Staff",
           fromTime: defaultShift?.startTime || "09:00",
           toTime: defaultShift?.endTime || "21:00",
-          isWorking: defaultShift?.active !== false,
+          isWorking: true, // Default to working when a staff member is first added to roster
           breakLabel: defaultShift?.breakLabel || ""
         }));
       if (!existingRows.length && !appendedRows.length) return current;
@@ -786,7 +786,7 @@ export default function SettingsPage() {
                   staffName: row.user?.name || row.phone || "Staff",
                   fromTime: defaultShift?.startTime || "09:00",
                   toTime: defaultShift?.endTime || "21:00",
-                  isWorking: defaultShift?.active !== false,
+                  isWorking: true, // Default to working when first building roster from staff list
                   breakLabel: defaultShift?.breakLabel || ""
                 }))
           }
@@ -1912,7 +1912,8 @@ export default function SettingsPage() {
           applyToAll: true,
           fromTime: selectedShift.startTime,
           toTime: selectedShift.endTime,
-          isWorking: selectedShift.active,
+          // Always true when a shift is actively applied — applying a shift = staff is working
+          isWorking: selectedShift.active !== false ? true : row.isWorking ?? true,
           breakLabel: selectedShift.breakLabel || row.breakLabel || ""
         }))
       });
