@@ -171,6 +171,7 @@ const REPORT_FILTERS = {
   ],
   service_reminder: [],
   feedback: [],
+  monthly_sale: [],
   staff_attendance: [
     { key: "stylistId", label: "Stylist", type: "select", endpoint: "/owner/staff-users", optionLabel: "name", defaultLabel: "All" }
   ],
