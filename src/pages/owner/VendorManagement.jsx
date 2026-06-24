@@ -51,7 +51,11 @@ const labelStyle = {
   fontSize: "0.85rem",
   fontWeight: 600,
   color: "#475569",
-  marginBottom: 6
+  marginBottom: 6,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  whiteSpace: "nowrap"
 };
 
 const formGroupStyle = {

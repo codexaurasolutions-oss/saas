@@ -13,13 +13,13 @@ import { SETTINGS_WORKSPACE_SECTIONS, getSettingsSection } from "./settingsWorks
 import "./SettingsPage.css";
 
 const WEEK_DAYS = [
-  { key: "sun", label: "Sun" },
-  { key: "mon", label: "Mon" },
-  { key: "tue", label: "Tue" },
-  { key: "wed", label: "Wed" },
-  { key: "thu", label: "Thu" },
-  { key: "fri", label: "Fri" },
-  { key: "sat", label: "Sat" }
+  { key: "sun", label: "Sun", dayOfWeekValue: 0 },
+  { key: "mon", label: "Mon", dayOfWeekValue: 1 },
+  { key: "tue", label: "Tue", dayOfWeekValue: 2 },
+  { key: "wed", label: "Wed", dayOfWeekValue: 3 },
+  { key: "thu", label: "Thu", dayOfWeekValue: 4 },
+  { key: "fri", label: "Fri", dayOfWeekValue: 5 },
+  { key: "sat", label: "Sat", dayOfWeekValue: 6 }
 ];
 
 const defaultPaymentModes = {
@@ -1621,72 +1621,165 @@ export default function SettingsPage() {
   };
 
   const renderShiftSection = () => {
-    const shifts = form.advancedSettings.shiftManagement.shifts;
-    const rosterModuleEnabled = form.advancedSettings.allowRosterMgtSettings !== false;
-    const updateShift = (id, patch) => {
-      updateAdvancedObject("shiftManagement", {
-        shifts: shifts.map((shift) => shift.id === id ? { ...shift, ...patch } : shift)
+    const shiftList = shifts;
+    const selectedShift = shiftList.find(s => s.id === selectedShiftId) || shiftList[0] || null;
+    const [shiftDraft, setShiftDraft] = useState(null);
+    const [shiftSaving, setShiftSaving] = useState(false);
+
+    useEffect(() => {
+      if (selectedShift) {
+        setShiftDraft({
+          ...selectedShift,
+          days: (selectedShift.days || []).map(d => ({ dayOfWeek: d.dayOfWeek, startTime: d.startTime, endTime: d.endTime, active: d.active })),
+          breaks: (selectedShift.breaks || []).map(b => ({ name: b.name, active: b.active, fromTime: b.fromTime, toTime: b.toTime }))
+        });
+      } else {
+        setShiftDraft(null);
+      }
+    }, [selectedShift?.id]);
+
+    const createShift = async () => {
+      try {
+        setShiftSaving(true);
+        const payload = {
+          name: "New Shift",
+          active: true,
+          sameForAllDays: true,
+          startTime: "09:00",
+          endTime: "21:00",
+          days: WEEK_DAYS.map(d => ({ dayOfWeek: d.dayOfWeekValue, startTime: "09:00", endTime: "21:00", active: true })),
+          breaks: []
+        };
+        const res = await api.post("/owner/shifts", payload);
+        setShifts((prev) => [...prev, res.data]);
+        setSelectedShiftId(res.data.id);
+        setStatus({ loading: false, error: "", success: "Shift created." });
+      } catch (err) {
+        setStatus({ loading: false, error: formatApiError(err, "Could not create shift"), success: "" });
+      } finally {
+        setShiftSaving(false);
+      }
+    };
+
+    const deleteShift = async (id) => {
+      try {
+        setShiftSaving(true);
+        await api.delete(`/owner/shifts/${id}`);
+        setShifts((prev) => prev.filter(s => s.id !== id));
+        if (selectedShiftId === id) setSelectedShiftId(null);
+        setStatus({ loading: false, error: "", success: "Shift deleted." });
+      } catch (err) {
+        setStatus({ loading: false, error: formatApiError(err, "Could not delete shift"), success: "" });
+      } finally {
+        setShiftSaving(false);
+      }
+    };
+
+    const saveShift = async () => {
+      if (!selectedShift || !shiftDraft) return;
+      try {
+        setShiftSaving(true);
+        const payload = {
+          name: shiftDraft.name?.trim() || "Untitled Shift",
+          active: shiftDraft.active !== false,
+          sameForAllDays: shiftDraft.sameForAllDays !== false,
+          startTime: shiftDraft.sameForAllDays ? (shiftDraft.startTime || "09:00") : null,
+          endTime: shiftDraft.sameForAllDays ? (shiftDraft.endTime || "21:00") : null,
+          sortOrder: shiftDraft.sortOrder || 0,
+          days: shiftDraft.sameForAllDays ? [] : (shiftDraft.days || []).map(d => ({
+            dayOfWeek: Number(d.dayOfWeek),
+            startTime: d.startTime || "09:00",
+            endTime: d.endTime || "21:00",
+            active: d.active !== false
+          })),
+          breaks: (shiftDraft.breaks || []).filter(b => b.name || b.fromTime || b.toTime).map(b => ({
+            name: b.name || "Break",
+            active: b.active !== false,
+            fromTime: b.fromTime || "00:00",
+            toTime: b.toTime || "00:00"
+          }))
+        };
+        const res = await api.patch(`/owner/shifts/${selectedShift.id}`, payload);
+        setShifts((prev) => prev.map(s => s.id === res.data.id ? res.data : s));
+        setStatus({ loading: false, error: "", success: "Shift saved." });
+      } catch (err) {
+        setStatus({ loading: false, error: formatApiError(err, "Could not save shift"), success: "" });
+      } finally {
+        setShiftSaving(false);
+      }
+    };
+
+    const updateDraftField = (field, value) => {
+      setShiftDraft((current) => current ? { ...current, [field]: value } : current);
+    };
+
+    const updateDayField = (dayOfWeek, patch) => {
+      setShiftDraft((current) => {
+        if (!current) return current;
+        const days = (current.days || []).map(d => d.dayOfWeek === dayOfWeek ? { ...d, ...patch } : d);
+        return { ...current, days };
       });
     };
-    const addShift = () => {
-      const newShift = { id: makeId("shift"), name: "", active: true, sameForAllDays: true, startTime: "09:00", endTime: "21:00", days: WEEK_DAYS.reduce((acc, day) => ({ ...acc, [day.key]: { startTime: "09:00", endTime: "21:00", active: true } }), {}), breakLabel: "", breaks: [] };
-      updateAdvancedObject("shiftManagement", { shifts: [...shifts, newShift] });
-      setSelectedShiftId(newShift.id);
-    };
-    const removeShift = (id) => {
-      updateAdvancedObject("shiftManagement", { shifts: shifts.filter((shift) => shift.id !== id) });
-      if (selectedShiftId === id) setSelectedShiftId(null);
+
+    const addBreakToDraft = () => {
+      setShiftDraft((current) => current ? {
+        ...current,
+        breaks: [...(current.breaks || []), { name: "", active: true, fromTime: "", toTime: "" }]
+      } : current);
     };
 
-    const addBreak = (shiftId) => {
-      const shift = shifts.find(s => s.id === shiftId);
-      const newBreaks = [...(shift.breaks || []), { id: makeId("break"), name: "", active: true, fromTime: "", toTime: "" }];
-      updateShift(shiftId, { breaks: newBreaks });
+    const updateBreakInDraft = (index, patch) => {
+      setShiftDraft((current) => {
+        if (!current) return current;
+        const breaks = (current.breaks || []).map((b, i) => i === index ? { ...b, ...patch } : b);
+        return { ...current, breaks };
+      });
     };
 
-    const updateBreak = (shiftId, breakId, patch) => {
-      const shift = shifts.find(s => s.id === shiftId);
-      const newBreaks = (shift.breaks || []).map(b => b.id === breakId ? { ...b, ...patch } : b);
-      updateShift(shiftId, { breaks: newBreaks });
+    const removeBreakFromDraft = (index) => {
+      setShiftDraft((current) => {
+        if (!current) return current;
+        const breaks = (current.breaks || []).filter((_, i) => i !== index);
+        return { ...current, breaks };
+      });
     };
 
-    const removeBreak = (shiftId, breakId) => {
-      const shift = shifts.find(s => s.id === shiftId);
-      const newBreaks = (shift.breaks || []).filter(b => b.id !== breakId);
-      updateShift(shiftId, { breaks: newBreaks });
+    const toggleSameForAllDays = (checked) => {
+      setShiftDraft((current) => {
+        if (!current) return current;
+        if (checked) {
+          const firstDay = (current.days || [])[0] || {};
+          const startTime = firstDay.startTime || "09:00";
+          const endTime = firstDay.endTime || "21:00";
+          return {
+            ...current,
+            sameForAllDays: true,
+            startTime,
+            endTime,
+            days: WEEK_DAYS.map(d => ({ dayOfWeek: d.dayOfWeekValue, startTime, endTime, active: true }))
+          };
+        } else {
+          const startTime = current.startTime || "09:00";
+          const endTime = current.endTime || "21:00";
+          return {
+            ...current,
+            sameForAllDays: false,
+            startTime: null,
+            endTime: null,
+            days: WEEK_DAYS.map(d => ({ dayOfWeek: d.dayOfWeekValue, startTime, endTime, active: true }))
+          };
+        }
+      });
     };
-
-    const handleSameForAllDays = (shift, checked) => {
-      const newDays = WEEK_DAYS.reduce((acc, day) => {
-        const existing = shift.days?.[day.key] || {};
-        acc[day.key] = {
-          startTime: existing.startTime || shift.startTime || "09:00",
-          endTime: existing.endTime || shift.endTime || "21:00",
-          active: checked ? true : (existing.active !== false)
-        };
-        return acc;
-      }, {});
-      updateShift(shift.id, { sameForAllDays: checked, days: newDays, startTime: shift.days?.SUN?.startTime || shift.startTime, endTime: shift.days?.SUN?.endTime || shift.endTime });
-    };
-    const updateDayTime = (shift, dayKey, patch) => {
-      const newDays = { ...(shift.days || {}), [dayKey]: { ...(shift.days?.[dayKey] || {}), ...patch } };
-      updateShift(shift.id, { days: newDays });
-    };
-    const selectedShift = shifts.find(s => s.id === selectedShiftId) || shifts[0] || null;
 
     return (
       <>
-        <SectionHeader title="Shift Management" description="Create reusable shift templates with per-day timing so roster planning stays consistent across staff, roles, and branches." badges={[`${shifts.length} shifts`, rosterModuleEnabled ? "Roster Enabled" : "Roster Locked"]} />
-        {!rosterModuleEnabled ? (
-          <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
-            Roster management is currently disabled from settings, so these templates stay visible for reference but should not be treated as editable live defaults until the module is enabled again.
-          </div>
-        ) : null}
+        <SectionHeader title="Shift Management" description="Create reusable shift templates with per-day timing so roster planning stays consistent across staff, roles, and branches." badges={[`${shiftList.length} shifts`]} action={<button type="button" onClick={saveShift} disabled={!selectedShift || shiftSaving} className="primary-button" style={{ padding: "8px 18px", background: "var(--button-bg-solid, #3b82f6)", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: shiftSaving ? "not-allowed" : "pointer", opacity: !selectedShift || shiftSaving ? 0.6 : 1 }}>{shiftSaving ? "Saving..." : "Save Shift"}</button>} />
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 320px) 1fr", gap: 16 }}>
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, height: "fit-content" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-              {shifts.map((shift) => (
+              {shiftList.map((shift) => (
                 <button
                   key={shift.id}
                   type="button"
@@ -1711,22 +1804,22 @@ export default function SettingsPage() {
                   {!shift.active && <span style={{ color: "#ef4444", fontSize: 12 }}>(Inactive)</span>}
                 </button>
               ))}
-              {shifts.length === 0 && (
+              {shiftList.length === 0 && (
                 <div style={{ padding: "20px 14px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No shifts yet</div>
               )}
             </div>
             <button
               type="button"
-              onClick={addShift}
-              disabled={!rosterModuleEnabled}
-              style={{ width: "100%", padding: "10px 16px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+              onClick={createShift}
+              disabled={shiftSaving}
+              style={{ width: "100%", padding: "10px 16px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: shiftSaving ? "not-allowed" : "pointer", fontSize: 14 }}
             >
-              Create New
+              {shiftSaving ? "Creating..." : "Create New"}
             </button>
           </div>
 
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 20 }}>
-            {!selectedShift ? (
+            {!selectedShift || !shiftDraft ? (
               <div style={{ padding: "60px 20px", textAlign: "center", color: "#94a3b8" }}>
                 <strong>Select a shift to edit</strong>
                 <div style={{ fontSize: 12, marginTop: 4 }}>Or create a new shift to get started.</div>
@@ -1738,9 +1831,8 @@ export default function SettingsPage() {
                   <label style={{ display: "block" }}>
                     <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Shift Name</div>
                     <input
-                      disabled={!rosterModuleEnabled}
-                      value={selectedShift.name}
-                      onChange={(event) => updateShift(selectedShift.id, { name: event.target.value })}
+                      value={shiftDraft.name || ""}
+                      onChange={(event) => updateDraftField("name", event.target.value)}
                       placeholder="Enter shift name"
                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
                     />
@@ -1748,9 +1840,8 @@ export default function SettingsPage() {
                   <label style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", cursor: "pointer" }}>
                     <input
                       type="checkbox"
-                      disabled={!rosterModuleEnabled}
-                      checked={Boolean(selectedShift.active)}
-                      onChange={(event) => updateShift(selectedShift.id, { active: event.target.checked })}
+                      checked={Boolean(shiftDraft.active)}
+                      onChange={(event) => updateDraftField("active", event.target.checked)}
                       style={{ width: 18, height: 18 }}
                     />
                     <span style={{ fontSize: 14, fontWeight: 600 }}>Active</span>
@@ -1760,29 +1851,21 @@ export default function SettingsPage() {
                 <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#f8fafc", borderRadius: 8, marginBottom: 16, cursor: "pointer" }}>
                   <input
                     type="checkbox"
-                    disabled={!rosterModuleEnabled}
-                    checked={Boolean(selectedShift.sameForAllDays)}
-                    onChange={(event) => handleSameForAllDays(selectedShift, event.target.checked)}
+                    checked={Boolean(shiftDraft.sameForAllDays)}
+                    onChange={(event) => toggleSameForAllDays(event.target.checked)}
                     style={{ width: 18, height: 18 }}
                   />
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Same For All Days</span>
                 </label>
 
-                {selectedShift.sameForAllDays ? (
+                {shiftDraft.sameForAllDays ? (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
                     <label>
                       <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Start Time</div>
                       <input
                         type="time"
-                        disabled={!rosterModuleEnabled}
-                        value={selectedShift.startTime || "09:00"}
-                        onChange={(event) => {
-                          const newDays = WEEK_DAYS.reduce((acc, day) => {
-                            acc[day.key] = { ...(selectedShift.days?.[day.key] || {}), startTime: event.target.value, endTime: selectedShift.days?.[day.key]?.endTime || selectedShift.endTime || "21:00", active: selectedShift.days?.[day.key]?.active !== false };
-                            return acc;
-                          }, {});
-                          updateShift(selectedShift.id, { startTime: event.target.value, days: newDays });
-                        }}
+                        value={shiftDraft.startTime || "09:00"}
+                        onChange={(event) => updateDraftField("startTime", event.target.value)}
                         style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
                       />
                     </label>
@@ -1790,15 +1873,8 @@ export default function SettingsPage() {
                       <div style={{ fontSize: 13, color: "#475569", marginBottom: 4, fontWeight: 600 }}>End Time</div>
                       <input
                         type="time"
-                        disabled={!rosterModuleEnabled}
-                        value={selectedShift.endTime || "21:00"}
-                        onChange={(event) => {
-                          const newDays = WEEK_DAYS.reduce((acc, day) => {
-                            acc[day.key] = { ...(selectedShift.days?.[day.key] || {}), startTime: selectedShift.days?.[day.key]?.startTime || selectedShift.startTime || "09:00", endTime: event.target.value, active: selectedShift.days?.[day.key]?.active !== false };
-                            return acc;
-                          }, {});
-                          updateShift(selectedShift.id, { endTime: event.target.value, days: newDays });
-                        }}
+                        value={shiftDraft.endTime || "21:00"}
+                        onChange={(event) => updateDraftField("endTime", event.target.value)}
                         style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 14 }}
                       />
                     </label>
@@ -1812,29 +1888,26 @@ export default function SettingsPage() {
                       <div>Active</div>
                     </div>
                     {WEEK_DAYS.map((day) => {
-                      const dayData = selectedShift.days?.[day.key] || {};
+                      const dayData = (shiftDraft.days || []).find(d => d.dayOfWeek === day.dayOfWeekValue) || { dayOfWeek: day.dayOfWeekValue, startTime: "09:00", endTime: "21:00", active: true };
                       return (
                         <div key={day.key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr 60px", gap: 12, padding: "10px 12px", borderBottom: "1px solid #f1f5f9", alignItems: "center" }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{day.label}</div>
                           <input
                             type="time"
-                            disabled={!rosterModuleEnabled}
                             value={dayData.startTime || "09:00"}
-                            onChange={(event) => updateDayTime(selectedShift, day.key, { startTime: event.target.value })}
+                            onChange={(event) => updateDayField(day.dayOfWeekValue, { startTime: event.target.value })}
                             style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
                           />
                           <input
                             type="time"
-                            disabled={!rosterModuleEnabled}
                             value={dayData.endTime || "21:00"}
-                            onChange={(event) => updateDayTime(selectedShift, day.key, { endTime: event.target.value })}
+                            onChange={(event) => updateDayField(day.dayOfWeekValue, { endTime: event.target.value })}
                             style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
                           />
                           <input
                             type="checkbox"
-                            disabled={!rosterModuleEnabled}
                             checked={dayData.active !== false}
-                            onChange={(event) => updateDayTime(selectedShift, day.key, { active: event.target.checked })}
+                            onChange={(event) => updateDayField(day.dayOfWeekValue, { active: event.target.checked })}
                             style={{ width: 18, height: 18 }}
                           />
                         </div>
@@ -1843,70 +1916,68 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Break Types</h3>
                   <button
                     type="button"
-                    onClick={() => addBreak(selectedShift.id)}
-                    disabled={!rosterModuleEnabled}
-                    style={{ padding: "8px 16px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 13 }}
+                    onClick={addBreakToDraft}
+                    style={{ padding: "6px 14px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12 }}
                   >
-                    Add Break Type
+                    + Add Break
                   </button>
                 </div>
 
-                {(selectedShift.breaks || []).map((brk) => (
-                  <div key={brk.id} style={{ padding: 16, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", position: "relative", marginBottom: 12 }}>
-                    <button type="button" onClick={() => removeBreak(selectedShift.id, brk.id)} style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>&times;</button>
-                    <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 12 }}>
-                      <label style={{ flex: 1 }}>
+                {(shiftDraft.breaks || []).length === 0 && (
+                  <div style={{ padding: "16px", textAlign: "center", color: "#94a3b8", fontSize: 13, background: "#f8fafc", borderRadius: 8, marginBottom: 12 }}>
+                    No breaks added yet.
+                  </div>
+                )}
+
+                {(shiftDraft.breaks || []).map((brk, idx) => (
+                  <div key={idx} style={{ padding: 16, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", position: "relative", marginBottom: 12 }}>
+                    <button type="button" onClick={() => removeBreakFromDraft(idx)} style={{ position: "absolute", top: 8, right: 8, background: "#fee2e2", color: "#991b1b", border: "none", cursor: "pointer", width: 24, height: 24, borderRadius: 6, fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12, marginBottom: 12, paddingRight: 30 }}>
+                      <label>
                         <div style={{ fontSize: 12, color: "#475569", marginBottom: 4, fontWeight: 600 }}>Break Name</div>
-                        <input value={brk.name} onChange={(e) => updateBreak(selectedShift.id, brk.id, { name: e.target.value })} placeholder="Enter Break Name" disabled={!rosterModuleEnabled} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, width: "100%", fontSize: 13, outline: "none" }} />
+                        <input value={brk.name || ""} onChange={(e) => updateBreakInDraft(idx, { name: e.target.value })} placeholder="e.g. Lunch" style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, width: "100%", fontSize: 13, outline: "none" }} />
                       </label>
                       <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 18, cursor: "pointer" }}>
-                        <input type="checkbox" checked={brk.active} onChange={(e) => updateBreak(selectedShift.id, brk.id, { active: e.target.checked })} disabled={!rosterModuleEnabled} style={{ width: 16, height: 16 }} />
-                        <span style={{ fontSize: 13 }}>Active</span>
+                        <input type="checkbox" checked={brk.active !== false} onChange={(e) => updateBreakInDraft(idx, { active: e.target.checked })} style={{ width: 16, height: 16 }} />
+                        <span style={{ fontSize: 12 }}>Active</span>
                       </label>
                     </div>
                     <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 12 }}>
                       <div style={{ fontSize: 12, color: "#475569", marginBottom: 8, fontWeight: 600 }}>Break Timing</div>
                       <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#64748b" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
                           From
-                          <input type="time" value={brk.fromTime} onChange={(e) => updateBreak(selectedShift.id, brk.id, { fromTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
+                          <input type="time" value={brk.fromTime || ""} onChange={(e) => updateBreakInDraft(idx, { fromTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} />
                         </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#64748b" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
                           To
-                          <input type="time" value={brk.toTime} onChange={(e) => updateBreak(selectedShift.id, brk.id, { toTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} disabled={!rosterModuleEnabled} />
+                          <input type="time" value={brk.toTime || ""} onChange={(e) => updateBreakInDraft(idx, { toTime: e.target.value })} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none" }} />
                         </label>
                       </div>
                     </div>
                   </div>
                 ))}
 
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
                   <button
                     type="button"
-                    onClick={() => removeShift(selectedShift.id)}
-                    style={{ padding: "10px 24px", background: "#fff", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+                    onClick={() => deleteShift(selectedShift.id)}
+                    disabled={shiftSaving}
+                    style={{ padding: "10px 20px", background: "#fff", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontWeight: 600, cursor: shiftSaving ? "not-allowed" : "pointer", fontSize: 14 }}
                   >
-                    Delete
+                    Delete Shift
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedShiftId(null)}
-                    style={{ padding: "10px 24px", background: "#fff", border: "1px solid #cbd5e1", color: "#475569", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}
+                    onClick={saveShift}
+                    disabled={shiftSaving}
+                    style={{ padding: "10px 28px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: shiftSaving ? "not-allowed" : "pointer", fontSize: 14, opacity: shiftSaving ? 0.6 : 1 }}
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      updateAdvancedObject("shiftManagement", { shifts });
-                      await saveWorkspace();
-                    }}
-                    style={{ padding: "10px 32px", background: "var(--button-bg-solid, #3b82f6)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 14 }}
-                  >
-                    Save
+                    {shiftSaving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </>
@@ -1928,13 +1999,20 @@ export default function SettingsPage() {
       if (!rosterModuleEnabled) return;
       const selectedShift = shifts.find((item) => item.id === roster.useShiftId);
       if (!selectedShift) return;
+      // If shift is per-day, pick the first day's times
+      let fromTime = selectedShift.startTime;
+      let toTime = selectedShift.endTime;
+      if (!selectedShift.sameForAllDays && (selectedShift.days || []).length > 0) {
+        const firstDay = selectedShift.days[0];
+        fromTime = firstDay.startTime || fromTime;
+        toTime = firstDay.endTime || toTime;
+      }
       updateAdvancedObject("rosterManagement", {
         rows: roster.rows.map((row) => ({
           ...row,
           applyToAll: true,
-          fromTime: selectedShift.startTime,
-          toTime: selectedShift.endTime,
-          // Always true when a shift is actively applied — applying a shift = staff is working
+          fromTime: fromTime || "09:00",
+          toTime: toTime || "21:00",
           isWorking: selectedShift.active !== false ? true : row.isWorking ?? true,
           breakLabel: selectedShift.breakLabel || row.breakLabel || ""
         }))

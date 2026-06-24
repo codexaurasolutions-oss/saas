@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
+import { useSalonSettings } from "../../context/SalonSettingsContext";
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend, Line, ComposedChart
+} from "recharts";
 
 const ALL_REPORTS = [
   { key: "sales_summary", label: "Sales Summary" },
@@ -87,17 +92,41 @@ const REPORT_ENDPOINTS = {
   sales_summary: "/reports/sales-summary-list",
   product_sales: "/reports/product-sales",
   service_sales: "/reports/service-sales",
+  service_reminder: "/reports/service-reminder",
   customers: "/reports/customers",
+  feedback: "/reports/feedback",
   staff_performance: "/reports/staff-performance",
-  appointments: "/reports/appointments",
+  incentive_report: "/reports/incentive",
+  monthly_sale: "/reports/sales-summary-list",
+  staff_attendance: "/reports/staff-attendance",
   memberships: "/reports/memberships",
+  membership_redemption: "/reports/membership-redemption",
+  inter_store_membership: "/reports/inter-store-membership",
   packages: "/reports/packages",
+  package_redemption: "/reports/package-redemption",
+  gift_card_sold: "/reports/gift-card-sold",
+  gift_card_redemption: "/reports/gift-card-redemption",
+  advance_received: "/reports/advance-received",
+  balance_received: "/reports/balance-received",
+  coupon_redemption: "/reports/coupon-redemption",
+  day_wise: "/reports/branch-sales",
+  tip_report: "/reports/tip",
+  complimentary: "/reports/complimentary",
   cancelled_invoices: "/reports/cancelled-invoices",
-  minimum_stock: "/reports/low-stock",
+  appointments: "/reports/appointments",
+  gst_returns: "/reports/gst-returns",
+  guest_followups: "/reports/guest-followups",
   daily_stock: "/reports/stock",
   stock_transaction: "/reports/stock",
-  day_wise: "/reports/branch-sales",
-  monthly_sale: "/reports/sales-summary-list",
+  material_received: "/reports/material-received",
+  minimum_stock: "/reports/low-stock",
+  reconcile_stock: "/reports/reconcile-stock",
+  consumable_tracking: "/reports/consumable-tracking",
+  total_consumed: "/reports/total-consumed",
+  purchase_order: "/reports/purchase-order",
+  gst_outwards: "/reports/gst-outwards",
+  inventory_transaction: "/reports/inventory-transaction",
+  pnl_report: "/reports/pnl",
 };
 
 const normalizeColumnKey = (value) =>
@@ -203,6 +232,20 @@ const normalizeRowForReport = (reportKey, row, index) => {
     };
   }
 
+  // For most new reports, the backend already returns data in the right format.
+  // We just need to ensure dates are properly formatted.
+  if (row && typeof row === "object") {
+    const normalized = { ...row };
+    // Prettify all date-like fields
+    for (const key of Object.keys(normalized)) {
+      const lowerKey = key.toLowerCase();
+      if ((lowerKey === "date" || lowerKey.endsWith("date") || lowerKey.includes("date")) && normalized[key]) {
+        normalized[key] = prettifyDate(normalized[key]);
+      }
+    }
+    return normalized;
+  }
+
   return row;
 };
 
@@ -282,6 +325,82 @@ const getCellValue = (row, col) => {
   return value;
 };
 
+function GuestCollectionChart({ rows }) {
+  const { formatMoney } = useSalonSettings();
+  const dataRows = (rows || []).filter((r) => r && r["GUEST NAME"] && r["GUEST NAME"] !== "TOTAL" && (Number(r["TOTAL"]) || 0) > 0);
+
+  const chartData = useMemo(() => {
+    return dataRows
+      .map((r) => ({
+        name: r["GUEST NAME"] || r["Guest Name"] || "Guest",
+        phone: r["GUEST NUMBER"] || r["Guest Number"] || "",
+        value: Number(r["TOTAL"]) || 0
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [dataRows]);
+
+  const PIE_COLORS = ["#86c7a3", "#5fa67d", "#7fb59a", "#a3d4b9", "#c5e0d0", "#6b9b80", "#9bc1a8", "#b3d4c0", "#5a8c6a", "#7faa8c", "#a4c5ad", "#cce0d4"];
+
+  if (chartData.length === 0) {
+    return (
+      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 20, marginTop: 16, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
+        No data available for the chart. Run the report to see guest-wise sales visualization.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 20, marginTop: 16 }}>
+      <h3 style={{ margin: "0 0 16px 0", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Guest wise sale</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 24, alignItems: "center" }}>
+        <div style={{ width: "100%", height: 360 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={130}
+                innerRadius={50}
+                paddingAngle={1}
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="#ffffff" strokeWidth={1} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => formatMoney(value)} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div style={{ width: "100%", height: 360 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} angle={-20} textAnchor="end" interval={0} height={60} />
+              <YAxis tick={{ fontSize: 11, fill: "#475569" }} tickFormatter={(value) => `₹${value}`} />
+              <Tooltip formatter={(value) => formatMoney(value)} />
+              <Bar dataKey="value" fill="#86c7a3" radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={2} dot={{ r: 3, fill: "#f97316" }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+        {chartData.map((entry, index) => (
+          <div key={index} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#475569" }}>
+            <span style={{ width: 12, height: 12, borderRadius: 2, background: PIE_COLORS[index % PIE_COLORS.length] }} />
+            <span style={{ fontWeight: 600 }}>{entry.name}</span>
+            <span>({formatMoney(entry.value)})</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ReportTable({ reportKey, rows, loading }) {
   const cols = COLUMNS[reportKey] || ["Data"];
 
@@ -299,14 +418,17 @@ function ReportTable({ reportKey, rows, loading }) {
               {cols.map((_, cellIndex) => <td key={cellIndex}>&nbsp;</td>)}
             </tr>
           ))
-        ) : rows?.length ? rows.map((row, rowIndex) => (
-          <tr key={rowIndex}>
-            {cols.map((col, cellIndex) => {
-              const value = col === "SR. NO." ? rowIndex + 1 : getCellValue(row, col);
-              return <td key={cellIndex}>{value ?? "—"}</td>;
-            })}
-          </tr>
-        )) : (
+        ) : rows?.length ? rows.map((row, rowIndex) => {
+          const isTotalRow = row && (row["GUEST NAME"] === "TOTAL" || row["Product"] === "TOTAL" || row["Service"] === "TOTAL" || row["Staff"] === "TOTAL");
+          return (
+            <tr key={rowIndex} style={isTotalRow ? { fontWeight: 700, background: "#f1f5f9", borderTop: "2px solid #334155" } : undefined}>
+              {cols.map((col, cellIndex) => {
+                const value = col === "SR. NO." ? (isTotalRow ? "" : rowIndex + 1) : getCellValue(row, col);
+                return <td key={cellIndex} style={isTotalRow ? { fontWeight: 700 } : undefined}>{value ?? "—"}</td>;
+              })}
+            </tr>
+          );
+        }) : (
           <tr>
             <td colSpan={cols.length} className="rpt-empty">No records found for the selected filters.</td>
           </tr>
@@ -954,6 +1076,7 @@ export default function ReportsHubPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState("Loaded");
+  const [showChart, setShowChart] = useState(false);
 
   const currentReport = ALL_REPORTS.find((report) => report.key === activeReport);
 
@@ -1131,8 +1254,8 @@ export default function ReportsHubPage() {
               <input type="date" className="rpt-date-input" style={{ border: "none", padding: "0 2px", outline: "none", background: "transparent", fontSize: "0.72rem" }} value={filters.end} onChange={(event) => setFilters((current) => ({ ...current, end: event.target.value }))} />
             </div>
             
-            <button type="button" className="rpt-btn" style={{
-              background: "#2563eb",
+            <button type="button" className="rpt-btn" onClick={() => setShowChart((current) => !current)} style={{
+              background: showChart ? "#1d4ed8" : "#2563eb",
               color: "#ffffff",
               borderRadius: "6px",
               padding: "5px 14px",
@@ -1142,7 +1265,7 @@ export default function ReportsHubPage() {
               cursor: "pointer",
               boxShadow: "0 1px 3px rgba(37, 99, 235, 0.2)",
               transition: "all 0.15s ease"
-            }}>Show Report</button>
+            }}>{showChart ? "Hide Chart" : "Show Report"}</button>
 
             {(filters.start || filters.end) && (
               <button type="button" className="rpt-btn rpt-btn-clear" onClick={() => setFilters((current) => ({ ...current, start: "", end: "" }))}>×</button>
@@ -1164,6 +1287,10 @@ export default function ReportsHubPage() {
             <ReportTable reportKey={activeReport} rows={rows} loading={loading} />
           )}
         </div>
+
+        {showChart && activeReport === "customers" && (
+          <GuestCollectionChart rows={rows} />
+        )}
       </div>
     </div>
   );

@@ -873,7 +873,7 @@ export default function InventoryPage() {
                         <td style={{ padding: "16px 24px", color: "#64748b" }}>{new Date(o.createdAt || o.orderedAt).toLocaleDateString()}</td>
                         <td style={{ padding: "16px 24px", color: "#64748b" }}>{o.vendor?.name || "-"}</td>
                         <td style={{ padding: "16px 24px", color: "#64748b" }}>{o.items?.length || 0} items</td>
-                        <td style={{ padding: "16px 24px", fontWeight: 600 }}>{formatMoney(o.totalAmount || 0)}</td>
+                        <td style={{ padding: "16px 24px", fontWeight: 600 }}>{formatMoney(o.totalCost || 0)}</td>
                         <td style={{ padding: "16px 24px" }}>
                           <span style={{ padding: "4px 8px", borderRadius: 20, fontSize: "0.8rem", fontWeight: 600, background: o.status === "RECEIVED" ? "#dcfce7" : o.status === "CANCELLED" ? "#fee2e2" : "#fef3c7", color: o.status === "RECEIVED" ? "#166534" : o.status === "CANCELLED" ? "#991b1b" : "#92400e" }}>{o.status}</span>
                         </td>

@@ -15,6 +15,7 @@ const LINE_PERIODS = [
   { key: "3m", label: "3M" },
   { key: "6m", label: "6M" },
   { key: "1y", label: "1Y" },
+  { key: "5y", label: "5Y" }
 ];
 const PALETTE = {
   total: "#6366f1", service: "#3b82f6", product: "#10b981",
@@ -239,8 +240,18 @@ export default function TrendsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: 20, marginBottom: 20 }}>
         {/* Revenue Split Bar */}
         <div className="chart-card">
-          <p className="chart-card-title">Revenue Split</p>
-          <p className="chart-card-sub">Breakdown by category</p>
+          <p className="chart-card-title">
+            {activeFilter === "overall" ? "Revenue Split" :
+             activeFilter === "service" ? "Service Revenue" :
+             activeFilter === "product" ? "Product Revenue" :
+             activeFilter === "stylist" ? "Stylist Revenue" : "Revenue Split"}
+          </p>
+          <p className="chart-card-sub">
+            {activeFilter === "overall" ? "Breakdown by category" :
+             activeFilter === "service" ? "Service-only sales" :
+             activeFilter === "product" ? "Product-only sales" :
+             activeFilter === "stylist" ? "Top stylists by revenue" : "Breakdown by category"}
+          </p>
           {loading ? (
             <div style={{ height: 280, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ textAlign: "center", color: "#94a3b8" }}>
@@ -266,7 +277,12 @@ export default function TrendsPage() {
         <div className="chart-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
             <div>
-              <p className="chart-card-title" style={{ margin: 0 }}>Revenue Trend</p>
+              <p className="chart-card-title" style={{ margin: 0 }}>
+                {activeFilter === "overall" ? "Revenue Trend" :
+                 activeFilter === "service" ? "Service Revenue Trend" :
+                 activeFilter === "product" ? "Product Revenue Trend" :
+                 activeFilter === "stylist" ? "Stylist Revenue Trend" : "Revenue Trend"}
+              </p>
               <p className="chart-card-sub" style={{ margin: "2px 0 0" }}>Over-time performance</p>
             </div>
             <div style={{ display: "flex", gap: 5 }}>
@@ -312,9 +328,19 @@ export default function TrendsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
         {/* Revenue Breakdown progress bars */}
         <div className="chart-card">
-          <p className="chart-card-title">Revenue Breakdown</p>
-          <p className="chart-card-sub">Category share of total</p>
-          {[
+          <p className="chart-card-title">
+            {activeFilter === "overall" ? "Revenue Breakdown" :
+             activeFilter === "service" ? "Service Performance" :
+             activeFilter === "product" ? "Product Performance" :
+             activeFilter === "stylist" ? "Stylist Performance" : "Revenue Breakdown"}
+          </p>
+          <p className="chart-card-sub">
+            {activeFilter === "overall" ? "Category share of total" :
+             activeFilter === "service" ? "Service-only breakdown" :
+             activeFilter === "product" ? "Product-only breakdown" :
+             activeFilter === "stylist" ? "Stylist revenue share" : "Category share of total"}
+          </p>
+          {activeFilter === "overall" ? [
             { label: "Services",    value: serviceRev,  color: PALETTE.service },
             { label: "Products",    value: productRev,  color: PALETTE.product },
             { label: "Packages",    value: packageRev,  color: PALETTE.package },
@@ -322,7 +348,23 @@ export default function TrendsPage() {
             { label: "Gift Cards",  value: revenueBar.find((r) => r.name === "Gift Card")?.value  || 0, color: PALETTE.giftCard },
           ].map((item) => (
             <ProgressBar key={item.label} {...item} max={totalRevenue} moneyFormatter={formatMoney} />
-          ))}
+          )) : activeFilter === "service" ? [
+            { label: "Service Sales", value: serviceRev, color: PALETTE.service }
+          ].map((item) => (
+            <ProgressBar key={item.label} {...item} max={totalRevenue} moneyFormatter={formatMoney} />
+          )) : activeFilter === "product" ? [
+            { label: "Product Sales", value: productRev, color: PALETTE.product }
+          ].map((item) => (
+            <ProgressBar key={item.label} {...item} max={totalRevenue} moneyFormatter={formatMoney} />
+          )) : (
+            topStaff.slice(0, 5).map((s) => ({
+              label: s.name,
+              value: s.revenue,
+              color: PALETTE.total
+            })).map((item) => (
+              <ProgressBar key={item.label} {...item} max={totalRevenue} moneyFormatter={formatMoney} />
+            ))
+          )}
         </div>
 
         {/* Top Services */}
