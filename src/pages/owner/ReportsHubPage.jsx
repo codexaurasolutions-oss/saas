@@ -785,7 +785,7 @@ function ReportTable({ reportKey, rows, loading, visibleColumns }) {
             </tr>
           ))
         ) : rows?.length ? rows.map((row, rowIndex) => {
-          const isTotalRow = row && (row["GUEST NAME"] === "TOTAL" || row["Product"] === "TOTAL" || row["Service"] === "TOTAL" || row["Staff"] === "TOTAL");
+          const isTotalRow = row && Object.values(row).some((v) => String(v).trim() === "TOTAL");
           return (
             <tr key={rowIndex} style={isTotalRow ? { fontWeight: 700, background: "#f1f5f9", borderTop: "2px solid #334155" } : undefined}>
               {cols.map((col, cellIndex) => {
