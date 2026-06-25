@@ -117,6 +117,18 @@ export default function PosPage() {
   const [consumableItemIndex, setConsumableItemIndex] = useState(null);
   const [consumableItems, setConsumableItems] = useState([]);
   const [consumableSearch, setConsumableSearch] = useState("");
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discountDraft, setDiscountDraft] = useState({ type: "FIX", value: "" });
+  const [showApplyPkgRedemptionModal, setShowApplyPkgRedemptionModal] = useState(false);
+  const [customerPackages, setCustomerPackages] = useState([]);
+  const [loadingCustomerPkgs, setLoadingCustomerPkgs] = useState(false);
+  const [showGcRedemptionModal, setShowGcRedemptionModal] = useState(false);
+  const [gcRedemptionCode, setGcRedemptionCode] = useState("");
+  const [gcRedemptionResult, setGcRedemptionResult] = useState(null);
+  const [gcRedemptionLoading, setGcRedemptionLoading] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [tipDraft, setTipDraft] = useState({ staffId: "", amount: "", paymentMode: "CASH" });
+  const [tipEntries, setTipEntries] = useState([]);
 
   const [newGuestForm, setNewGuestForm] = useState({ name: "", phone: "", email: "", gender: "FEMALE", alternatePhone: "", dateOfBirth: "", anniversary: "", gst: "", notes: "" });
   const [form, setForm] = useState({
@@ -174,6 +186,136 @@ export default function PosPage() {
     if (consumableItemIndex == null) return;
     updateItem(consumableItemIndex, { consumableItems });
     setShowConsumableModal(false);
+  };
+
+  // === Apply Discount ===
+  const openDiscountModal = () => {
+    setDiscountDraft({ type: "FIX", value: String(form.discount || "") });
+    setShowDiscountModal(true);
+  };
+
+  const confirmDiscount = () => {
+    const val = Number(discountDraft.value || 0);
+    if (val < 0) {
+      setStatus({ error: "Discount cannot be negative.", success: "" });
+      return;
+    }
+    let finalDiscount = 0;
+    if (discountDraft.type === "PERCENT") {
+      const pct = Math.min(100, Math.max(0, val));
+      finalDiscount = Number(((totals.subtotal + totals.itemTax) * pct / 100).toFixed(2));
+    } else {
+      finalDiscount = val;
+    }
+    setForm(c => ({ ...c, discount: finalDiscount }));
+    setShowDiscountModal(false);
+    setStatus({ error: "", success: `Discount of ${formatMoney(finalDiscount)} applied.` });
+  };
+
+  // === Apply Package ===
+  const loadCustomerPackagesForRedemption = async () => {
+    if (!form.customerId) {
+      setStatus({ error: "Please select a guest first.", success: "" });
+      setToastMessage({ type: "error", title: "Guest Required", message: "Please select a guest first." });
+      return;
+    }
+    setLoadingCustomerPkgs(true);
+    try {
+      const response = await api.get(`/owner/customers/${form.customerId}/packages`);
+      setCustomerPackages((response.data || []).filter(p => p.status === "ACTIVE" && new Date(p.endsAt) > new Date()));
+      setShowApplyPkgRedemptionModal(true);
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Could not load customer packages"), success: "" });
+    } finally {
+      setLoadingCustomerPkgs(false);
+    }
+  };
+
+  const applyPackageService = (customerPkg, serviceEntry) => {
+    const matchedItemIndex = form.items.findIndex(item =>
+      (item.serviceId === serviceEntry.serviceId || item.serviceId === serviceEntry.service?.id) && Number(item.unitPrice || 0) > 0
+    );
+    if (matchedItemIndex === -1) {
+      setStatus({ error: `Service "${serviceEntry.service?.name || serviceEntry.serviceId}" not found in cart or already free.`, success: "" });
+      return;
+    }
+    const remaining = (serviceEntry.sessions || 0) - (serviceEntry.sessionsUsed || 0);
+    if (remaining <= 0) {
+      setStatus({ error: `No remaining sessions for "${serviceEntry.service?.name || serviceEntry.serviceId}".`, success: "" });
+      return;
+    }
+    const item = form.items[matchedItemIndex];
+    const discountAmt = Number(item.unitPrice || 0);
+    const nextItems = [...form.items];
+    nextItems[matchedItemIndex] = {
+      ...nextItems[matchedItemIndex],
+      unitPrice: 0,
+      originalUnitPrice: Number(item.originalUnitPrice || item.unitPrice || 0),
+      discountPct: 0,
+      discountAmt: discountAmt
+    };
+    setForm(c => ({
+      ...c,
+      items: nextItems,
+      packageRedemptions: [
+        ...c.packageRedemptions,
+        { customerPackageId: customerPkg.id, serviceId: serviceEntry.serviceId || serviceEntry.service?.id, sessionsUsed: 1 }
+      ]
+    }));
+    setShowApplyPkgRedemptionModal(false);
+    setStatus({ error: "", success: "Package applied successfully" });
+  };
+
+  // === Apply Gift Card ===
+  const validateGiftCard = async () => {
+    if (!gcRedemptionCode.trim()) {
+      setStatus({ error: "Please enter a gift card code.", success: "" });
+      return;
+    }
+    setGcRedemptionLoading(true);
+    setGcRedemptionResult(null);
+    try {
+      const response = await api.post("/owner/gift-cards/validate", { code: gcRedemptionCode.trim() });
+      setGcRedemptionResult(response.data);
+    } catch (err) {
+      setGcRedemptionResult(null);
+      setStatus({ error: formatApiError(err, "Invalid gift card"), success: "" });
+    } finally {
+      setGcRedemptionLoading(false);
+    }
+  };
+
+  const applyGiftCard = () => {
+    if (!gcRedemptionResult) return;
+    const gcAmount = Number(gcRedemptionResult.balanceAmount || 0);
+    const billTotal = totals.total;
+    const applyAmount = Math.min(gcAmount, billTotal);
+    setForm(c => ({ ...c, giftVoucherCode: gcRedemptionResult.code, discount: Number(c.discount || 0) + applyAmount }));
+    setShowGcRedemptionModal(false);
+    setGcRedemptionCode("");
+    setGcRedemptionResult(null);
+    setStatus({ error: "", success: `Gift card applied: ${formatMoney(applyAmount)}` });
+  };
+
+  // === Add Tip ===
+  const addTipEntry = () => {
+    const amount = Number(tipDraft.amount || 0);
+    if (amount <= 0) {
+      setStatus({ error: "Tip amount must be greater than zero.", success: "" });
+      return;
+    }
+    if (!tipDraft.staffId) {
+      setStatus({ error: "Please select a staff member for the tip.", success: "" });
+      return;
+    }
+    const staffName = (context.staffUsers || []).find(s => s.id === tipDraft.staffId)?.user?.name || "Staff";
+    setTipEntries(prev => [...prev, { staffId: tipDraft.staffId, staffName, amount, paymentMode: tipDraft.paymentMode }]);
+    setTipDraft({ staffId: "", amount: "", paymentMode: "CASH" });
+    setStatus({ error: "", success: `Tip of ${formatMoney(amount)} added for ${staffName}.` });
+  };
+
+  const removeTipEntry = (index) => {
+    setTipEntries(prev => prev.filter((_, i) => i !== index));
   };
 
   const loadContext = useCallback(async (customerId = form.customerId, branchId = form.branchId) => {
@@ -1350,6 +1492,13 @@ export default function PosPage() {
               <input placeholder="Add Order Instruction (Optional, Max 500 Characters)" value={form.notes} onChange={(e) => setForm(c => ({ ...c, notes: e.target.value }))} />
             </div>
 
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", padding: "8px 0" }}>
+              <button type="button" onClick={openDiscountModal} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap" }}>Apply Discount</button>
+              <button type="button" onClick={loadCustomerPackagesForRedemption} disabled={loadingCustomerPkgs} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: loadingCustomerPkgs ? "not-allowed" : "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap", opacity: loadingCustomerPkgs ? 0.6 : 1 }}>{loadingCustomerPkgs ? "Loading..." : "Apply Package"}</button>
+              <button type="button" onClick={() => { setGcRedemptionCode(""); setGcRedemptionResult(null); setShowGcRedemptionModal(true); }} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap" }}>Apply Gift Card</button>
+              <button type="button" onClick={() => setShowTipModal(true)} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap" }}>Add Tip</button>
+            </div>
+
             <div className="pos-payment-details">
               {form.customerId && (() => {
                 const customer = context.customers.find(c => c.id === form.customerId);
@@ -2275,6 +2424,164 @@ export default function PosPage() {
           </button>
         </div>
       )}
+
+      {showDiscountModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowDiscountModal(false)}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(95vw, 420px)", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <strong style={{ fontSize: 20, color: "#0f172a" }}>Discount:</strong>
+              <button type="button" onClick={() => setShowDiscountModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 20 }}>&#x2715;</button>
+            </div>
+            <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, color: "#64748b", display: "block", marginBottom: 6 }}>Fix</label>
+                <input type="number" min="0" placeholder={formatMoney(0)} value={discountDraft.type === "FIX" ? discountDraft.value : ""} onFocus={() => setDiscountDraft(d => ({ ...d, type: "FIX" }))} onChange={e => setDiscountDraft(d => ({ ...d, value: e.target.value }))} style={{ width: "100%", padding: "10px 12px", border: discountDraft.type === "FIX" ? "2px solid var(--accent, #3b82f6)" : "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.95rem", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", paddingBottom: 4, fontWeight: 700, color: "#64748b" }}>OR</div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, color: "#64748b", display: "block", marginBottom: 6 }}>Percentage</label>
+                <input type="number" min="0" max="100" placeholder="%" value={discountDraft.type === "PERCENT" ? discountDraft.value : ""} onFocus={() => setDiscountDraft(d => ({ ...d, type: "PERCENT" }))} onChange={e => setDiscountDraft(d => ({ ...d, value: e.target.value }))} style={{ width: "100%", padding: "10px 12px", border: discountDraft.type === "PERCENT" ? "2px solid var(--accent, #3b82f6)" : "1px solid #cbd5e1", borderRadius: 8, fontSize: "0.95rem", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <button type="button" onClick={confirmDiscount} style={{ width: "100%", padding: "12px", background: "var(--button-bg-solid, #0f172a)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>Apply</button>
+          </div>
+        </div>
+      )}
+
+      {showApplyPkgRedemptionModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowApplyPkgRedemptionModal(false)}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(95vw, 560px)", maxHeight: "85vh", overflowY: "auto", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <strong style={{ fontSize: 20, color: "#0f172a" }}>Apply Packages</strong>
+              <button type="button" onClick={() => setShowApplyPkgRedemptionModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 20 }}>&#x2715;</button>
+            </div>
+            {customerPackages.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#64748b" }}>No active packages found for this customer.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {customerPackages.map((cp) => (
+                  <div key={cp.id} style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+                    <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                      <div style={{ fontWeight: 700, color: "#1e40af", fontSize: "1rem" }}>{cp.package?.name || "CUSTOM"}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b" }}>Valid Till: {cp.endsAt ? new Date(cp.endsAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</div>
+                    </div>
+                    <div style={{ padding: "8px 16px" }}>
+                      <div style={{ fontWeight: 600, color: "#334155", marginBottom: 8 }}>Services:</div>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
+                            <th style={{ textAlign: "left", padding: "6px 0", color: "#475569" }}>Name</th>
+                            <th style={{ textAlign: "right", padding: "6px 0", color: "#475569" }}>Avl</th>
+                            <th style={{ textAlign: "right", padding: "6px 0", color: "#475569" }}>Used</th>
+                            <th style={{ textAlign: "right", padding: "6px 0" }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(cp.package?.services || []).map((svc, idx) => {
+                            const svcId = svc.serviceId || svc.service?.id;
+                            const available = (svc.sessions || 0) - (svc.sessionsUsed || 0);
+                            const isInCart = form.items.some(item => item.serviceId === svcId && Number(item.unitPrice || 0) > 0);
+                            return (
+                              <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                <td style={{ padding: "8px 0", color: isInCart ? "#16a34a" : "#0f172a" }}>{svc.service?.name || svc.serviceId}</td>
+                                <td style={{ padding: "8px 0", textAlign: "right", color: "#16a34a", fontWeight: 600 }}>{available}</td>
+                                <td style={{ padding: "8px 0", textAlign: "right", color: "#64748b" }}>{svc.sessionsUsed || 0}</td>
+                                <td style={{ padding: "8px 0", textAlign: "right" }}>
+                                  {available > 0 && isInCart && (
+                                    <button type="button" onClick={() => applyPackageService(cp, svc)} style={{ padding: "4px 12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}>Apply</button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showGcRedemptionModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowGcRedemptionModal(false)}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(95vw, 440px)", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <strong style={{ fontSize: 20, color: "#0f172a" }}>Apply Gift Card</strong>
+              <button type="button" onClick={() => setShowGcRedemptionModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 20 }}>&#x2715;</button>
+            </div>
+            <div style={{ textAlign: "center", marginBottom: 16, color: "#475569" }}>Enter gift card number</div>
+            <input type="text" value={gcRedemptionCode} onChange={e => setGcRedemptionCode(e.target.value)} placeholder="Gift card code" style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: "1rem", boxSizing: "border-box", marginBottom: 16, textAlign: "center", letterSpacing: 2 }} />
+            {gcRedemptionResult && (
+              <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: "#166534" }}>Gift Card Found</div>
+                <div style={{ color: "#15803d", fontSize: "0.9rem" }}>Balance: {formatMoney(Number(gcRedemptionResult.balanceAmount || 0))}</div>
+                <div style={{ color: "#15803d", fontSize: "0.85rem" }}>Expires: {gcRedemptionResult.expiresAt ? new Date(gcRedemptionResult.expiresAt).toLocaleDateString("en-GB") : "No expiry"}</div>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button type="button" onClick={() => { setShowGcRedemptionModal(false); setGcRedemptionCode(""); setGcRedemptionResult(null); }} style={{ padding: "10px 24px", background: "#fff", border: "1px solid #cbd5e1", borderRadius: 8, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Close</button>
+              {gcRedemptionResult ? (
+                <button type="button" onClick={applyGiftCard} style={{ padding: "10px 24px", background: "var(--button-bg-solid, #2563eb)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer" }}>Apply</button>
+              ) : (
+                <button type="button" onClick={validateGiftCard} disabled={gcRedemptionLoading || !gcRedemptionCode.trim()} style={{ padding: "10px 24px", background: "var(--button-bg-solid, #2563eb)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: gcRedemptionLoading || !gcRedemptionCode.trim() ? "not-allowed" : "pointer", opacity: gcRedemptionLoading || !gcRedemptionCode.trim() ? 0.6 : 1 }}>{gcRedemptionLoading ? "Validating..." : "Validate & Apply"}</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTipModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowTipModal(false)}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(95vw, 560px)", maxHeight: "85vh", overflowY: "auto", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <strong style={{ fontSize: 20, color: "#0f172a" }}>Tip</strong>
+              <button type="button" onClick={() => setShowTipModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 20 }}>&#x2715;</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {tipEntries.map((entry, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+                  <span style={{ color: "#64748b" }}>{idx + 1})</span>
+                  <span style={{ flex: 1, fontWeight: 600, color: "#0f172a" }}>{entry.staffName || (context.staffUsers || []).find(s => s.id === entry.staffId)?.user?.name || "Staff"}</span>
+                  <span style={{ fontWeight: 600, color: "#16a34a" }}>{formatMoney(Number(entry.amount))}</span>
+                  <span style={{ fontSize: "0.85rem", color: "#64748b" }}>{entry.paymentMode}</span>
+                  <button type="button" onClick={() => removeTipEntry(idx)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444" }}>&#x2715;</button>
+                </div>
+              ))}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 10, alignItems: "end", padding: "12px 14px", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+                <label style={{ display: "grid", gap: 4 }}>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#475569" }}>Staff</span>
+                  <select value={tipDraft.staffId} onChange={e => setTipDraft(d => ({ ...d, staffId: e.target.value }))} style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: "0.9rem" }}>
+                    <option value="">Select staff</option>
+                    {(context.staffUsers || []).map(s => <option key={s.id} value={s.id}>{s.user?.name || s.user?.email || s.id}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: "grid", gap: 4 }}>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#475569" }}>Amount</span>
+                  <input type="number" min="0" value={tipDraft.amount} onChange={e => setTipDraft(d => ({ ...d, amount: e.target.value }))} style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: "0.9rem" }} />
+                </label>
+                <label style={{ display: "grid", gap: 4 }}>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#475569" }}>Payment</span>
+                  <select value={tipDraft.paymentMode} onChange={e => setTipDraft(d => ({ ...d, paymentMode: e.target.value }))} style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: "0.9rem" }}>
+                    <option value="CASH">Cash</option>
+                    <option value="ONLINE">Online</option>
+                    <option value="UPI">UPI</option>
+                    <option value="CARD">Card</option>
+                  </select>
+                </label>
+                <button type="button" onClick={addTipEntry} style={{ padding: "8px 12px", background: "var(--button-bg-solid, #2563eb)", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}>Add</button>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
+              <button type="button" onClick={() => setShowTipModal(false)} style={{ padding: "10px 24px", background: "#fff", border: "1px solid #cbd5e1", borderRadius: 8, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Cancel</button>
+              <button type="button" onClick={() => { setShowTipModal(false); setStatus({ error: "", success: `Total tips: ${formatMoney(tipEntries.reduce((s, e) => s + Number(e.amount || 0), 0))}` }); }} style={{ padding: "10px 24px", background: "var(--button-bg-solid, #2563eb)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer" }}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
