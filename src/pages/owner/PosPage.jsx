@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { downloadFromApi } from "../../utils/download";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { api } from "../../api/client";
@@ -2438,9 +2439,12 @@ export default function PosPage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "1.1rem"
+            flexShrink: 0
           }}>
-            {toastMessage.type === "error" ? "⚠️" : "✅"}
+            {toastMessage.type === "error"
+              ? <AlertCircle size={18} color="#ef4444" />
+              : <CheckCircle2 size={18} color="#22c55e" />
+            }
           </div>
           <div style={{ flex: 1 }}>
             <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "#1e293b" }}>{toastMessage.title}</h4>
