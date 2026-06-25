@@ -574,17 +574,25 @@ function ReportChart({ reportKey, rows }) {
   const data = useMemo(() => {
     if (!rows || rows.length === 0) return [];
     const filtered = rows.filter((r) => r && typeof r === "object");
+
+    const pick = (row, ...keys) => {
+      for (const k of keys) {
+        if (row[k] !== undefined && row[k] !== null && row[k] !== "" && row[k] !== "-") return row[k];
+      }
+      return undefined;
+    };
+
     if (reportKey === "customers") {
       return filtered
-        .filter((r) => r["GUEST NAME"] && r["GUEST NAME"] !== "TOTAL")
-        .map((r) => ({ name: r["GUEST NAME"] || r["Guest Name"] || "Guest", value: Number(r["TOTAL"]) || 0 }))
+        .filter((r) => pick(r, "GUEST NAME", "Guest Name") && pick(r, "GUEST NAME", "Guest Name") !== "TOTAL")
+        .map((r) => ({ name: pick(r, "GUEST NAME", "Guest Name") || "Guest", value: Number(pick(r, "TOTAL", "Total Spend", "Total")) || 0 }))
         .filter((d) => d.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
     }
     if (reportKey === "product_sales") {
       return filtered
-        .map((r) => ({ name: r.Product || r["Product"] || "-", value: Number(r.Sales || r["Sales"] || r["Value"] || 0) }))
+        .map((r) => ({ name: pick(r, "PRODUCT", "Product", "productName", "name") || "-", value: Number(pick(r, "TOTAL", "Total", "Sales")) || 0 }))
         .filter((d) => d.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
@@ -592,8 +600,8 @@ function ReportChart({ reportKey, rows }) {
     if (reportKey === "service_sales") {
       const grouped = {};
       filtered.forEach((r) => {
-        const name = r.Service || r["Service"] || "-";
-        const total = Number(r.Total || r["Total"] || 0);
+        const name = pick(r, "SERVICE", "Service") || "-";
+        const total = Number(pick(r, "TOTAL", "Total")) || 0;
         grouped[name] = (grouped[name] || 0) + total;
       });
       return Object.entries(grouped)
@@ -604,7 +612,7 @@ function ReportChart({ reportKey, rows }) {
     }
     if (reportKey === "staff_performance") {
       return filtered
-        .map((r) => ({ name: r.Staff || r["Staff"] || r.staff || "-", value: Number(r.Revenue || r["Revenue"] || 0) }))
+        .map((r) => ({ name: pick(r, "STAFF", "Staff", "staff", "staffName") || "-", value: Number(pick(r, "REVENUE", "Revenue", "Total")) || 0 }))
         .filter((d) => d.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
@@ -613,50 +621,50 @@ function ReportChart({ reportKey, rows }) {
       const nameCol = reportKey === "memberships" ? "Membership Plan" : (reportKey === "packages" ? "Package" : "Customer");
       const valCol = reportKey === "gift_card_sold" ? "Value" : "Price";
       return filtered
-        .map((r) => ({ name: r[nameCol] || "-", value: Number(r[valCol] || 0) }))
+        .map((r) => ({ name: pick(r, nameCol, nameCol.toUpperCase(), "Plan", "Package") || "-", value: Number(pick(r, valCol, valCol.toUpperCase())) || 0 }))
         .filter((d) => d.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
     }
     if (reportKey === "day_wise") {
       return filtered
-        .filter((r) => r.Date && r.Date !== "TOTAL")
-        .map((r) => ({ name: r.Date, value: Number(r.Total || 0) }));
+        .filter((r) => pick(r, "DATE", "Date") && pick(r, "DATE", "Date") !== "TOTAL")
+        .map((r) => ({ name: pick(r, "DATE", "Date"), value: Number(pick(r, "TOTAL", "Total")) || 0 }));
     }
     if (reportKey === "monthly_sale") {
       return filtered
-        .filter((r) => r.DATE && r.DATE !== "TOTAL")
-        .map((r) => ({ name: r.DATE, value: Number(r.TOTAL || 0) }))
+        .filter((r) => pick(r, "DATE", "Date") && pick(r, "DATE", "Date") !== "TOTAL")
+        .map((r) => ({ name: pick(r, "DATE", "Date"), value: Number(pick(r, "TOTAL", "Total", "NET TOTAL")) || 0 }))
         .slice(0, 30);
     }
     if (reportKey === "appointments") {
       const grouped = {};
       filtered.forEach((r) => {
-        const d = r.Date || "-";
-        grouped[d] = (grouped[d] || 0) + (Number(r.Amount || 0));
+        const d = pick(r, "DATE", "Date") || "-";
+        grouped[d] = (grouped[d] || 0) + (Number(pick(r, "AMOUNT", "Amount", "TOTAL", "Total")) || 0);
       });
       return Object.entries(grouped).map(([name, value]) => ({ name, value }));
     }
     if (reportKey === "daily_stock") {
       return filtered
         .slice(0, 15)
-        .map((r) => ({ name: r["ITEM NAME"] || "-", value: Number(r["CURRENT STOCK"] || 0) }));
+        .map((r) => ({ name: pick(r, "ITEM NAME", "Item Name") || "-", value: Number(pick(r, "CURRENT STOCK", "Current Stock")) || 0 }));
     }
     if (reportKey === "pnl_report") {
-      return filtered.map((r) => ({ name: r.Month || r["Month"] || "-", value: Number(r.Revenue || r["Revenue"] || 0) }));
+      return filtered.map((r) => ({ name: pick(r, "MONTH", "Month") || "-", value: Number(pick(r, "REVENUE", "Revenue", "Total")) || 0 }));
     }
     if (reportKey === "tip_report") {
       const grouped = {};
       filtered.forEach((r) => {
-        const name = r["GUEST NAME"] || "-";
-        grouped[name] = (grouped[name] || 0) + Number(r["TIP AMOUNT"] || 0);
+        const name = pick(r, "GUEST NAME", "Guest Name") || "-";
+        grouped[name] = (grouped[name] || 0) + (Number(pick(r, "TIP AMOUNT", "Tip Amount")) || 0);
       });
       return Object.entries(grouped).map(([name, value]) => ({ name, value })).filter((d) => d.value > 0).sort((a, b) => b.value - a.value).slice(0, 10);
     }
     if (reportKey === "complimentary" || reportKey === "cancelled_invoices") {
       return filtered
         .slice(0, 10)
-        .map((r) => ({ name: r.Customer || r["Customer"] || r["Guest Name"] || "-", value: Number(r.Value || r["Value"] || r["Total"] || 0) }));
+        .map((r) => ({ name: pick(r, "GUEST NAME", "Guest Name", "Customer") || "-", value: Number(pick(r, "TOTAL", "Total", "VALUE", "Value")) || 0 }));
     }
     return filtered
       .slice(0, 10)
