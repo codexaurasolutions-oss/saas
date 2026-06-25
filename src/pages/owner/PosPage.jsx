@@ -290,11 +290,11 @@ export default function PosPage() {
     const gcAmount = Number(gcRedemptionResult.balanceAmount || 0);
     const billTotal = totals.total;
     const applyAmount = Math.min(gcAmount, billTotal);
-    setForm(c => ({ ...c, giftVoucherCode: gcRedemptionResult.code, discount: Number(c.discount || 0) + applyAmount }));
+    setForm(c => ({ ...c, giftVoucherCode: gcRedemptionResult.code }));
     setShowGcRedemptionModal(false);
     setGcRedemptionCode("");
     setGcRedemptionResult(null);
-    setStatus({ error: "", success: `Gift card applied: ${formatMoney(applyAmount)}` });
+    setStatus({ error: "", success: `Gift card applied: ${formatMoney(applyAmount)} (will be deducted at checkout as WALLET payment)` });
   };
 
   // === Add Tip ===
@@ -996,6 +996,23 @@ export default function PosPage() {
       setResult(response.data);
       setStatus({ error: "", success: `Invoice ${response.data.invoiceNumber} ${mode === "complete" ? "created and completed" : "created"}.` });
       
+      const invoiceId = response.data.id;
+      for (const tip of tipEntries) {
+        if (Number(tip.amount || 0) > 0 && tip.staffId) {
+          try {
+            await api.post(`/owner/invoices/${invoiceId}/tip`, {
+              amount: Number(tip.amount),
+              mode: tip.paymentMode,
+              staffId: tip.staffId,
+              note: `Tip for ${tip.staffName}`
+            });
+          } catch (tipErr) {
+            console.error("Tip failed:", tipErr);
+          }
+        }
+      }
+      setTipEntries([]);
+
       if (mode === "complete") {
         setCreatedInvoice(response.data);
         setShowSuccessModal(true);
