@@ -57,7 +57,7 @@ const COLUMNS = {
   tip_report: ["SR. NO.", "DATE", "GUEST NAME", "GUEST NUMBER", "INVOICE NO", "STAFF", "TIP AMOUNT", "PAYMENT MODE"],
   complimentary: ["Date", "Service", "Staff", "Customer", "Reason", "Value"],
   cancelled_invoices: ["Invoice", "Customer", "Branch", "Status", "Total", "Paid", "Refunded"],
-  pnl_report: ["Month", "Revenue", "COGS", "Gross Profit", "Expenses", "Net Profit", "Margin Percentage"],
+  pnl_report: ["NAME", "PROFIT", "LOSS"],
   customers: ["SR. NO.", "GUEST NAME", "GUEST NUMBER", "COUNT", "TAXES", "GIFT CARD", "COUPON", "REFERRAL", "LOYALTY", "BALANCE PENDING", "ADVANCE UTILIZED", "PACKAGE REDEMPTION", "BALANCE CLEARED", "MEMBERSHIP REDEMPTION", "ONLINE", "OFFLINE", "TOTAL"],
   service_reminder: ["Customer", "Phone", "Last Service", "Service", "Due Date", "Status"],
   feedback: ["Date", "Customer", "Staff", "Service", "Rating", "Comment"],
@@ -79,7 +79,7 @@ const COLUMNS = {
   gst_outwards: ["Invoice #", "Date", "Customer", "Taxable Amt", "Tax Rate", "Tax Amt", "Total"],
   daily_stock: ["SR. NO.", "ITEM NAME", "VARIATION NAME", "CATEGORY NAME", "SKU", "OPENING STOCK", "CURRENT STOCK", "CURRENT ONFLOOR", "UNIT PRICE", "TOTAL STOCK PRICE", "TOTAL ONFLOOR PRICE", "TOTAL PRICE", "STOCK TYPE"],
   stock_transaction: ["Date", "Product", "Type", "Qty", "Staff", "Note"],
-  material_received: ["Date", "Product", "Vendor", "Qty", "Unit Cost", "Total Cost", "PO #"],
+  material_received: ["Date", "Transaction Id", "Vendor Invoice Id", "Product", "Vendor", "Qty", "Unit Cost", "Total Cost", "PO #"],
   minimum_stock: ["SR. NO.", "CATEGORY NAME", "ITEM NAME", "VARIATION NAME", "STORE SKU", "CURRENT STOCK", "MINIMUM QUANTITY"],
   reconcile_stock: ["Product", "System Stock", "Physical Count", "Variance", "Date", "Staff"],
   consumable_tracking: ["Product", "Service", "Qty Used Per Service", "Total Used", "Cost"],
@@ -162,7 +162,9 @@ const REPORT_FILTERS = {
   ],
   material_received: [
     { key: "productId", label: "Item", type: "select", endpoint: "/owner/inventory/products", optionLabel: "name", defaultLabel: "All" },
-    { key: "vendorId", label: "Vendor", type: "select", endpoint: "/owner/purchases/vendors", optionLabel: "name", defaultLabel: "All" }
+    { key: "transactionId", label: "Transaction Id", type: "text", placeholder: "Search transaction / PO #" },
+    { key: "vendorId", label: "Vendor", type: "select", endpoint: "/owner/purchases/vendors", optionLabel: "name", defaultLabel: "All" },
+    { key: "vendorInvoiceId", label: "Vendor Invoice Id", type: "text", placeholder: "Search vendor invoice #" }
   ],
   minimum_stock: [
     { key: "productId", label: "Item", type: "select", endpoint: "/owner/inventory/products", optionLabel: "name", defaultLabel: "All" }
@@ -749,6 +751,45 @@ function currentChartTitle(reportKey) {
     cancelled_invoices: "Cancelled invoice amounts"
   };
   return map[reportKey] || "Visualization";
+}
+
+function PnLStatement({ data, loading }) {
+  const { formatMoney } = useSalonSettings();
+  if (loading) return <div style={{ padding: 20, textAlign: "center", color: "#94a3b8" }}>Loading...</div>;
+  if (!data || !data.rows) return <div style={{ padding: 20, textAlign: "center", color: "#94a3b8" }}>No data available</div>;
+
+  const rows = data.rows || [];
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 20, marginTop: 16 }}>
+      <h3 style={{ margin: "0 0 16px 0", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>{data.title || "Profit & Loss Statement"}</h3>
+      <table className="rpt-table" style={{ marginTop: 0 }}>
+        <thead>
+          <tr style={{ background: "#bfdbfe" }}>
+            <th style={{ textAlign: "left" }}>Name</th>
+            <th style={{ textAlign: "right" }}>Profit (₹)</th>
+            <th style={{ textAlign: "right" }}>Loss (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, idx) => {
+            const isHeader = row._isHeader;
+            const isTotal = row._isTotal;
+            return (
+              <tr key={idx} style={{
+                fontWeight: isHeader || isTotal ? 700 : 400,
+                background: isTotal ? "#3b82f6" : (isHeader ? "#f8fafc" : "transparent"),
+                color: isTotal ? "#ffffff" : "#0f172a"
+              }}>
+                <td style={{ paddingLeft: isHeader ? 12 : 32, color: isHeader && !isTotal ? "#2563eb" : "inherit" }}>{row.NAME}</td>
+                <td style={{ textAlign: "right" }}>{row.PROFIT ? formatMoney(row.PROFIT) : "0"}</td>
+                <td style={{ textAlign: "right" }}>{row.LOSS ? formatMoney(row.LOSS) : "0"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function ColumnPicker({ reportKey, visibleColumns, onToggle, onClose, onSelectAll, onClearAll }) {
@@ -1454,6 +1495,7 @@ export default function ReportsHubPage() {
   const [reportFilters, setReportFilters] = useState({});
   const [rows, setRows] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
+  const [pnlData, setPnlData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState("Loaded");
   const [showChart, setShowChart] = useState(false);
@@ -1475,6 +1517,7 @@ export default function ReportsHubPage() {
     const endpoint = activeReport === "sales_summary" ? "/reports/sales-summary-dashboard" : REPORT_ENDPOINTS[activeReport];
     setRows([]);
     setDashboardData(null);
+    setPnlData(null);
 
     if (!endpoint) {
       setLoading(false);
@@ -1502,6 +1545,9 @@ export default function ReportsHubPage() {
       .then((res) => {
         if (activeReport === "sales_summary") {
           setDashboardData(res.data);
+        } else if (activeReport === "pnl_report") {
+          setPnlData(res.data);
+          setRows((res.data?.rows || []).map((row, index) => normalizeRowForReport(activeReport, row, index)));
         } else {
           const payload = Array.isArray(res.data) ? res.data : res.data?.rows || [];
           setRows(payload.map((row, index) => normalizeRowForReport(activeReport, row, index)));
@@ -1713,9 +1759,19 @@ export default function ReportsHubPage() {
               return (
                 <div key={f.key} className="rpt-filter-chip">
                   <span className="rpt-filter-label">{f.label}:</span>
-                  <select value={value} onChange={(e) => setReportFilters((current) => ({ ...current, [f.key]: e.target.value }))}>
-                    {opts.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  {f.type === "text" ? (
+                    <input
+                      type="text"
+                      value={value}
+                      placeholder={f.placeholder || ""}
+                      onChange={(e) => setReportFilters((current) => ({ ...current, [f.key]: e.target.value }))}
+                      style={{ padding: "4px 8px", border: "1px solid #e2e8f0", borderRadius: "5px", fontSize: "0.72rem", minWidth: 130 }}
+                    />
+                  ) : (
+                    <select value={value} onChange={(e) => setReportFilters((current) => ({ ...current, [f.key]: e.target.value }))}>
+                      {opts.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  )}
                 </div>
               );
             })}
@@ -1764,12 +1820,14 @@ export default function ReportsHubPage() {
         }}>
           {activeReport === "sales_summary" ? (
             <SalesSummaryDashboard data={dashboardData} loading={loading} />
+          ) : activeReport === "pnl_report" ? (
+            <PnLStatement data={pnlData} loading={loading} />
           ) : (
             <ReportTable reportKey={activeReport} rows={rows} loading={loading} visibleColumns={activeVisibleColumns} />
           )}
         </div>
 
-        {showChart && REPORTS_WITH_CHARTS.has(activeReport) && activeReport !== "sales_summary" && (
+        {showChart && REPORTS_WITH_CHARTS.has(activeReport) && activeReport !== "sales_summary" && activeReport !== "pnl_report" && (
           activeReport === "customers" ? <GuestCollectionChart rows={rows} /> : <ReportChart reportKey={activeReport} rows={rows} />
         )}
       </div>
