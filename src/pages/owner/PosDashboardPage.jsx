@@ -587,16 +587,25 @@ export default function PosDashboardPage() {
     }
   };
 
-  const applyGiftCard = () => {
-    if (!gcRedemptionResult) return;
-    const gcAmount = Number(gcRedemptionResult.balanceAmount || 0);
-    const billTotal = totals.total;
-    const applyAmount = Math.min(gcAmount, billTotal);
-    setInvoiceDiscountDraft(prev => Number(prev || 0) + applyAmount);
-    setShowApplyGcModal(false);
-    setGcRedemptionCode("");
-    setGcRedemptionResult(null);
-    setStatus({ error: "", success: `Gift card applied: ${formatMoney(applyAmount)}` });
+  const applyGiftCard = async () => {
+    if (!gcRedemptionResult || !activeInvoiceId) {
+      setStatus({ error: "Please save the invoice first before applying a gift card.", success: "" });
+      return;
+    }
+    try {
+      setGcRedemptionLoading(true);
+      const response = await api.post(`/owner/invoices/${activeInvoiceId}/apply-gift-card`, { giftCardCode: gcRedemptionResult.code });
+      const { applyAmount, newGcBalance } = response.data;
+      setShowApplyGcModal(false);
+      setGcRedemptionCode("");
+      setGcRedemptionResult(null);
+      setStatus({ error: "", success: `Gift card applied: ${formatMoney(applyAmount)}. Remaining GC balance: ${formatMoney(newGcBalance)}` });
+      await loadInvoiceDetail(activeInvoiceId);
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Failed to apply gift card"), success: "" });
+    } finally {
+      setGcRedemptionLoading(false);
+    }
   };
 
   const addTipEntry = () => {
@@ -698,38 +707,51 @@ export default function PosDashboardPage() {
       const diffOffline = Math.max(0, Number(paymentDraft.offline || 0) - paidOffline);
       if (diffOnline > 0) additionalPayments.push({ mode: "ONLINE", amount: diffOnline });
       if (diffOffline > 0) additionalPayments.push({ mode: "CASH", amount: diffOffline });
-      tipEntries.forEach(tip => {
-        additionalPayments.push({ mode: tip.paymentMode, amount: Number(tip.amount), note: `Tip for ${tip.staffName}`, type: "TIP" });
-      });
 
       await api.patch(`/owner/invoices/${invoiceId}`, {
         notes: [stripStructuredMeta(detailNote), buildStructuredMeta(form.items)].filter(Boolean).join("\n\n"),
         discount: Number(invoiceDiscountDraft || 0),
         additionalPayments,
-        sendInvoiceMessage: messageConfig.invoiceMessage,
         items: form.items.map((item) => ({
           id: item.id,
-          itemType: item.itemType || (item.productId ? "PRODUCT" : "SERVICE"),
-          serviceId: item.serviceId || null,
-          productId: item.productId || null,
-          membershipPlanId: item.membershipPlanId || null,
-          packageId: item.packageId || null,
-          serviceName: item.serviceName || item.productName || item.name || "Item",
-          staffUserId: item.staffUserSalonId || item.staffUserId || null,
-          staffName: item.staffName || null,
+          itemType: item.itemType,
+          serviceId: item.serviceId,
+          productId: item.productId,
+          productName: item.productName,
+          serviceName: item.serviceName,
+          staffUserSalonId: item.staffUserSalonId,
           qty: Number(item.qty || 1),
           unitPrice: Number(item.unitPrice || 0),
+          taxPct: Number(item.taxPct || 0),
           discountPct: Number(item.discountPct || 0),
           discountAmt: Number(item.discountAmt || 0),
-          taxPct: Number(item.taxPct || 0),
-          tipAmount: Number(item.tipAmount || 0)
+          tipAmount: Number(item.tipAmount || 0),
+          complimentary: item.complimentary,
+          appliedBenefitType: item.appliedBenefitType,
+          appliedBenefitValue: item.appliedBenefitValue,
+          packageSessionsUsed: item.packageSessionsUsed,
+          metaData: item.serviceReminder || item.consumables?.length ? { serviceReminder: item.serviceReminder, consumables: item.consumables } : undefined
         }))
       });
 
-      await load();
+      for (const tip of tipEntries) {
+        if (Number(tip.amount || 0) > 0 && tip.staffId) {
+          try {
+            await api.post(`/owner/invoices/${invoiceId}/tip`, {
+              amount: Number(tip.amount),
+              mode: tip.paymentMode,
+              staffId: tip.staffId,
+              note: `Tip for ${tip.staffName}`
+            });
+          } catch (tipErr) {
+            console.error("Tip failed:", tipErr);
+          }
+        }
+      }
+      setTipEntries([]);
+
       await loadInvoiceDetail(invoiceId);
       setIsEditing(false);
-      setPaymentDraft({ online: "", offline: "" });
       setStatus({ error: "", success: "Invoice updated successfully." });
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not update invoice"), success: "" });
@@ -1627,7 +1649,7 @@ export default function PosDashboardPage() {
               {tipEntries.map((entry, idx) => (
                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8 }}>
                   <span style={{ color: "#64748b" }}>{idx + 1})</span>
-                  <span style={{ flex: 1, fontWeight: 600, color: "#0f172a" }}>{entry.staffName}</span>
+                  <span style={{ flex: 1, fontWeight: 600, color: "#0f172a" }}>{entry.staffName || (posContext.staffUsers || []).find(s => s.id === entry.staffId)?.user?.name || "Staff"}</span>
                   <span style={{ fontWeight: 600, color: "#16a34a" }}>{formatMoney(Number(entry.amount))}</span>
                   <span style={{ fontSize: "0.85rem", color: "#64748b" }}>{entry.paymentMode}</span>
                   <button type="button" onClick={() => removeTipEntry(idx)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444" }}><X size={16} /></button>
@@ -1656,7 +1678,7 @@ export default function PosDashboardPage() {
                 </label>
                 <button type="button" onClick={addTipEntry} style={{ padding: "8px 12px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}>Add</button>
               </div>
-              <button type="button" onClick={() => setTipEntries(prev => [...prev, { staffId: "", amount: 0, paymentMode: "CASH", staffName: "" }])} style={{ padding: "8px 16px", background: "none", border: "1px dashed #cbd5e1", borderRadius: 8, cursor: "pointer", color: "#475569", fontWeight: 600, textAlign: "center" }}>Add More Staff +</button>
+
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
               <button type="button" onClick={() => setShowTipModal(false)} style={{ padding: "10px 24px", background: "#fff", border: "1px solid #cbd5e1", borderRadius: 8, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Cancel</button>
