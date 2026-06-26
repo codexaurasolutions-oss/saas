@@ -724,7 +724,7 @@ export default function CustomersPage() {
   const handleExport = async (format) => {
     setShowExportMenu(false);
     try {
-      await downloadFromApi(`/owner/customers/export`, { params: { format }, fallbackFilename: `Customers.${format === "csv" ? "csv" : "xlsx"}` });
+      await downloadFromApi(`/owner/customers/export`, { params: { format }, fallbackFilename: `Customers.${format === "csv" ? "csv" : format}` });
     } catch {
       alert("Could not export customers");
     }
@@ -1436,9 +1436,9 @@ export default function CustomersPage() {
         <div className="crm-actions">
           <button className="crm-btn crm-btn-light" onClick={() => setShowFilters(true)}><Filter size={16} /> Filters</button>
           <button className="crm-btn" onClick={() => setShowAddGuest(true)}><Plus size={16} /> Add Guest</button>
-          <button className="crm-btn" onClick={handleImportClick}><Download size={16} /> Import</button>
+          <button className="crm-btn" onClick={handleImportClick}><Upload size={16} /> Import</button>
           <div className="export-dropdown">
-            <button className="crm-btn" onClick={() => setShowExportMenu((current) => !current)}><Upload size={16} /> Export <ChevronDown size={16} /></button>
+            <button className="crm-btn" onClick={() => setShowExportMenu((current) => !current)}><Download size={16} /> Export <ChevronDown size={16} /></button>
             {showExportMenu && (
               <div className="export-menu">
                 <button className="export-item" onClick={() => handleExport("xlsx")}>Export as XLSX</button>
