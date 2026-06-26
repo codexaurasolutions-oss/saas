@@ -1246,7 +1246,10 @@ export default function InventoryPage() {
                     return (
                       <tr key={p.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "12px 16px", color: "#475569" }}>{p.category?.name || "-"}</td>
-                        <td style={{ padding: "12px 16px", fontWeight: 600, color: "#0f172a" }}>{p.name}</td>
+                        <td style={{ padding: "12px 16px", fontWeight: 600, color: "#0f172a" }}>
+                          {p.name}
+                          {p.featured && <span style={{ fontSize: 10, background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontWeight: 700, marginLeft: 6 }}>★ Featured</span>}
+                        </td>
                         <td style={{ padding: "12px 16px", textAlign: "center", color: "#64748b" }}>{actualStock}</td>
                         <td style={{ padding: "12px 16px", textAlign: "center" }}>
                           <input

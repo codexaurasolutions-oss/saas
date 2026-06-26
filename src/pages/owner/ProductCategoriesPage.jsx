@@ -8,7 +8,7 @@ import "./ServiceHubPage.css";
 const defaultProductForm = {
   name: "",
   categoryId: "",
-  position: 1,
+  featured: false,
   isActive: true,
   targetGroup: "BOTH",
   hideFromCatalogue: false,
@@ -89,7 +89,7 @@ export default function ProductCategoriesPage() {
     setProductForm({
       name: p.name || "",
       categoryId: p.categoryId || "",
-      position: p.position || 1,
+      featured: Boolean(p.featured),
       isActive: p.isActive !== false,
       targetGroup: p.targetGroup || "BOTH",
       hideFromCatalogue: Boolean(p.hideFromCatalogue),
@@ -116,7 +116,7 @@ export default function ProductCategoriesPage() {
         costPrice: Number(productForm.costPrice),
         sellingPrice: Number(productForm.sellingPrice),
         salePrice: productForm.salePrice ? Number(productForm.salePrice) : null,
-        position: Number(productForm.position) || 1
+        featured: Boolean(productForm.featured)
       };
       if (editingProduct) {
         await api.patch(`/owner/inventory/products/${editingProduct.id}`, payload);
@@ -221,7 +221,10 @@ export default function ProductCategoriesPage() {
                   {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} /> : "📦"}
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>{p.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
+                    {p.name}
+                    {p.featured && <span style={{ fontSize: 10, background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>★ Featured</span>}
+                  </div>
                   <div style={{ fontSize: 12, color: "#64748b" }}>{p.sku || "No SKU"}</div>
                 </div>
               </div>
@@ -283,15 +286,17 @@ export default function ProductCategoriesPage() {
             </div>
             <form onSubmit={handleSaveProduct} style={{ display: "flex", flexDirection: "column", overflow: "hidden", flex: 1 }}>
               <div className="hub-modal-body" style={{ overflowY: "auto", flex: 1, padding: 24 }}>
-                {/* Name, Position, Active */}
+                {/* Name, Featured, Active */}
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 16, marginBottom: 20, alignItems: "end" }}>
                   <div className="hub-form-group">
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Name *</label>
                     <input type="text" required className="hub-input" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Product name" style={{ width: "100%" }} />
                   </div>
-                  <div className="hub-form-group">
-                    <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Position *</label>
-                    <input type="number" required className="hub-input" value={productForm.position} onChange={e => setProductForm({...productForm, position: parseInt(e.target.value) || 1})} style={{ width: "100%" }} />
+                  <div className="hub-form-group" style={{ display: "flex", alignItems: "end" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#334155", cursor: "pointer" }}>
+                      <input type="checkbox" checked={productForm.featured} onChange={e => setProductForm({...productForm, featured: e.target.checked})} style={{ width: 18, height: 18, accentColor: "#f59e0b" }} />
+                      Featured
+                    </label>
                   </div>
                   <div className="hub-form-group" style={{ display: "flex", alignItems: "end" }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#334155", cursor: "pointer" }}>
