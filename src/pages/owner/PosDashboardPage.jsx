@@ -842,6 +842,9 @@ export default function PosDashboardPage() {
                   <div className="pos-dash-card-meta">
                     {dateStr}, {timeStr}, Total : {formatMoney(row.total)}
                   </div>
+                  <span className={`pos-dash-card-pickup pos-dash-card-status-${(row.status || "default").toLowerCase()}`}>
+                    {row.status === "PAID" ? "Paid" : row.status === "PARTIAL" ? "Partial" : row.status === "UNPAID" ? "Unpaid" : row.status === "CANCELLED" ? "Cancelled" : row.status || "N/A"}
+                  </span>
                 </div>
               </div>
             );
