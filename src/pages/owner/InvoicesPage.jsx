@@ -325,11 +325,11 @@ export default function InvoicesPage() {
                       </select>
                     </label>
                     <label style={{ flex: 1, minWidth: 150 }}>
-                      <span className="muted" style={{ cursor: "pointer" }} onClick={() => {
+                      <span className="muted">Amount (click field to auto-fill)</span>
+                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Number(selectedInvoice?.balanceAmount || 0) || undefined} value={paymentForm.amount || ""} onFocus={() => {
                         const balanceAmt = Number(selectedInvoice?.balanceAmount || 0);
                         if (balanceAmt > 0) setPaymentForm(prev => ({ ...prev, amount: balanceAmt }));
-                      }}>Amount (click to auto-fill balance)</span>
-                      <input type="number" min="0" step="0.01" inputMode="decimal" max={Number(selectedInvoice?.balanceAmount || 0) || undefined} value={paymentForm.amount || ""} onChange={(event) => {
+                      }} onChange={(event) => {
                         const balanceAmt = Number(selectedInvoice?.balanceAmount || 0);
                         const val = Math.min(Number(event.target.value) || 0, balanceAmt || Infinity);
                         setPaymentForm({ ...paymentForm, amount: val });
