@@ -1726,7 +1726,7 @@ export default function ReportsHubPage() {
 
       <div id="printable-report" className="rpt-main">
         <div className="rpt-topbar">
-          {REPORTS_WITH_CHARTS.has(activeReport) && (
+          {REPORTS_WITH_CHARTS.has(activeReport) && activeReport !== "sales_summary" && (
             <button
               type="button"
               className={`rpt-icon-btn ${showChart ? "active" : ""}`}
@@ -1740,7 +1740,7 @@ export default function ReportsHubPage() {
               </svg>
             </button>
           )}
-          {REPORTS_WITH_COLUMN_PICKER.has(activeReport) && (
+          {REPORTS_WITH_COLUMN_PICKER.has(activeReport) && activeReport !== "sales_summary" && (
             <div style={{ position: "relative" }}>
               <button
                 type="button"
