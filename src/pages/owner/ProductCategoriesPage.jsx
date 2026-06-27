@@ -22,6 +22,9 @@ const defaultProductForm = {
   description: "",
   videoLink: "",
   benefits: "",
+  ingredients: "",
+  usageInstructions: "",
+  displayImages: [],
   variations: []
 };
 
@@ -103,6 +106,9 @@ export default function ProductCategoriesPage() {
       description: p.description || "",
       videoLink: p.videoLink || "",
       benefits: p.benefits || "",
+      ingredients: p.ingredients || "",
+      usageInstructions: p.usageInstructions || "",
+      displayImages: Array.isArray(p.displayImages) ? p.displayImages : [],
       variations: Array.isArray(p.variations) ? p.variations : []
     });
     setShowProductModal(true);
@@ -117,7 +123,17 @@ export default function ProductCategoriesPage() {
         costPrice: Number(productForm.costPrice),
         sellingPrice: Number(productForm.sellingPrice),
         salePrice: productForm.salePrice ? Number(productForm.salePrice) : null,
-        featured: Boolean(productForm.featured)
+        featured: Boolean(productForm.featured),
+        targetGroup: productForm.targetGroup || "BOTH",
+        hideFromCatalogue: Boolean(productForm.hideFromCatalogue),
+        nonDiscountable: Boolean(productForm.nonDiscountable),
+        description: productForm.description || null,
+        videoLink: productForm.videoLink || null,
+        benefits: productForm.benefits || null,
+        ingredients: productForm.ingredients || null,
+        usageInstructions: productForm.usageInstructions || null,
+        displayImages: Array.isArray(productForm.displayImages) ? productForm.displayImages : [],
+        variations: Array.isArray(productForm.variations) ? productForm.variations : []
       };
       if (editingProduct) {
         await api.patch(`/owner/inventory/products/${editingProduct.id}`, payload);
@@ -330,8 +346,15 @@ export default function ProductCategoriesPage() {
                   </label>
                 </div>
 
-                {/* Price, Sale Price, Non Discountable */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20, alignItems: "end" }}>
+                {/* Cost Price, Price, Sale Price, Non Discountable */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 20, alignItems: "end" }}>
+                  <div className="hub-form-group">
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Cost Price</label>
+                    <div style={{ display: "flex", alignItems: "center", border: "1px solid #e2e8f0", borderRadius: 6, overflow: "hidden" }}>
+                      <span style={{ padding: "8px 10px", background: "#f8fafc", borderRight: "1px solid #e2e8f0", fontSize: 13, color: "#64748b" }}>{currencySymbol}</span>
+                      <input type="number" className="hub-input" value={productForm.costPrice} onChange={e => { const val = e.target.value; setProductForm(prev => ({...prev, costPrice: val === "" ? "" : (parseFloat(val) || 0)})); }} onFocus={() => handlePriceFocus("costPrice")} onBlur={() => handlePriceBlur("costPrice")} style={{ border: "none", flex: 1 }} />
+                    </div>
+                  </div>
                   <div className="hub-form-group">
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Price</label>
                     <div style={{ display: "flex", alignItems: "center", border: "1px solid #e2e8f0", borderRadius: 6, overflow: "hidden" }}>
@@ -409,6 +432,45 @@ export default function ProductCategoriesPage() {
                 <div className="hub-form-group" style={{ marginBottom: 20 }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Benefits</label>
                   <textarea className="hub-input" value={productForm.benefits} onChange={e => setProductForm({...productForm, benefits: e.target.value})} placeholder="Benefits" rows={2} style={{ width: "100%", resize: "vertical" }} />
+                </div>
+
+                {/* Ingredients */}
+                <div className="hub-form-group" style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Ingredients</label>
+                  <textarea className="hub-input" value={productForm.ingredients} onChange={e => setProductForm({...productForm, ingredients: e.target.value})} placeholder="Ingredients" rows={2} style={{ width: "100%", resize: "vertical" }} />
+                </div>
+
+                {/* Usage Instructions */}
+                <div className="hub-form-group" style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Usage Instructions</label>
+                  <textarea className="hub-input" value={productForm.usageInstructions} onChange={e => setProductForm({...productForm, usageInstructions: e.target.value})} placeholder="Usage Instructions" rows={2} style={{ width: "100%", resize: "vertical" }} />
+                </div>
+
+                {/* Display Images */}
+                <div style={{ marginBottom: 20, padding: "12px 0", borderTop: "1px solid #f1f5f9" }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8, display: "block" }}>Display Images</label>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start" }}>
+                    {(productForm.displayImages || []).map((img, idx) => (
+                      <div key={idx} style={{ position: "relative", width: 80, height: 80, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                        <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button type="button" onClick={() => setProductForm({...productForm, displayImages: productForm.displayImages.filter((_, i) => i !== idx)})} style={{ position: "absolute", top: 2, right: 2, background: "#dc2626", color: "white", border: "none", borderRadius: "50%", width: 18, height: 18, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>x</button>
+                      </div>
+                    ))}
+                    <label style={{ width: 80, height: 80, borderRadius: 8, border: "2px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", fontSize: 10, gap: 4, transition: "border-color 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = "#2563eb"} onMouseLeave={e => e.currentTarget.style.borderColor = "#cbd5e1"}>
+                      <span style={{ fontSize: 20 }}>+</span>
+                      Add Image
+                      <input type="file" accept="image/*" multiple hidden onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        files.forEach(file => {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            setProductForm(prev => ({...prev, displayImages: [...(prev.displayImages || []), ev.target.result]}));
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }} />
+                    </label>
+                  </div>
                 </div>
               </div>
 
