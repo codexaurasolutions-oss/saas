@@ -3,12 +3,12 @@ import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import ModuleTabs from "../../components/ModuleTabs";
 import PageLoader from "../../components/PageLoader";
+import { useBranch } from '../../context/BranchContext';
 
 export default function PaymentsPage() {
+  const { selectedBranchId } = useBranch();
   const [tab, setTab] = useState("summary");
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [filters, setFilters] = useState({ q: "", mode: "", type: "" });
   const [refundForm, setRefundForm] = useState({ invoiceId: "", amount: 0, note: "" });
   const [status, setStatus] = useState("");
@@ -17,21 +17,20 @@ export default function PaymentsPage() {
   useEffect(() => {
     let active = true;
     const params = {
-      ...(selectedBranch ? { branchId: selectedBranch } : {}),
+      ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.mode ? { mode: filters.mode } : {}),
       ...(filters.type ? { type: filters.type } : {})
     };
-    Promise.all([api.get("/owner/payments", { params }), api.get("/owner/branches")]).then(([paymentResponse, branchResponse]) => {
+    api.get("/owner/payments", { params }).then((response) => {
       if (!active) return;
-      setRows(paymentResponse.data);
-      setBranches(branchResponse.data);
+      setRows(response.data);
       setLoading(false);
     });
     return () => {
       active = false;
     };
-  }, [selectedBranch, filters]);
+  }, [selectedBranchId, filters]);
 
   const summary = useMemo(() => rows.reduce((acc, row) => {
     acc.total += Number(row.amount || 0);
@@ -51,15 +50,6 @@ export default function PaymentsPage() {
         ]}
         actions={
           <div className="inline-actions">
-            <label>
-              <span className="muted">Branches</span>
-              <select value={selectedBranch} onChange={(event) => setSelectedBranch(event.target.value)}>
-              <option value="">All branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>{branch.name}</option>
-              ))}
-            </select>
-            </label>
             <label>
               <span className="muted">Search invoice, customer, or note</span>
               <input value={filters.q} placeholder="Search invoice, customer, or note" onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))} />
@@ -116,7 +106,7 @@ export default function PaymentsPage() {
           await api.post("/owner/payments/refund", { ...refundForm, amount: Number(refundForm.amount) });
           setStatus("Refund posted.");
           setRefundForm({ invoiceId: "", amount: 0, note: "" });
-          const params = selectedBranch ? { branchId: selectedBranch } : {};
+          const params = selectedBranchId ? { branchId: selectedBranchId } : {};
           const paymentResponse = await api.get("/owner/payments", { params });
           setRows(paymentResponse.data);
         }} className="form-grid">

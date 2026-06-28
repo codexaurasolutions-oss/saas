@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search, X, ArrowLeft, CheckCircle2, Calendar, XCircle, PlusCircle, Trash2, User, Edit3, FileText, CreditCard, Gift, Wallet, AlertCircle, Package, Users, UserCog, Tag, Phone, StickyNote } from "lucide-react";
 import { api } from "../../api/client";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
+import { useBranch } from '../../context/BranchContext';
 import { formatApiError } from "../../utils/apiError";
 import PageLoader from "../../components/PageLoader";
 import AppointmentCheckoutModal from "./AppointmentCheckoutModal";
@@ -106,6 +107,7 @@ const formatCompactDate = (value, withYear = true) => {
 export default function AppointmentsPage() {
   const navigate = useNavigate();
   const { formatMoney } = useSalonSettings();
+  const { selectedBranchId } = useBranch();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -486,7 +488,8 @@ export default function AppointmentsPage() {
       const response = await api.get("/owner/appointments", {
         params: {
           from: startOfDay.toISOString(),
-          to: endOfDay.toISOString()
+          to: endOfDay.toISOString(),
+          branchId: selectedBranchId || undefined
         }
       });
       const data = response.data || [];
@@ -521,7 +524,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     loadAppointments();
-  }, [currentDate]);
+  }, [currentDate, selectedBranchId]);
 
   const handleDayChange = (offset) => {
     const nextDate = new Date(currentDate);

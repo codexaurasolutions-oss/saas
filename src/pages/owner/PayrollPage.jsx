@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { api } from "../../api/client";
+import { useBranch } from "../../context/BranchContext";
 import EmptyState from "../../components/EmptyState";
 import ModuleTabs from "../../components/ModuleTabs";
 import { formatApiError } from "../../utils/apiError";
@@ -14,12 +15,13 @@ const emptyRun = {
 
 export default function PayrollPage() {
   const location = useLocation();
+  const { selectedBranchId } = useBranch();
   const [runs, setRuns] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [leaves, setLeaves] = useState([]);
   const [incentives, setIncentives] = useState([]);
   const [report, setReport] = useState([]);
-  const [filters, setFilters] = useState({ payrollStatus: "", branchId: "", attendanceQ: "", attendanceBranchId: "", leaveStatus: "", leaveQ: "", incentiveQ: "" });
+  const [filters, setFilters] = useState({ payrollStatus: "", attendanceQ: "", leaveStatus: "", leaveQ: "", incentiveQ: "" });
   const [form, setForm] = useState(emptyRun);
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(true);
@@ -37,8 +39,8 @@ export default function PayrollPage() {
   const load = useCallback(async () => {
     try {
       const [runResponse, attendanceResponse, leaveResponse, incentiveResponse, reportResponse] = await Promise.all([
-        api.get("/owner/payroll", { params: { ...(filters.payrollStatus ? { status: filters.payrollStatus } : {}), ...(filters.branchId ? { branchId: filters.branchId } : {}) } }),
-        api.get("/owner/attendance", { params: { ...(filters.attendanceQ ? { q: filters.attendanceQ } : {}), ...(filters.attendanceBranchId ? { branchId: filters.attendanceBranchId } : {}) } }),
+        api.get("/owner/payroll", { params: { ...(filters.payrollStatus ? { status: filters.payrollStatus } : {}), ...(selectedBranchId ? { branchId: selectedBranchId } : {}) } }),
+        api.get("/owner/attendance", { params: { ...(filters.attendanceQ ? { q: filters.attendanceQ } : {}), ...(selectedBranchId ? { branchId: selectedBranchId } : {}) } }),
         api.get("/owner/leaves", { params: { ...(filters.leaveStatus ? { status: filters.leaveStatus } : {}), ...(filters.leaveQ ? { q: filters.leaveQ } : {}) } }),
         api.get("/owner/incentives", { params: { ...(filters.incentiveQ ? { q: filters.incentiveQ } : {}) } }),
         api.get("/owner/payroll/reports")
@@ -53,7 +55,7 @@ export default function PayrollPage() {
       setStatus({ error: formatApiError(error, "Could not load payroll workspace"), success: "" });
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, selectedBranchId]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -114,11 +116,7 @@ export default function PayrollPage() {
               <option value="PAID">Paid</option>
             </select>
             </label>
-            <label>
-              <span className="muted">Filter by branch id</span>
-              <input value={filters.branchId} placeholder="Filter by branch id" onChange={(e) => setFilters((current) => ({ ...current, branchId: e.target.value }))} />
-            </label>
-            <button type="button" className="secondary-button" onClick={() => setFilters((current) => ({ ...current, payrollStatus: "", branchId: "" }))}>Reset</button>
+            <button type="button" className="secondary-button" onClick={() => setFilters((current) => ({ ...current, payrollStatus: "" }))}>Reset</button>
           </div>
           <div className="list-stack" style={{ marginTop: 16 }}>
             {runs.map((row) => (
@@ -140,11 +138,7 @@ export default function PayrollPage() {
               <span className="muted">Search staff name</span>
               <input value={filters.attendanceQ} placeholder="Search staff name" onChange={(e) => setFilters((current) => ({ ...current, attendanceQ: e.target.value }))} />
             </label>
-            <label>
-              <span className="muted">Filter by branch id</span>
-              <input value={filters.attendanceBranchId} placeholder="Filter by branch id" onChange={(e) => setFilters((current) => ({ ...current, attendanceBranchId: e.target.value }))} />
-            </label>
-            <button type="button" className="secondary-button" onClick={() => setFilters((current) => ({ ...current, attendanceQ: "", attendanceBranchId: "" }))}>Reset</button>
+            <button type="button" className="secondary-button" onClick={() => setFilters((current) => ({ ...current, attendanceQ: "" }))}>Reset</button>
           </div>
           <div className="list-stack">
             {attendance.map((row) => (

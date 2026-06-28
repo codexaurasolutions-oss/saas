@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
+import { useBranch } from "../../context/BranchContext";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
@@ -22,11 +23,11 @@ const emptyForm = {
 };
 
 export default function ExpertsPage() {
+  const { selectedBranchId } = useBranch();
   const [rows, setRows] = useState([]);
   const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
   const [customRoles, setCustomRoles] = useState([]);
-  const [filterBranch, setFilterBranch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [status, setStatus] = useState({ error: "", success: "", loading: true });
@@ -36,7 +37,7 @@ export default function ExpertsPage() {
     return services.filter((service) => !service.branchId || service.branchId === form.branchId);
   }, [form.branchId, services]);
 
-  const load = async (branchId = filterBranch) => {
+  const load = async (branchId = selectedBranchId) => {
     const [usersResponse, branchesResponse, servicesResponse, rolesResponse] = await Promise.all([
       api.get("/owner/users", { params: branchId ? { branchId } : {} }),
       api.get("/owner/branches"),
@@ -73,7 +74,7 @@ export default function ExpertsPage() {
   useEffect(() => {
     let active = true;
     Promise.all([
-      api.get("/owner/users", { params: filterBranch ? { branchId: filterBranch } : {} }),
+      api.get("/owner/users", { params: selectedBranchId ? { branchId: selectedBranchId } : {} }),
       api.get("/owner/branches"),
       api.get("/owner/services")
     ]).then(([usersResponse, branchesResponse, servicesResponse]) => {
@@ -87,7 +88,7 @@ export default function ExpertsPage() {
     return () => {
       active = false;
     };
-  }, [filterBranch]);
+  }, [selectedBranchId]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -124,7 +125,7 @@ export default function ExpertsPage() {
         setStatus({ error: "", success: "Expert login created." });
       }
       resetForm();
-      await load(filterBranch);
+      await load(selectedBranchId);
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not save expert"), success: "" });
     }
@@ -174,12 +175,6 @@ export default function ExpertsPage() {
         <div>
           <h2>Experts</h2>
           <p className="muted">Service experts, stylists, and salon specialists live here. POS only picks them per service line, while this page manages the team separately.</p>
-        </div>
-        <div>
-          <select value={filterBranch} onChange={(event) => setFilterBranch(event.target.value)}>
-            <option value="">All branches</option>
-            {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-          </select>
         </div>
       </div>
 

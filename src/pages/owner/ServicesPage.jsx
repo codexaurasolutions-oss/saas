@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
+import { useBranch } from "../../context/BranchContext";
 import { formatApiError } from "../../utils/apiError";
 
 const emptyForm = {
@@ -30,10 +31,10 @@ const DURATION_OPTIONS = [
 ];
 
 export default function ServicesPage() {
+  const { selectedBranchId } = useBranch();
   const [rows, setRows] = useState([]);
   const [branches, setBranches] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [status, setStatus] = useState({ error: "", success: "", loading: true });

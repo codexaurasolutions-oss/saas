@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
+import { useBranch } from '../../context/BranchContext';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, Line, ComposedChart
@@ -1540,9 +1541,10 @@ function SalesSummaryDashboard({ data, loading, onViewReport }) {
 }
 
 export default function ReportsHubPage() {
+  const { selectedBranchId } = useBranch();
   const [activeReport, setActiveReport] = useState("sales_summary");
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({ start: "", end: "", branchId: "" });
+  const [filters, setFilters] = useState({ start: "", end: "" });
   const [quickRange, setQuickRange] = useState("");
   const [reportFilters, setReportFilters] = useState({});
   const [rows, setRows] = useState([]);
@@ -1580,7 +1582,7 @@ export default function ReportsHubPage() {
     const params = {};
     if (filters.start) params.start = filters.start;
     if (filters.end) params.end = filters.end;
-    if (filters.branchId) params.branchId = filters.branchId;
+    if (selectedBranchId) params.branchId = selectedBranchId;
     filterConfig.forEach((f) => {
       const v = reportFilters[f.key];
       if (v && v !== "all") params[f.key] = v;
@@ -1603,7 +1605,7 @@ export default function ReportsHubPage() {
         setDashboardData(null);
       })
       .finally(() => setLoading(false));
-  }, [activeReport, filters.branchId, filters.end, filters.start, filterConfig, reportFilters]);
+  }, [activeReport, filters.end, filters.start, filterConfig, reportFilters]);
 
   const filteredReports = ALL_REPORTS.filter((report) => !search || report.label.toLowerCase().includes(search.toLowerCase()));
 

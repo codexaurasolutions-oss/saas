@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { SalonSettingsProvider } from "./context/SalonSettingsContext";
+import { BranchProvider } from "./context/BranchContext";
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(
@@ -11,7 +12,9 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <AuthProvider>
         <SalonSettingsProvider>
-          <App />
+          <BranchProvider>
+            <App />
+          </BranchProvider>
         </SalonSettingsProvider>
       </AuthProvider>
     </BrowserRouter>

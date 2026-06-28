@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import { downloadFromApi } from "../../utils/download";
+import { useBranch } from '../../context/BranchContext';
 import EmptyState from "../../components/EmptyState";
 import ModuleTabs from "../../components/ModuleTabs";
 import PageLoader from "../../components/PageLoader";
@@ -19,7 +20,6 @@ const reportSections = [
 ];
 
 const initialData = {
-  branches: [],
   sales: null,
   payments: null,
   appointments: [],
@@ -114,7 +114,8 @@ function computeRange(key) {
 export default function ReportsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ branchId: "", start: "", end: "" });
+  const { selectedBranchId } = useBranch();
+  const [filters, setFilters] = useState({ start: "", end: "" });
   const [quickRange, setQuickRange] = useState("");
   const [state, setState] = useState({ loading: true, error: "", data: initialData });
 
@@ -136,13 +137,12 @@ export default function ReportsPage() {
     const load = async () => {
       setState((current) => ({ ...current, loading: true, error: "" }));
       const sharedParams = {
-        ...(filters.branchId ? { branchId: filters.branchId } : {}),
+        ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
         ...(filters.start ? { start: filters.start } : {}),
         ...(filters.end ? { end: filters.end } : {})
       };
 
       const requests = {
-        branches: api.get("/owner/branches"),
         sales: api.get("/reports/sales-summary", { params: sharedParams }),
         payments: api.get("/reports/payment-modes", { params: sharedParams }),
         appointments: api.get("/reports/appointments", { params: sharedParams }),
@@ -199,7 +199,7 @@ export default function ReportsPage() {
     return () => {
       active = false;
     };
-  }, [filters.branchId, filters.end, filters.start]);
+  }, [filters.end, filters.start]);
 
   const jumpToReport = (nextView) => {
     const section = reportSections.find((item) => item.key === nextView);
@@ -208,7 +208,7 @@ export default function ReportsPage() {
 
   const exportCurrent = async () => {
     const query = {
-      ...(filters.branchId ? { branchId: filters.branchId } : {}),
+      ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
       ...(filters.start ? { start: filters.start } : {}),
       ...(filters.end ? { end: filters.end } : {})
     };
@@ -254,7 +254,7 @@ export default function ReportsPage() {
     try {
       await downloadFromApi("/reports/export.xls", {
         params: {
-          ...(filters.branchId ? { branchId: filters.branchId } : {}),
+          ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
           ...(filters.start ? { start: filters.start } : {}),
           ...(filters.end ? { end: filters.end } : {})
         },
@@ -280,13 +280,6 @@ export default function ReportsPage() {
               <span className="muted">Select Option</span>
               <select value={reportView} onChange={(event) => jumpToReport(event.target.value)}>
               {reportSections.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
-            </select>
-            </label>
-            <label>
-              <span className="muted">Branches</span>
-              <select value={filters.branchId} onChange={(event) => setFilters((current) => ({ ...current, branchId: event.target.value }))}>
-              <option value="">All branches</option>
-              {data.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
             </select>
             </label>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

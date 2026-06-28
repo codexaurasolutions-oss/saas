@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import { useAuth } from "../../context/AuthContext";
+import { useBranch } from "../../context/BranchContext";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { formatApiError } from "../../utils/apiError";
 import { 
@@ -33,6 +34,7 @@ export default function ExpensesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { selectedBranchId } = useBranch();
   const { formatMoney, currencyMeta, settings } = useSalonSettings();
   const canApproveExpenses = useMemo(() => {
     if (auth?.membership?.salonRole === "SALON_OWNER") return true;
@@ -52,7 +54,6 @@ export default function ExpensesPage() {
 
   // Filters & selection
   const [filters, setFilters] = useState({
-    branchId: "",
     paymentMode: "",
     categoryId: "",
     startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 1).toISOString().slice(0, 10),
@@ -137,7 +138,7 @@ export default function ExpensesPage() {
   const baseFilteredExpenses = rows.filter(row => {
     const dateMatch = (!filters.startDate || row.expenseDate >= filters.startDate) &&
                       (!filters.endDate || row.expenseDate <= filters.endDate);
-    const branchMatch = !filters.branchId || row.branchId === filters.branchId;
+    const branchMatch = !selectedBranchId || row.branchId === selectedBranchId;
     const paymentModeMatch = !filters.paymentMode || row.paymentMode === filters.paymentMode;
     const categoryMatch = !filters.categoryId || row.categoryId === filters.categoryId;
     return dateMatch && branchMatch && paymentModeMatch && categoryMatch;
@@ -157,7 +158,7 @@ export default function ExpensesPage() {
     const pDate = row.createdAt ? row.createdAt.slice(0, 10) : "";
     const dateMatch = (!filters.startDate || pDate >= filters.startDate) &&
                       (!filters.endDate || pDate <= filters.endDate);
-    const branchMatch = !filters.branchId || row.invoice?.branchId === filters.branchId;
+    const branchMatch = !selectedBranchId || row.invoice?.branchId === selectedBranchId;
     return dateMatch && branchMatch;
   });
 
@@ -899,20 +900,6 @@ export default function ExpensesPage() {
                 {/* Filter Row Panel */}
                 <div className="expenses-filter-panel">
                   <div className="filters-group">
-                    <div className="filter-item">
-                      <span className="filter-label">Store:</span>
-                      <select 
-                        className="filter-select"
-                        value={filters.branchId}
-                        onChange={(e) => setFilters({ ...filters, branchId: e.target.value })}
-                      >
-                        <option value="">All Branches</option>
-                        {branches.map(b => (
-                          <option key={b.id} value={b.id}>{b.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
                     <div className="filter-item">
                       <span className="filter-label">Paymode:</span>
                       <select 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { api } from "../../api/client";
+import { useBranch } from '../../context/BranchContext';
 import EmptyState from "../../components/EmptyState";
 import ModuleTabs from "../../components/ModuleTabs";
 import { formatApiError } from "../../utils/apiError";
@@ -8,10 +9,10 @@ import PageLoader from "../../components/PageLoader";
 
 export default function FeedbackPage() {
   const location = useLocation();
+  const { selectedBranchId } = useBranch();
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [report, setReport] = useState(null);
-  const [filters, setFilters] = useState({ status: "", branchId: "" });
+  const [filters, setFilters] = useState({ status: "" });
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(true);
 
@@ -25,23 +26,21 @@ export default function FeedbackPage() {
     try {
       const params = {
         ...(filters.status ? { status: filters.status } : {}),
-        ...(filters.branchId ? { branchId: filters.branchId } : {})
+        ...(selectedBranchId ? { branchId: selectedBranchId } : {})
       };
-      const [listResponse, reportResponse, settingsResponse, branchesResponse] = await Promise.all([
+      const [listResponse, reportResponse, settingsResponse] = await Promise.all([
         api.get("/owner/feedback", { params }),
         api.get("/owner/feedback/reports", { params }),
-        api.get("/owner/feedback/settings"),
-        api.get("/owner/branches")
+        api.get("/owner/feedback/settings")
       ]);
       setRows(listResponse.data || []);
       setReport({ ...(reportResponse.data || {}), settings: settingsResponse.data || {} });
-      setBranches(branchesResponse.data || []);
       setLoading(false);
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not load feedback module"), success: "" });
       setLoading(false);
     }
-  }, [filters.branchId, filters.status]);
+  }, [selectedBranchId, filters.status]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -81,14 +80,7 @@ export default function FeedbackPage() {
               <option value="RESOLVED">Resolved</option>
             </select>
             </label>
-            <label>
-              <span className="muted">Branches</span>
-              <select value={filters.branchId} onChange={(event) => setFilters((current) => ({ ...current, branchId: event.target.value }))}>
-              <option value="">All branches</option>
-              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-            </select>
-            </label>
-            <button type="button" className="secondary-button" onClick={() => setFilters({ status: "", branchId: "" })}>Reset</button>
+            <button type="button" className="secondary-button" onClick={() => setFilters({ status: "" })}>Reset</button>
           </>
         )}
       />

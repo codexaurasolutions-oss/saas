@@ -2,30 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
+import { useBranch } from '../../context/BranchContext';
 
 export default function OwnerDashboard() {
+  const { selectedBranchId } = useBranch();
   const [data, setData] = useState(null);
   const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      api.get("/owner/dashboard"),
-      api.get("/owner/branches")
-    ]).then(([dashboardResponse, branchesResponse]) => {
-      if (!active) return;
-      setData(dashboardResponse.data);
-      setBranches(branchesResponse.data);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const params = selectedBranch ? { branchId: selectedBranch } : {};
+    const params = selectedBranchId ? { branchId: selectedBranchId } : {};
     Promise.all([
       api.get("/owner/dashboard", { params }),
       api.get("/owner/branches")
@@ -37,9 +23,9 @@ export default function OwnerDashboard() {
     return () => {
       active = false;
     };
-  }, [selectedBranch]);
+  }, [selectedBranchId]);
 
-  const branchName = useMemo(() => branches.find((branch) => branch.id === selectedBranch)?.name || "All branches", [branches, selectedBranch]);
+  const branchName = useMemo(() => branches.find((branch) => branch.id === selectedBranchId)?.name || "All branches", [branches, selectedBranchId]);
 
   if (!data) return <div className="page-shell"><PageLoader title="Loading owner dashboard" message="Pulling sales, customers, payments, and branch activity into one view." /></div>;
 
@@ -50,17 +36,6 @@ export default function OwnerDashboard() {
           <div>
             <h1 style={{ marginTop: 0 }}>Owner Dashboard</h1>
             <p style={{ marginBottom: 0 }}>Daily salon operations, revenue snapshot, and team activity from the unified admin panel.</p>
-          </div>
-          <div>
-            <label>
-              <span className="muted">Branches</span>
-              <select value={selectedBranch} onChange={(event) => setSelectedBranch(event.target.value)}>
-              <option value="">All branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>{branch.name}</option>
-              ))}
-            </select>
-            </label>
           </div>
         </div>
       </div>

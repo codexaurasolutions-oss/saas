@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import { Menu, Settings, FileText, Monitor, Calendar as CalendarIcon, Users, BarChart2, Package, TrendingUp, Search, Bell, LayoutDashboard } from "lucide-react";
+import { useBranch } from "../context/BranchContext";
+import { Menu, Settings, FileText, Monitor, Calendar as CalendarIcon, Users, BarChart2, Package, TrendingUp, Search, Bell, LayoutDashboard, Building2, ChevronDown } from "lucide-react";
 
 export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { branches, selectedBranchId, selectedBranchName, setSelectedBranchId } = useBranch();
   const [salonName, setSalonName] = useState("");
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isBranchOpen, setIsBranchOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [quickSearch, setQuickSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -48,6 +51,7 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       if (!event.target.closest?.(".respark-search-wrap")) setSearchOpen(false);
       if (!event.target.closest?.(".respark-notif-wrap")) setIsNotifOpen(false);
       if (!event.target.closest?.(".respark-profile-wrap")) setIsProfileOpen(false);
+      if (!event.target.closest?.(".respark-branch-wrap")) setIsBranchOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -195,6 +199,70 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
         }
         .respark-search-wrap {
           position: relative;
+        }
+        .respark-branch-wrap {
+          position: relative;
+        }
+        .respark-branch-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.82rem;
+          color: #334155;
+          font-weight: 600;
+          white-space: nowrap;
+          transition: all 0.15s;
+        }
+        .respark-branch-btn:hover {
+          background: #e2e8f0;
+          border-color: #cbd5e1;
+        }
+        .respark-branch-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 0;
+          min-width: 200px;
+          max-height: 320px;
+          overflow-y: auto;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          z-index: 120;
+          padding: 6px;
+        }
+        .respark-branch-option {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          border: 0;
+          background: transparent;
+          text-align: left;
+          padding: 9px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.83rem;
+          color: #334155;
+          transition: background 0.12s;
+        }
+        .respark-branch-option:hover {
+          background: #eff6ff;
+        }
+        .respark-branch-option.active {
+          background: #dbeafe;
+          color: #1d4ed8;
+          font-weight: 600;
+        }
+        .respark-branch-option-check {
+          width: 16px;
+          height: 16px;
+          flex-shrink: 0;
         }
         .respark-search-dropdown {
           position: absolute;
@@ -527,6 +595,31 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
         ) : null}
 
         <div className="respark-top-right">
+          {/* Branch Selector */}
+          {branches.length > 1 ? (
+            <div className="respark-branch-wrap">
+              <button className="respark-branch-btn" onClick={() => setIsBranchOpen(!isBranchOpen)}>
+                <Building2 size={14} color="#64748b" />
+                {selectedBranchName}
+                <ChevronDown size={14} color="#64748b" />
+              </button>
+              {isBranchOpen && (
+                <div className="respark-branch-dropdown" onClick={e => e.stopPropagation()}>
+                  <button className={`respark-branch-option ${!selectedBranchId ? "active" : ""}`} onClick={() => { setSelectedBranchId(""); setIsBranchOpen(false); }}>
+                    <svg className="respark-branch-option-check" viewBox="0 0 16 16" fill="none">{!selectedBranchId ? <path d="M2 8.5l4 4 8-8" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> : null}</svg>
+                    All Branches
+                  </button>
+                  {branches.filter(b => b.isActive).map(branch => (
+                    <button key={branch.id} className={`respark-branch-option ${selectedBranchId === branch.id ? "active" : ""}`} onClick={() => { setSelectedBranchId(branch.id); setIsBranchOpen(false); }}>
+                      <svg className="respark-branch-option-check" viewBox="0 0 16 16" fill="none">{selectedBranchId === branch.id ? <path d="M2 8.5l4 4 8-8" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> : null}</svg>
+                      {branch.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
           <div className="respark-date">{dateStr}</div>
           
           {/* Notifications */}

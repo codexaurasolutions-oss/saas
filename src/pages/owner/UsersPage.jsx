@@ -1,6 +1,7 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { api } from "../../api/client";
+import { useBranch } from '../../context/BranchContext';
 import "./ServiceHubPage.css";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
 import EmptyState from "../../components/EmptyState";
@@ -46,12 +47,12 @@ const makeEmptyForm = () => ({
 const moduleCatalog = MODULE_GROUPS.flatMap((group) => group.modules);
 
 export default function UsersPage() {
+  const { selectedBranchId } = useBranch();
   const [rows, setRows] = useState([]);
   const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
   const [customRoles, setCustomRoles] = useState([]);
   const [designationOptions, setDesignationOptions] = useState([]);
-  const [filterBranch, setFilterBranch] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState("");
@@ -60,7 +61,7 @@ export default function UsersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
 
-  const load = async (branchId = filterBranch) => {
+  const load = async (branchId = selectedBranchId) => {
     const [usersResponse, branchesResponse, servicesResponse, rolesResponse, settingsResponse] = await Promise.all([
       api.get("/owner/users", { params: branchId ? { branchId } : {} }),
       api.get("/owner/branches"),
@@ -113,7 +114,7 @@ export default function UsersPage() {
     let active = true;
     setStatus((current) => ({ ...current, loading: true }));
     Promise.all([
-      api.get("/owner/users", { params: filterBranch ? { branchId: filterBranch } : {} }),
+      api.get("/owner/users", { params: selectedBranchId ? { branchId: selectedBranchId } : {} }),
       api.get("/owner/branches"),
       api.get("/owner/services"),
       api.get("/owner/custom-roles"),
@@ -137,7 +138,7 @@ export default function UsersPage() {
     return () => {
       active = false;
     };
-  }, [filterBranch]);
+  }, [selectedBranchId]);
 
   const filteredRows = useMemo(() => {
     if (!deferredQuery) return rows;
@@ -339,7 +340,7 @@ export default function UsersPage() {
         setIsCreateModalOpen(false);
       }
       resetForm();
-      await load(filterBranch);
+      await load(selectedBranchId);
     } catch (error) {
       setStatus((current) => ({ ...current, error: formatApiError(error, "Could not save staff user"), success: "" }));
     }
@@ -347,7 +348,7 @@ export default function UsersPage() {
 
   const toggleUserStatus = async (row) => {
     await api.patch(`/owner/users/${row.id}/status`, { isActive: !row.user.isActive });
-    await load(filterBranch);
+    await load(selectedBranchId);
   };
 
   const archiveUser = async (row) => {
@@ -355,7 +356,7 @@ export default function UsersPage() {
     if (editingId === row.id) {
       resetForm();
     }
-    await load(filterBranch);
+    await load(selectedBranchId);
   };
 
   const handleDirectorySelect = (rowId) => {
@@ -393,17 +394,6 @@ export default function UsersPage() {
               placeholder="Search staff..."
               onChange={(event) => setQuery(event.target.value)}
             />
-            <select 
-              className="hub-input" 
-              style={{ width: '100%', boxSizing: 'border-box' }}
-              value={filterBranch} 
-              onChange={(event) => setFilterBranch(event.target.value)}
-            >
-              <option value="">All branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>{branch.name}</option>
-              ))}
-            </select>
           </div>
 
           <div className="hub-list" style={{ flex: 1, overflowY: 'auto' }}>

@@ -5,64 +5,46 @@ import EmptyState from "../../components/EmptyState";
 import { formatApiError } from "../../utils/apiError";
 import PageLoader from "../../components/PageLoader";
 import { downloadFromApi } from "../../utils/download";
+import { useBranch } from '../../context/BranchContext';
 
 export default function InvoicesPage() {
   const { id: routeInvoiceId } = useParams();
   const navigate = useNavigate();
+  const { selectedBranchId } = useBranch();
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [filters, setFilters] = useState({ q: "", status: "" });
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ mode: "CASH", amount: 0, note: "" });
   const [reminderPreview, setReminderPreview] = useState("");
   const [status, setStatus] = useState({ error: "", success: "", loading: true });
 
-  const load = async (branchId = selectedBranch) => {
+  const load = async (branchId = selectedBranchId) => {
     const params = {
       ...(branchId ? { branchId } : {}),
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status ? { status: filters.status } : {})
     };
-    const [invoiceResponse, branchResponse] = await Promise.all([
-      api.get("/owner/invoices", { params }),
-      api.get("/owner/branches")
-    ]);
-    setRows(invoiceResponse.data);
-    setBranches(branchResponse.data);
+    const response = await api.get("/owner/invoices", { params });
+    setRows(response.data);
     setStatus((current) => ({ ...current, loading: false }));
   };
 
   useEffect(() => {
     let active = true;
-    Promise.all([api.get("/owner/invoices"), api.get("/owner/branches")]).then(([invoiceResponse, branchResponse]) => {
-      if (!active) return;
-      setRows(invoiceResponse.data);
-      setBranches(branchResponse.data);
-      setStatus((current) => ({ ...current, loading: false }));
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
     const params = {
-      ...(selectedBranch ? { branchId: selectedBranch } : {}),
+      ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status ? { status: filters.status } : {})
     };
-    Promise.all([api.get("/owner/invoices", { params }), api.get("/owner/branches")]).then(([invoiceResponse, branchResponse]) => {
+    api.get("/owner/invoices", { params }).then((response) => {
       if (!active) return;
-      setRows(invoiceResponse.data);
-      setBranches(branchResponse.data);
+      setRows(response.data);
       setStatus((current) => ({ ...current, loading: false }));
     });
     return () => {
       active = false;
     };
-  }, [selectedBranch, filters]);
+  }, [selectedBranchId, filters]);
 
   const openDetail = useCallback(async (invoiceId) => {
     const response = await api.get(`/owner/invoices/${invoiceId}`);
@@ -100,7 +82,7 @@ export default function InvoicesPage() {
     try {
       await api.post("/owner/payments", { invoiceId, ...paymentForm, amount: amt });
       setPaymentForm({ mode: "CASH", amount: 0, note: "" });
-      await load(selectedBranch);
+      await load(selectedBranchId);
       await openDetail(invoiceId);
       setStatus({ error: "", success: "Payment added." });
     } catch (error) {
@@ -112,7 +94,7 @@ export default function InvoicesPage() {
     setStatus({ error: "", success: "" });
     try {
       await api.patch(`/owner/invoices/${invoiceId}/cancel`);
-      await load(selectedBranch);
+      await load(selectedBranchId);
       setSelectedInvoice(null);
       navigate("/admin/invoices", { replace: true });
       setStatus({ error: "", success: "Invoice cancelled." });
@@ -140,15 +122,6 @@ export default function InvoicesPage() {
           <h2>Invoices</h2>
           <p className="muted">Invoice snapshots stay stable even if service prices change later. Payments and cancellation history are enforced from backend rules.</p>
         </div>
-        <label>
-              <span className="muted">Branches</span>
-              <select value={selectedBranch} onChange={(event) => setSelectedBranch(event.target.value)}>
-          <option value="">All branches</option>
-          {branches.map((branch) => (
-            <option key={branch.id} value={branch.id}>{branch.name}</option>
-          ))}
-        </select>
-            </label>
       </div>
       <div className="form-grid" style={{ marginBottom: 18 }}>
         <label>

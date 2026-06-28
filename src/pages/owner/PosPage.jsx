@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { downloadFromApi } from "../../utils/download";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
+import { useBranch } from '../../context/BranchContext';
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
@@ -62,6 +63,7 @@ const genderMatches = (item, selectedGender) => {
 
 export default function PosPage() {
   const { formatMoney } = useSalonSettings();
+  const { selectedBranchId } = useBranch();
   const navigate = useNavigate();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdInvoice, setCreatedInvoice] = useState(null);
@@ -447,6 +449,12 @@ export default function PosPage() {
       setForm(f => ({ ...f, branchId: defaultBranch.id }));
     }
   }, [context.branches, form.branchId]);
+
+  useEffect(() => {
+    if (selectedBranchId) {
+      setForm(prev => ({...prev, branchId: selectedBranchId}));
+    }
+  }, [selectedBranchId]);
 
   // Auto-apply advance: when a customer with advance is selected and items exist,
   // auto-fill the ADVANCE payment up to min(advance, total). Only fills if the user
