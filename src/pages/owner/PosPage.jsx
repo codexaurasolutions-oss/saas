@@ -1298,21 +1298,6 @@ export default function PosPage() {
             </div>
 
             <div className="pos-guest-row">
-              <div className="pos-search-guest" style={{ maxWidth: 220 }}>
-                <label>
-                  Branch :
-                  <select
-                    value={form.branchId}
-                    onChange={(e) => setForm((current) => ({ ...current, branchId: e.target.value }))}
-                  >
-                    <option value="">Select Branch</option>
-                    {(context.branches || []).map((branch) => (
-                      <option key={branch.id} value={branch.id}>{branch.name}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              
               <div className="pos-search-guest">
                 <label>
                   Guest : 
