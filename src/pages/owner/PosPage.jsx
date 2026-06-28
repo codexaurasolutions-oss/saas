@@ -2564,13 +2564,15 @@ export default function PosPage() {
                         <tbody>
                           {(cp.package?.services || []).map((svc, idx) => {
                             const svcId = svc.serviceId || svc.service?.id;
-                            const available = (svc.sessions || 0) - (svc.sessionsUsed || 0);
+                            const pendingUsed = form.packageRedemptions.filter(r => r.customerPackageId === cp.id && r.serviceId === svcId).length;
+                            const totalUsed = (svc.sessionsUsed || 0) + pendingUsed;
+                            const available = Math.max(0, (svc.sessions || 0) - totalUsed);
                             const isInCart = form.items.some(item => item.serviceId === svcId && Number(item.unitPrice || 0) > 0);
                             return (
                               <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
                                 <td style={{ padding: "8px 0", color: isInCart ? "#16a34a" : "#0f172a" }}>{svc.service?.name || svc.serviceId}</td>
                                 <td style={{ padding: "8px 0", textAlign: "right", color: "#16a34a", fontWeight: 600 }}>{available}</td>
-                                <td style={{ padding: "8px 0", textAlign: "right", color: "#64748b" }}>{svc.sessionsUsed || 0}</td>
+                                <td style={{ padding: "8px 0", textAlign: "right", color: "#64748b" }}>{totalUsed}</td>
                                 <td style={{ padding: "8px 0", textAlign: "right" }}>
                                   {available > 0 && isInCart && (
                                     <button type="button" onClick={() => applyPackageService(cp, svc)} style={{ padding: "4px 12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}>Apply</button>
