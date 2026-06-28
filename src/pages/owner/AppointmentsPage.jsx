@@ -1637,12 +1637,6 @@ export default function AppointmentsPage() {
 
                 <div className="sp-card">
                   <h4 className="sp-card-title">1. Guest Details {editMode && form.customerId && <button className="add-link" type="button" onClick={() => navigate(`/admin/customers/${form.customerId}`)}>Guest History</button>}</h4>
-                  <div className="sp-input-group">
-                    <select className="sp-input" value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })} required>
-                      <option value="">Select Branch</option>
-                      {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-                    </select>
-                  </div>
                   <div className="sp-input-group" style={{ position: "relative" }}>
                     <input 
                       type="text" 

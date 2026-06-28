@@ -132,10 +132,6 @@ export default function AppointmentEditPage() {
                 <option value="">Select customer</option>
                 {context.customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
               </select>
-              <select value={form.branchId} onChange={(event) => setForm((current) => ({ ...current, branchId: event.target.value }))}>
-                <option value="">Select branch</option>
-                {context.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-              </select>
               <select value={form.bookingChannel} onChange={(event) => setForm((current) => ({ ...current, bookingChannel: event.target.value }))}>
                 <option value="MANUAL">Manual</option>
                 <option value="WALK_IN">Walk-in</option>

@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, Legend, LineChart, Line, Area, AreaChart
 } from "recharts";
 import { api } from "../../api/client";
+import { useBranch } from "../../context/BranchContext";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { IndianRupee, Scissors, Package, Droplet, TrendingUp, FileText, Users, Star, BarChart2, Trophy, Loader2 } from "lucide-react";
 
@@ -118,6 +119,7 @@ function RankRow({ rank, name, revenue, moneyFormatter }) {
    MAIN PAGE
 ══════════════════════════════════════════════════ */
 export default function TrendsPage() {
+  const { selectedBranchId } = useBranch();
   const { formatMoney, currencyMeta } = useSalonSettings();
   const [timeRange,     setTimeRange]     = useState("7D");
   const [linePeriod,    setLinePeriod]    = useState("week");
@@ -134,11 +136,11 @@ export default function TrendsPage() {
 
   useEffect(() => {
     setLoading(true);
-    api.get("/owner/reports/trends", { params: { range: timeRange, period: linePeriod, filter: activeFilter } })
+    api.get("/owner/reports/trends", { params: { range: timeRange, period: linePeriod, filter: activeFilter, ...(selectedBranchId ? { branchId: selectedBranchId } : {}) } })
       .then((res) => setData(res.data))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [timeRange, linePeriod, activeFilter]);
+  }, [timeRange, linePeriod, activeFilter, selectedBranchId]);
 
   /* derived */
   const revenueBar = data?.revenueSplit || [
