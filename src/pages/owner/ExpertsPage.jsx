@@ -23,9 +23,8 @@ const emptyForm = {
 };
 
 export default function ExpertsPage() {
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, branches } = useBranch();
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
   const [customRoles, setCustomRoles] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -38,15 +37,13 @@ export default function ExpertsPage() {
   }, [form.branchId, services]);
 
   const load = async (branchId = selectedBranchId) => {
-    const [usersResponse, branchesResponse, servicesResponse, rolesResponse] = await Promise.all([
+    const [usersResponse, servicesResponse, rolesResponse] = await Promise.all([
       api.get("/owner/users", { params: branchId ? { branchId } : {} }),
-      api.get("/owner/branches"),
       api.get("/owner/services"),
       api.get("/owner/custom-roles").catch(() => ({ data: [] }))
     ]);
     const experts = (usersResponse.data || []).filter((row) => (row.serviceAssignments || []).length || row.showInCatalog || row.salonRole === "STAFF");
     setRows(experts);
-    setBranches(branchesResponse.data);
     setServices(servicesResponse.data);
     setCustomRoles(rolesResponse.data || []);
     setStatus((current) => ({ ...current, loading: false }));
@@ -54,40 +51,8 @@ export default function ExpertsPage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      api.get("/owner/users"),
-      api.get("/owner/branches"),
-      api.get("/owner/services")
-    ]).then(([usersResponse, branchesResponse, servicesResponse]) => {
-      if (!active) return;
-      const experts = (usersResponse.data || []).filter((row) => (row.serviceAssignments || []).length || row.showInCatalog || row.salonRole === "STAFF");
-      setRows(experts);
-      setBranches(branchesResponse.data);
-      setServices(servicesResponse.data);
-      setStatus((current) => ({ ...current, loading: false }));
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      api.get("/owner/users", { params: selectedBranchId ? { branchId: selectedBranchId } : {} }),
-      api.get("/owner/branches"),
-      api.get("/owner/services")
-    ]).then(([usersResponse, branchesResponse, servicesResponse]) => {
-      if (!active) return;
-      const experts = (usersResponse.data || []).filter((row) => (row.serviceAssignments || []).length || row.showInCatalog || row.salonRole === "STAFF");
-      setRows(experts);
-      setBranches(branchesResponse.data);
-      setServices(servicesResponse.data);
-      setStatus((current) => ({ ...current, loading: false }));
-    });
-    return () => {
-      active = false;
-    };
+    load();
+    return () => { active = false; };
   }, [selectedBranchId]);
 
   const resetForm = () => {
@@ -151,13 +116,13 @@ export default function ExpertsPage() {
 
   const toggleUserStatus = async (row) => {
     await api.patch(`/owner/users/${row.id}/status`, { isActive: !row.user.isActive });
-    await load(filterBranch);
+    await load(selectedBranchId);
   };
 
   const archiveUser = async (row) => {
     await api.patch(`/owner/users/${row.id}/archive`); 
     if (editingId === row.id) resetForm();
-    await load(filterBranch);
+    await load(selectedBranchId);
   };
 
   const toggleServiceId = (serviceId) => {

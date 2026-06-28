@@ -34,7 +34,7 @@ export default function ExpensesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { auth } = useAuth();
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, branches } = useBranch();
   const { formatMoney, currencyMeta, settings } = useSalonSettings();
   const canApproveExpenses = useMemo(() => {
     if (auth?.membership?.salonRole === "SALON_OWNER") return true;
@@ -46,7 +46,6 @@ export default function ExpensesPage() {
   // Data states
   const [rows, setRows] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [payments, setPayments] = useState([]);
   const [accountInjections, setAccountInjections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,17 +88,15 @@ export default function ExpensesPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [expenseRes, categoryRes, branchRes, paymentRes, injectionRes] = await Promise.all([
+      const [expenseRes, categoryRes, paymentRes, injectionRes] = await Promise.all([
         api.get("/owner/expenses"),
         api.get("/owner/expense-categories"),
-        api.get("/owner/branches").catch(() => ({ data: [] })),
         api.get("/owner/payments").catch(() => ({ data: [] })),
         api.get("/owner/expenses/accounts").catch(() => ({ data: { injections: [] } }))
       ]);
 
       setRows(expenseRes.data || []);
       setCategories(categoryRes.data || []);
-      setBranches(branchRes.data || []);
       setPayments(paymentRes.data || []);
       setAccountInjections(injectionRes.data?.injections || []);
 

@@ -31,9 +31,8 @@ const DURATION_OPTIONS = [
 ];
 
 export default function ServicesPage() {
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, branches } = useBranch();
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
@@ -41,54 +40,21 @@ export default function ServicesPage() {
 
   const title = useMemo(() => (editingId ? "Update Service" : "Add Service"), [editingId]);
 
-  const load = async (branchId = selectedBranch) => {
-    const [servicesResponse, branchesResponse, catsResponse] = await Promise.all([
+  const load = async (branchId = selectedBranchId) => {
+    const [servicesResponse, catsResponse] = await Promise.all([
       api.get("/owner/services", { params: branchId ? { branchId } : {} }),
-      api.get("/owner/branches"),
       api.get("/owner/service-categories")
     ]);
     setRows(servicesResponse.data);
-    setBranches(branchesResponse.data);
     setCategories(catsResponse.data);
     setStatus((current) => ({ ...current, loading: false }));
   };
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      api.get("/owner/services"),
-      api.get("/owner/branches"),
-      api.get("/owner/service-categories")
-    ]).then(([servicesResponse, branchesResponse, catsResponse]) => {
-      if (!active) return;
-      setRows(servicesResponse.data);
-      setBranches(branchesResponse.data);
-      setCategories(catsResponse.data);
-      setStatus((current) => ({ ...current, loading: false }));
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const params = selectedBranch ? { branchId: selectedBranch } : {};
-    Promise.all([
-      api.get("/owner/services", { params }),
-      api.get("/owner/branches"),
-      api.get("/owner/service-categories")
-    ]).then(([servicesResponse, branchesResponse, catsResponse]) => {
-      if (!active) return;
-      setRows(servicesResponse.data);
-      setBranches(branchesResponse.data);
-      setCategories(catsResponse.data);
-      setStatus((current) => ({ ...current, loading: false }));
-    });
-    return () => {
-      active = false;
-    };
-  }, [selectedBranch]);
+    load();
+    return () => { active = false; };
+  }, [selectedBranchId]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -116,7 +82,7 @@ export default function ServicesPage() {
         setStatus({ error: "", success: "Service added." });
       }
       resetForm();
-      await load(selectedBranch);
+      await load(selectedBranchId);
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not save service"), success: "" });
     }
@@ -125,7 +91,7 @@ export default function ServicesPage() {
   const archiveService = async (serviceId) => {
     await api.patch(`/owner/services/${serviceId}/archive`);
     if (editingId === serviceId) resetForm();
-    await load(selectedBranch);
+    await load(selectedBranchId);
   };
 
   const startEdit = (service) => {
@@ -145,7 +111,7 @@ export default function ServicesPage() {
     });
   };
 
-  const branchLabel = selectedBranch ? branches.find((item) => item.id === selectedBranch)?.name : "All";
+  const branchLabel = selectedBranchId ? branches.find((item) => item.id === selectedBranchId)?.name : "All";
 
   return (
     <div className="page-shell">
@@ -153,14 +119,6 @@ export default function ServicesPage() {
         <div>
           <h2>Services</h2>
           <p className="muted">Services stay branch-aware so POS, invoices, and reports always use the right active catalog.</p>
-        </div>
-        <div>
-          <select value={selectedBranch} onChange={(event) => setSelectedBranch(event.target.value)}>
-            <option value="">All branches</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
-            ))}
-          </select>
         </div>
       </div>
 

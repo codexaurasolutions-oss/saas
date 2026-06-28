@@ -1,31 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import { useBranch } from '../../context/BranchContext';
 
 export default function OwnerDashboard() {
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, selectedBranchName } = useBranch();
   const [data, setData] = useState(null);
-  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     let active = true;
     const params = selectedBranchId ? { branchId: selectedBranchId } : {};
-    Promise.all([
-      api.get("/owner/dashboard", { params }),
-      api.get("/owner/branches")
-    ]).then(([dashboardResponse, branchesResponse]) => {
+    api.get("/owner/dashboard", { params }).then((response) => {
       if (!active) return;
-      setData(dashboardResponse.data);
-      setBranches(branchesResponse.data);
+      setData(response.data);
     });
     return () => {
       active = false;
     };
   }, [selectedBranchId]);
 
-  const branchName = useMemo(() => branches.find((branch) => branch.id === selectedBranchId)?.name || "All branches", [branches, selectedBranchId]);
+  const branchName = selectedBranchName;
 
   if (!data) return <div className="page-shell"><PageLoader title="Loading owner dashboard" message="Pulling sales, customers, payments, and branch activity into one view." /></div>;
 

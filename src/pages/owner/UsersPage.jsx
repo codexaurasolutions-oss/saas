@@ -47,9 +47,8 @@ const makeEmptyForm = () => ({
 const moduleCatalog = MODULE_GROUPS.flatMap((group) => group.modules);
 
 export default function UsersPage() {
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, branches } = useBranch();
   const [rows, setRows] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
   const [customRoles, setCustomRoles] = useState([]);
   const [designationOptions, setDesignationOptions] = useState([]);
@@ -62,15 +61,13 @@ export default function UsersPage() {
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
 
   const load = async (branchId = selectedBranchId) => {
-    const [usersResponse, branchesResponse, servicesResponse, rolesResponse, settingsResponse] = await Promise.all([
+    const [usersResponse, servicesResponse, rolesResponse, settingsResponse] = await Promise.all([
       api.get("/owner/users", { params: branchId ? { branchId } : {} }),
-      api.get("/owner/branches"),
       api.get("/owner/services"),
       api.get("/owner/custom-roles"),
       api.get("/owner/settings")
     ]);
     setRows(usersResponse.data);
-    setBranches(branchesResponse.data);
     setServices(servicesResponse.data);
     setCustomRoles(rolesResponse.data);
     setDesignationOptions(
@@ -83,61 +80,8 @@ export default function UsersPage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      api.get("/owner/users"),
-      api.get("/owner/branches"),
-      api.get("/owner/services"),
-      api.get("/owner/custom-roles"),
-      api.get("/owner/settings")
-    ]).then(([usersResponse, branchesResponse, servicesResponse, rolesResponse, settingsResponse]) => {
-      if (!active) return;
-      setRows(usersResponse.data);
-      setBranches(branchesResponse.data);
-      setServices(servicesResponse.data);
-      setCustomRoles(rolesResponse.data);
-      setDesignationOptions(
-        Array.isArray(settingsResponse.data?.advancedSettings?.designations)
-          ? settingsResponse.data.advancedSettings.designations.filter((row) => row?.active !== false && row?.name).map((row) => row.name)
-          : []
-      );
-      setStatus((current) => ({ ...current, loading: false }));
-    }).catch((error) => {
-      if (!active) return;
-      setStatus({ error: formatApiError(error, "Could not load staff workspace"), success: "", loading: false });
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    setStatus((current) => ({ ...current, loading: true }));
-    Promise.all([
-      api.get("/owner/users", { params: selectedBranchId ? { branchId: selectedBranchId } : {} }),
-      api.get("/owner/branches"),
-      api.get("/owner/services"),
-      api.get("/owner/custom-roles"),
-      api.get("/owner/settings")
-    ]).then(([usersResponse, branchesResponse, servicesResponse, rolesResponse, settingsResponse]) => {
-      if (!active) return;
-      setRows(usersResponse.data);
-      setBranches(branchesResponse.data);
-      setServices(servicesResponse.data);
-      setCustomRoles(rolesResponse.data);
-      setDesignationOptions(
-        Array.isArray(settingsResponse.data?.advancedSettings?.designations)
-          ? settingsResponse.data.advancedSettings.designations.filter((row) => row?.active !== false && row?.name).map((row) => row.name)
-          : []
-      );
-      setStatus((current) => ({ ...current, loading: false }));
-    }).catch((error) => {
-      if (!active) return;
-      setStatus({ error: formatApiError(error, "Could not refresh staff list"), success: "", loading: false });
-    });
-    return () => {
-      active = false;
-    };
+    load();
+    return () => { active = false; };
   }, [selectedBranchId]);
 
   const filteredRows = useMemo(() => {

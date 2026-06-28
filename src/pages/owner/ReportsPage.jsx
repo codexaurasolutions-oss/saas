@@ -199,7 +199,7 @@ export default function ReportsPage() {
     return () => {
       active = false;
     };
-  }, [filters.end, filters.start]);
+  }, [filters.end, filters.start, selectedBranchId]);
 
   const jumpToReport = (nextView) => {
     const section = reportSections.find((item) => item.key === nextView);
