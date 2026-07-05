@@ -26,8 +26,12 @@ export default function LoginPage() {
         password: form.password,
         loginAccessToken: access || undefined
       };
-      await login(payload);
-      nav("/admin/dashboard");
+      const res = await login(payload);
+      if (res?.user?.systemRole === "SUPER_ADMIN") {
+        nav("/super-admin/dashboard");
+      } else {
+        nav("/admin/dashboard");
+      }
     } catch (error) {
       setErr(formatApiError(error, "Login failed"));
     } finally {
