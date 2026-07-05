@@ -209,46 +209,57 @@ export default function SubscriptionsPage() {
       <div className="two-col">
         <div className="panel-card">
           <h3>Create Subscription</h3>
-          <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
+          <form onSubmit={submit} className="form-grid">
             <label>
-              <span className="muted">Salon</span>
+              <span>Salon</span>
               <select value={form.salonId} onChange={(event) => setForm({ ...form, salonId: event.target.value })}>
-              <option value="">Select salon</option>
-              {salons.map((salon) => <option key={salon.id} value={salon.id}>{salon.name}</option>)}
-            </select>
+                <option value="">Select salon</option>
+                {salons.map((salon) => <option key={salon.id} value={salon.id}>{salon.name}</option>)}
+              </select>
             </label>
             <label>
-              <span className="muted">Plan</span>
+              <span>Plan</span>
               <select value={form.planId} onChange={(event) => setForm({ ...form, planId: event.target.value })}>
-              <option value="">Select plan</option>
-              {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}{plan.isCustom ? " (Custom)" : ""}</option>)}
-            </select>
+                <option value="">Select plan</option>
+                {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}{plan.isCustom ? " (Custom)" : ""}</option>)}
+              </select>
             </label>
             <label>
-              <span className="muted">Active</span>
+              <span>Status</span>
               <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
-              <option value="ACTIVE">Active</option>
-              <option value="TRIAL">Trial</option>
-              <option value="EXPIRED">Expired</option>
-              <option value="SUSPENDED">Suspended</option>
-            </select>
+                <option value="ACTIVE">Active</option>
+                <option value="TRIAL">Trial</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="SUSPENDED">Suspended</option>
+              </select>
             </label>
             <label>
-              <span className="muted">Paid</span>
+              <span>Payment Status</span>
               <select value={form.paymentStatus} onChange={(event) => setForm({ ...form, paymentStatus: event.target.value })}>
-              <option value="PAID">Paid</option>
-              <option value="PENDING">Pending</option>
-              <option value="FAILED">Failed</option>
-            </select>
+                <option value="PAID">Paid</option>
+                <option value="PENDING">Pending</option>
+                <option value="FAILED">Failed</option>
+              </select>
             </label>
             <label>
-              <span className="muted">Manual discount</span>
+              <span>Manual Discount (INR)</span>
               <input type="number" min="0" value={form.manualDiscount} placeholder="Manual discount" onChange={(event) => setForm({ ...form, manualDiscount: event.target.value })} />
             </label>
-            <textarea rows="4" value={form.notes} placeholder="Notes" onChange={(event) => setForm({ ...form, notes: event.target.value })} />
-            <input type="date" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
-            <input type="date" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} />
-            <button>Create Subscription</button>
+            <label>
+              <span>Subscription Start Date</span>
+              <input type="date" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
+            </label>
+            <label>
+              <span>Subscription End Date</span>
+              <input type="date" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              <span>Internal Notes</span>
+              <textarea rows="4" value={form.notes} placeholder="Notes" onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </label>
+            <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
+              <button>Create Subscription</button>
+            </div>
           </form>
           {status.error && <p className="error-text">{status.error}</p>}
           {status.success && <p className="success-text">{status.success}</p>}

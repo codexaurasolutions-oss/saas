@@ -58,15 +58,14 @@ export default function SuperAdminDashboard() {
             <h1 style={{ marginTop: 0 }}>Super Admin Dashboard</h1>
             <p style={{ marginBottom: 0 }}>Live SaaS overview for salons, subscriptions, leads, and support workload.</p>
           </div>
-          <div style={{ minWidth: 220 }}>
-            <div className="item-meta" style={{ marginBottom: 8 }}>Reporting window</div>
-            <label>
-              <span className="muted">Today</span>
-              <select value={period} onChange={(event) => setPeriod(event.target.value)}>
-              <option value="today">Today</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
+          <div style={{ minWidth: 220 }} className="super-admin-page">
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Reporting Period</span>
+              <select value={period} onChange={(event) => setPeriod(event.target.value)} style={{ minHeight: 38, padding: "6px 12px", borderRadius: 8 }}>
+                <option value="today">Today</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
             </label>
           </div>
         </div>
