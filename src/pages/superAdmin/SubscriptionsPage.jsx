@@ -39,6 +39,7 @@ export default function SubscriptionsPage() {
 
   useEffect(() => {
     let active = true;
+    setStatus({ error: "", success: "" });
     Promise.all([
       api.get("/super-admin/subscriptions", {
         params: {
@@ -54,6 +55,10 @@ export default function SubscriptionsPage() {
       setRows(subscriptionsResponse.data);
       setSalons(salonsResponse.data);
       setPlans(plansResponse.data);
+      setLoading(false);
+    }).catch((err) => {
+      if (!active) return;
+      setStatus({ error: formatApiError(err, "Could not load subscription data."), success: "" });
       setLoading(false);
     });
     return () => {

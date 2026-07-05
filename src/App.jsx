@@ -85,6 +85,18 @@ const CheckoutPage = lazyWithRetry(() => import("./pages/storefront/CheckoutPage
 const LegalContentPage = lazyWithRetry(() => import("./pages/shared/LegalContentPage.jsx"));
 const WebsiteEditorPage = lazyWithRetry(() => import("./pages/owner/WebsiteEditorPage.jsx"));
 const ManagePage = lazyWithRetry(() => import("./pages/owner/ManagePage.jsx"));
+const MarketingHomePage = lazyWithRetry(() => import("./pages/public/MarketingHomePage.jsx"));
+const PublicDemoLeadPage = lazyWithRetry(() => import("./pages/public/DemoLeadPage.jsx"));
+const DemoCheckoutPage = lazyWithRetry(() => import("./pages/public/DemoCheckoutPage.jsx"));
+
+const SuperAdminDashboard = lazyWithRetry(() => import("./pages/superAdmin/Dashboard.jsx"));
+const SuperAdminSalonsPage = lazyWithRetry(() => import("./pages/superAdmin/SalonsPage.jsx"));
+const SuperAdminPlansPage = lazyWithRetry(() => import("./pages/superAdmin/PlansPage.jsx"));
+const SuperAdminDemoLeadsPage = lazyWithRetry(() => import("./pages/superAdmin/DemoLeadsPage.jsx"));
+const SuperAdminSubscriptionsPage = lazyWithRetry(() => import("./pages/superAdmin/SubscriptionsPage.jsx"));
+const SuperAdminSupportTicketsPage = lazyWithRetry(() => import("./pages/superAdmin/SupportTicketsPage.jsx"));
+const SuperAdminSettingsPage = lazyWithRetry(() => import("./pages/superAdmin/SettingsPage.jsx"));
+const SuperAdminAuditLogsPage = lazyWithRetry(() => import("./pages/superAdmin/AuditLogsPage.jsx"));
 
 const RouteFallback = () => (
   <div className="page-shell">
@@ -244,17 +256,51 @@ const Protected = () => {
     }
   ];
 
-  const visibleGroups = [
-    ...(shouldShowMyWorkspace && myWorkspaceItems.length
-      ? [{
-          label: "My Workspace",
-          hint: "Personal pages",
-          defaultOpen: true,
-          items: myWorkspaceItems
-        }]
-      : []),
-    ...groups
+  const superAdminGroups = [
+    {
+      label: "Platform Command",
+      hint: "SaaS control deck",
+      defaultOpen: true,
+      items: [
+        { label: "Dashboard", to: "/super-admin/dashboard" },
+        { label: "Salons Control", to: "/super-admin/salons" },
+        { label: "Plans Catalog", to: "/super-admin/plans" },
+        { label: "Subscriptions", to: "/super-admin/subscriptions" }
+      ]
+    },
+    {
+      label: "Operations",
+      hint: "Leads and tickets",
+      defaultOpen: true,
+      items: [
+        { label: "Demo Pipeline", to: "/super-admin/demo-leads" },
+        { label: "Support Queue", to: "/super-admin/support-tickets" }
+      ]
+    },
+    {
+      label: "System",
+      hint: "Configuration & logs",
+      defaultOpen: true,
+      items: [
+        { label: "Global Settings", to: "/super-admin/settings" },
+        { label: "Platform Logs", to: "/super-admin/audit-logs" }
+      ]
+    }
   ];
+
+  const visibleGroups = auth?.user?.systemRole === "SUPER_ADMIN"
+    ? superAdminGroups
+    : [
+        ...(shouldShowMyWorkspace && myWorkspaceItems.length
+          ? [{
+              label: "My Workspace",
+              hint: "Personal pages",
+              defaultOpen: true,
+              items: myWorkspaceItems
+            }]
+          : []),
+        ...groups
+      ];
 
   return (
     <div className={`app-shell ${!sidebarExpanded ? "sidebar-collapsed" : ""}`}>
@@ -318,7 +364,13 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <div key={location.pathname} className="route-stage">
       <Routes location={location}>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Public SaaS marketing pages */}
+        <Route path="/" element={<MarketingHomePage />} />
+        <Route path="/features" element={<MarketingHomePage />} />
+        <Route path="/pricing" element={<MarketingHomePage />} />
+        <Route path="/platform" element={<MarketingHomePage />} />
+        <Route path="/book-demo" element={<PublicDemoLeadPage />} />
+        <Route path="/demo-checkout/:leadId/:planId" element={<DemoCheckoutPage />} />
 
         <Route path="/customer/login" element={<CustomerLoginPage />} />
         <Route path="/customer/register" element={<CustomerRegisterPage />} />

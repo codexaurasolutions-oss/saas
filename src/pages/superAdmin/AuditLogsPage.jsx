@@ -69,7 +69,18 @@ export default function AuditLogsPage() {
                 </div>
                 <span className="badge">{new Date(row.createdAt).toLocaleString()}</span>
               </div>
-              <div className="muted">No detailed metadata preview available.</div>
+              {row.meta && Object.keys(row.meta).length > 0 ? (
+                <div style={{ marginTop: 8, padding: "10px 12px", background: "#f5f5f4", borderRadius: 8, fontFamily: "monospace", fontSize: 12, display: "grid", gap: 4 }}>
+                  {Object.entries(row.meta).map(([key, val]) => (
+                    <div key={key} style={{ display: "flex", gap: 8 }}>
+                      <span className="muted" style={{ fontWeight: "bold" }}>{key}:</span>
+                      <span>{typeof val === "object" ? JSON.stringify(val) : String(val)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>No detailed metadata available.</div>
+              )}
             </div>
           ))}
           {!status.loading && !rows.length && (

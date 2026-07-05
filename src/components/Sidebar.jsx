@@ -17,16 +17,17 @@ import {
 } from "lucide-react";
 
 const GROUP_ICONS = {
-  "My Workspace":  <User size={17} />,
-  "Operations":    <Zap size={17} />,
-  "Setup":         <Settings size={17} />,
-  "Expenses":      <DollarSign size={17} />,
-  "Enquiries":     <MessageSquare size={17} />,
-  "System":        <Wrench size={17} />,
-  "Workspace":     <Home size={17} />,
-  "Settings":      <Settings size={17} />,
-  "Manage":        <FolderOpen size={17} />,
-  "Website":       <Globe size={17} />,
+  "My Workspace":     <User size={17} />,
+  "Operations":       <Zap size={17} />,
+  "Setup":            <Settings size={17} />,
+  "Expenses":         <DollarSign size={17} />,
+  "Enquiries":        <MessageSquare size={17} />,
+  "System":           <Wrench size={17} />,
+  "Workspace":        <Home size={17} />,
+  "Settings":         <Settings size={17} />,
+  "Manage":           <FolderOpen size={17} />,
+  "Website":          <Globe size={17} />,
+  "Platform Command": <Home size={17} />,
 };
 
 const DEFAULT_ICON = <LayoutDashboard size={17} />;

@@ -38,16 +38,59 @@ export default function PlansPage() {
   const load = async () => {
     setLoading(true);
     try {
-      setRows((await api.get("/super-admin/plans")).data);
+      const data = (await api.get("/super-admin/plans")).data;
+      setRows(data);
+      if (data.length >= 1) {
+        const firstPlan = data[0];
+        setEditingId(firstPlan.id);
+        setForm({
+          name: firstPlan.name,
+          monthlyPrice: Number(firstPlan.monthlyPrice || 0),
+          yearlyPrice: Number(firstPlan.yearlyPrice || 0),
+          trialDays: Number(firstPlan.trialDays || 14),
+          branchLimit: Number(firstPlan.branchLimit || 99999),
+          userLimit: Number(firstPlan.userLimit || 9999),
+          customerLimit: Number(firstPlan.customerLimit || 99999),
+          invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
+          storageLimit: Number(firstPlan.storageLimit || 999),
+          isCustom: Boolean(firstPlan.isCustom),
+          featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+        });
+      }
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Could not load plan data."), success: "" });
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     let active = true;
     api.get("/super-admin/plans").then((response) => {
       if (active) {
         setRows(response.data);
+        setLoading(false);
+        if (response.data.length >= 1) {
+          const firstPlan = response.data[0];
+          setEditingId(firstPlan.id);
+          setForm({
+            name: firstPlan.name,
+            monthlyPrice: Number(firstPlan.monthlyPrice || 0),
+            yearlyPrice: Number(firstPlan.yearlyPrice || 0),
+            trialDays: Number(firstPlan.trialDays || 14),
+            branchLimit: Number(firstPlan.branchLimit || 99999),
+            userLimit: Number(firstPlan.userLimit || 9999),
+            customerLimit: Number(firstPlan.customerLimit || 99999),
+            invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
+            storageLimit: Number(firstPlan.storageLimit || 999),
+            isCustom: Boolean(firstPlan.isCustom),
+            featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+          });
+        }
+      }
+    }).catch((err) => {
+      if (active) {
+        setStatus({ error: formatApiError(err, "Could not load plans."), success: "" });
         setLoading(false);
       }
     });
@@ -63,8 +106,26 @@ export default function PlansPage() {
   }), [rows]);
 
   const resetForm = () => {
-    setForm(emptyForm);
-    setEditingId("");
+    if (rows.length >= 1) {
+      const firstPlan = rows[0];
+      setForm({
+        name: firstPlan.name,
+        monthlyPrice: Number(firstPlan.monthlyPrice || 0),
+        yearlyPrice: Number(firstPlan.yearlyPrice || 0),
+        trialDays: Number(firstPlan.trialDays || 14),
+        branchLimit: Number(firstPlan.branchLimit || 99999),
+        userLimit: Number(firstPlan.userLimit || 9999),
+        customerLimit: Number(firstPlan.customerLimit || 99999),
+        invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
+        storageLimit: Number(firstPlan.storageLimit || 999),
+        isCustom: Boolean(firstPlan.isCustom),
+        featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+      });
+      setEditingId(firstPlan.id);
+    } else {
+      setForm(emptyForm);
+      setEditingId("");
+    }
   };
 
   const submit = async (event) => {
@@ -92,7 +153,6 @@ export default function PlansPage() {
         await api.post("/super-admin/plans", payload);
         setStatus({ error: "", success: "Plan created." });
       }
-      resetForm();
       await load();
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not save plan"), success: "" });
@@ -106,11 +166,11 @@ export default function PlansPage() {
       monthlyPrice: Number(row.monthlyPrice || 0),
       yearlyPrice: Number(row.yearlyPrice || 0),
       trialDays: Number(row.trialDays || 14),
-      branchLimit: Number(row.branchLimit || 1),
-      userLimit: Number(row.userLimit || 5),
-      customerLimit: Number(row.customerLimit || 500),
-      invoiceLimit: Number(row.invoiceLimit || 1000),
-      storageLimit: Number(row.storageLimit || 0),
+      branchLimit: Number(row.branchLimit || 99999),
+      userLimit: Number(row.userLimit || 9999),
+      customerLimit: Number(row.customerLimit || 99999),
+      invoiceLimit: Number(row.invoiceLimit || 99999),
+      storageLimit: Number(row.storageLimit || 999),
       isCustom: Boolean(row.isCustom),
       featureFlagsText: JSON.stringify(row.featureFlags || {}, null, 2)
     });

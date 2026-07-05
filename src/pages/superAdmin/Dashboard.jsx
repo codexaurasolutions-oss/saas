@@ -6,9 +6,16 @@ import PageLoader from "../../components/PageLoader";
 
 export default function SuperAdminDashboard() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
   const [period, setPeriod] = useState("month");
+
   useEffect(() => {
-    api.get("/super-admin/dashboard", { params: { period } }).then((response) => setData(response.data));
+    setError("");
+    api.get("/super-admin/dashboard", { params: { period } })
+      .then((response) => setData(response.data))
+      .catch((err) => {
+        setError(err?.response?.data?.message || "Could not load dashboard stats.");
+      });
   }, [period]);
 
   const healthCards = useMemo(() => [
@@ -19,6 +26,18 @@ export default function SuperAdminDashboard() {
     { label: "Demo Leads", value: data?.demoLeadsCount || 0, caption: "Fresh acquisition pipeline" },
     { label: "Support Queue", value: data?.supportTicketsCount || 0, caption: "Open support workload" }
   ], [data]);
+
+  if (error) {
+    return (
+      <div className="page-shell">
+        <div className="panel-card" style={{ maxWidth: 600, margin: "40px auto", textAlign: "center" }}>
+          <h2 className="error-text" style={{ color: "#c2410c" }}>Dashboard Error</h2>
+          <p className="muted">{error}</p>
+          <button type="button" onClick={() => { setError(""); setData(null); api.get("/super-admin/dashboard", { params: { period } }).then(res => setData(res.data)).catch(e => setError(e?.response?.data?.message || "Error")); }} style={{ marginTop: 16 }}>Retry Loading</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
     return (

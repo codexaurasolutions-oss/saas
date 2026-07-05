@@ -32,6 +32,7 @@ export default function SuperAdminSupportTicketsPage() {
 
   useEffect(() => {
     let active = true;
+    setStatus({ error: "", success: "" });
     api.get("/super-admin/support-tickets", {
       params: {
         ...(filters.q ? { q: filters.q } : {}),
@@ -43,6 +44,10 @@ export default function SuperAdminSupportTicketsPage() {
       setRows(response.data);
       setNotes(Object.fromEntries(response.data.map((row) => [row.id, row.internalNote || ""])));
       setAssignedAgents(Object.fromEntries(response.data.map((row) => [row.id, row.assignedAgentName || ""])));
+      setLoading(false);
+    }).catch((err) => {
+      if (!active) return;
+      setStatus({ error: formatApiError(err, "Could not load support tickets."), success: "" });
       setLoading(false);
     });
     return () => {

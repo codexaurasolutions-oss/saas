@@ -111,6 +111,7 @@ export default function SalonsPage() {
 
   useEffect(() => {
     let active = true;
+    setStatus({ error: "", success: "" });
     api.get("/super-admin/salons", {
       params: {
         ...(query ? { q: query } : {}),
@@ -119,6 +120,11 @@ export default function SalonsPage() {
     }).then((response) => {
       if (active) {
         setSalons(response.data);
+        setLoading(false);
+      }
+    }).catch((err) => {
+      if (active) {
+        setStatus({ error: formatApiError(err, "Could not load salons."), success: "" });
         setLoading(false);
       }
     });

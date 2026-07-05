@@ -61,6 +61,9 @@ export default function SuperAdminSettingsPage() {
         invoicePrefix: response.data?.invoicePrefix || "INV"
       });
       setLoading(false);
+    }).catch((err) => {
+      setStatus({ error: formatApiError(err, "Could not load global settings."), success: "" });
+      setLoading(false);
     });
   }, []);
 
@@ -153,7 +156,11 @@ export default function SuperAdminSettingsPage() {
             <input value={form.blogTitle} placeholder="Blog title" onChange={(event) => setForm({ ...form, blogTitle: event.target.value })} />
             <textarea rows="3" value={form.blogIntro} placeholder="Blog intro" onChange={(event) => setForm({ ...form, blogIntro: event.target.value })} />
             <textarea rows="3" value={form.backupPolicyNote} placeholder="Backup / retention note" onChange={(event) => setForm({ ...form, backupPolicyNote: event.target.value })} />
-            <label style={{ display: "flex", gap: 8 }}>
+            <label>
+               <span className="muted">Notification Defaults (JSON)</span>
+               <textarea rows="4" value={form.notificationDefaultsText} onChange={(event) => setForm({ ...form, notificationDefaultsText: event.target.value })} placeholder='{"email": true, "sms": false, "whatsapp": true}' />
+             </label>
+             <label style={{ display: "flex", gap: 8 }}>
               <input type="checkbox" checked={form.maintenanceMode} onChange={(event) => setForm({ ...form, maintenanceMode: event.target.checked })} />
               Maintenance Mode
             </label>
