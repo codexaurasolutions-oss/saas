@@ -34,7 +34,7 @@ export default function AuditLogsPage() {
   }, [query, typeFilter]);
 
   return (
-    <div className="page-shell">
+    <div className="page-shell super-admin-page">
       <h2>Audit Logs</h2>
       <div className="panel-card">
         <div className="form-grid" style={{ marginBottom: 16 }}>

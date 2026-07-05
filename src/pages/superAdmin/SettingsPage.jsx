@@ -106,7 +106,7 @@ export default function SuperAdminSettingsPage() {
   };
 
   return (
-    <div className="page-shell">
+    <div className="page-shell super-admin-page">
       <div className="hero-card" style={{ padding: 24, marginBottom: 20 }}>
         <div className="item-head">
           <div>

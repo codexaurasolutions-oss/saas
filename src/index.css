@@ -3574,4 +3574,204 @@ pre {
   }
 }
 
+/* ── Super Admin Custom Styling (Premium SaaS Design System) ── */
+.super-admin-page {
+  padding: 24px;
+}
+
+.super-admin-page .hero-card {
+  background: linear-gradient(135deg, #1e1b4b, #311042) !important; /* Deep purple-indigo gradient */
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(30, 27, 75, 0.15) !important;
+  border-radius: 24px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 32px !important;
+}
+
+.super-admin-page .hero-card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.super-admin-page .hero-card h1 {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  margin: 0 0 8px 0 !important;
+  background: linear-gradient(to right, #ffffff, #e0e7ff) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.super-admin-page .hero-card p {
+  color: #c7d2fe !important;
+  font-size: 1.05rem !important;
+  margin: 0 !important;
+}
+
+.super-admin-page .cta-secondary {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.super-admin-page .cta-secondary:hover {
+  background: white !important;
+  color: #1e1b4b !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.super-admin-page .panel-card {
+  background: white !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.04) !important;
+  padding: 24px !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.super-admin-page .panel-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 30px rgba(148, 163, 184, 0.08) !important;
+}
+
+.super-admin-page input,
+.super-admin-page select,
+.super-admin-page textarea {
+  border: 1px solid #cbd5e1 !important;
+  background: #f8fafc !important;
+  border-radius: 14px !important;
+  font-size: 0.95rem !important;
+  padding: 12px 16px !important;
+  min-height: 48px !important;
+  transition: all 0.2s ease !important;
+}
+
+.super-admin-page input:focus,
+.super-admin-page select:focus,
+.super-admin-page textarea:focus {
+  border-color: #6366f1 !important;
+  background: white !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+}
+
+.super-admin-page .stat-card {
+  background: white !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 128px !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+.super-admin-page .stat-card:hover {
+  transform: translateY(-3px) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.04) !important;
+}
+
+.super-admin-page .stat-label {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: #64748b !important;
+  letter-spacing: 0.05em !important;
+}
+
+.super-admin-page .stat-value {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin-top: 8px !important;
+  font-family: monospace !important;
+}
+
+.super-admin-page .badge {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 20px !important;
+  padding: 6px 14px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+}
+
+/* Badge colors for demo status */
+.super-admin-page .status-pending { background: #dbeafe !important; color: #1e40af !important; border: none !important; }
+.super-admin-page .status-contacted { background: #f3e8ff !important; color: #6b21a8 !important; border: none !important; }
+.super-admin-page .status-meeting_scheduled { background: #fef3c7 !important; color: #92400e !important; border: none !important; }
+.super-admin-page .status-approved { background: #dcfce7 !important; color: #166534 !important; border: none !important; }
+.super-admin-page .status-rejected { background: #fee2e2 !important; color: #991b1b !important; border: none !important; }
+
+.super-admin-page button {
+  background: #6366f1 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  border-radius: 14px !important;
+  padding: 12px 24px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  min-height: 48px !important;
+}
+
+.super-admin-page button:hover {
+  background: #4f46e5 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+}
+
+.super-admin-page button.secondary-button {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.super-admin-page button.secondary-button:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.super-admin-page .list-item {
+  border: 1px solid #f1f5f9 !important;
+  background: #ffffff !important;
+  padding: 16px 20px !important;
+  border-radius: 16px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 8px !important;
+}
+
+.super-admin-page .list-item:hover {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  transform: translateX(4px) !important;
+}
+
 
