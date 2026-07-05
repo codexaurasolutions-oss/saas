@@ -248,43 +248,82 @@ export default function SalonsPage() {
         <div className="panel-card">
           <h3>{editingId ? "Update Salon" : "Create Salon"}</h3>
           <form onSubmit={createOrUpdateSalon} className="form-grid">
-            <input placeholder="Salon name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <input placeholder="Slug" value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value })} />
-            <select value={form.businessType} onChange={(event) => setForm({ ...form, businessType: event.target.value })}>
-              {businessTypes.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
-            <input placeholder="Email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
-            <input placeholder="Address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
-            <input placeholder="City" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
-            <input placeholder="Country" value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} />
-            <input placeholder="Timezone" value={form.timezone} onChange={(event) => setForm({ ...form, timezone: event.target.value })} />
-            <input placeholder="Currency" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} />
-            <input type="number" min="0" placeholder="Tax rate" value={form.taxRate} onChange={(event) => setForm({ ...form, taxRate: event.target.value })} />
             <label>
-              <span className="muted">Trial start date</span>
+              <span>Salon Name</span>
+              <input placeholder="Salon name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            </label>
+            <label>
+              <span>URL Slug</span>
+              <input placeholder="Slug" value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value })} />
+            </label>
+            <label>
+              <span>Business Type</span>
+              <select value={form.businessType} onChange={(event) => setForm({ ...form, businessType: event.target.value })}>
+                {businessTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Business Email</span>
+              <input placeholder="Email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+            </label>
+            <label>
+              <span>Business Phone</span>
+              <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
+            </label>
+            <label>
+              <span>Street Address</span>
+              <input placeholder="Address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+            </label>
+            <label>
+              <span>City</span>
+              <input placeholder="City" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
+            </label>
+            <label>
+              <span>Country</span>
+              <input placeholder="Country" value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} />
+            </label>
+            <label>
+              <span>Timezone</span>
+              <input placeholder="Timezone" value={form.timezone} onChange={(event) => setForm({ ...form, timezone: event.target.value })} />
+            </label>
+            <label>
+              <span>Currency Code (e.g. INR)</span>
+              <input placeholder="Currency" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} />
+            </label>
+            <label>
+              <span>Tax Rate (%)</span>
+              <input type="number" min="0" placeholder="Tax rate" value={form.taxRate} onChange={(event) => setForm({ ...form, taxRate: event.target.value })} />
+            </label>
+            <label>
+              <span>Trial Start Date</span>
               <input type="date" value={form.trialStartsAt} onChange={(event) => setForm({ ...form, trialStartsAt: event.target.value })} />
             </label>
             <label>
-              <span className="muted">Trial end date</span>
+              <span>Trial End Date</span>
               <input type="date" value={form.trialEndsAt} onChange={(event) => setForm({ ...form, trialEndsAt: event.target.value })} />
             </label>
-            <textarea rows="4" style={{ gridColumn: "1 / -1" }} placeholder="Internal note" value={form.internalNote} onChange={(event) => setForm({ ...form, internalNote: event.target.value })} />
-            {!editingId && <input placeholder="Owner name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />}
-            {!editingId && <input placeholder="Owner email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />}
-            {!editingId && <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />}
-            <div className="summary-box" style={{ gridColumn: "1 / -1" }}>
-              <strong>Feature Access</strong>
-              <div className="item-meta">Enabled features: {activeFeatureCount} / {featureFlagKeys.length}</div>
-              <div className="badge-row">
-                {featureFlagKeys.map((key) => (
-                  <label key={key} className="badge" style={{ gap: 8 }}>
-                    <input type="checkbox" checked={Boolean(featureFlags[key])} onChange={() => toggleDraftFeature(key)} />
-                    {key}
-                  </label>
-                ))}
-              </div>
-            </div>
+            <label style={{ gridColumn: "1 / -1" }}>
+              <span>Internal Note</span>
+              <textarea rows="4" placeholder="Internal note" value={form.internalNote} onChange={(event) => setForm({ ...form, internalNote: event.target.value })} />
+            </label>
+            {!editingId && (
+              <label>
+                <span>Owner Full Name</span>
+                <input placeholder="Owner name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
+              </label>
+            )}
+            {!editingId && (
+              <label>
+                <span>Owner Email</span>
+                <input placeholder="Owner email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+              </label>
+            )}
+            {!editingId && (
+              <label>
+                <span>Owner Password</span>
+                <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />
+              </label>
+            )}
             <div className="form-actions" style={{ gridColumn: "1 / -1" }}>
               <button>{editingId ? "Save Salon" : "Create Salon"}</button>
               {editingId && <button type="button" className="secondary-button" onClick={resetForm}>Cancel Edit</button>}

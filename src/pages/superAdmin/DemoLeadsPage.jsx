@@ -22,6 +22,7 @@ export default function DemoLeadsPage() {
   const [busyId, setBusyId] = useState("");
   const [feedback, setFeedback] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(true);
+  const [lastApprovedLead, setLastApprovedLead] = useState(null);
 
   const load = async (nextFilters = filters) => {
     setLoading(true);
@@ -144,8 +145,10 @@ export default function DemoLeadsPage() {
   const approveLead = async (leadId) => {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
+    setLastApprovedLead(null);
     try {
       const response = await api.post(`/super-admin/demo-leads/${leadId}/approve`, draftsById[leadId]);
+      setLastApprovedLead(response.data);
       setFeedback({
         error: response.data.emailError ? `Demo approved but email delivery failed: ${response.data.emailError}` : "",
         success: response.data.owner.isDemoAccount 
@@ -231,6 +234,48 @@ export default function DemoLeadsPage() {
       <div className="panel-card">
         {feedback.error && <p className="error-text">{feedback.error}</p>}
         {feedback.success && <p className="success-text">{feedback.success}</p>}
+
+        {lastApprovedLead && (
+          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", marginBottom: 20, padding: 18, borderRadius: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ color: "#166534", margin: "0 0 6px 0", fontSize: "1.05rem" }}>✅ Workspace Setup Ready!</h4>
+                <p style={{ margin: "0 0 12px 0", fontSize: "0.9rem", color: "#1e3a1e" }}>
+                  The salon workspace has been created for <strong>{lastApprovedLead.owner?.email}</strong>.
+                </p>
+                {lastApprovedLead.emailError && (
+                  <div style={{ color: "#b91c1c", background: "#fee2e2", padding: "8px 12px", borderRadius: 8, fontSize: "0.85rem", marginBottom: 12, border: "1px solid #fca5a5" }}>
+                    ⚠️ Email delivery timed out. You can manually copy the invitation details below to send via WhatsApp or SMS.
+                  </div>
+                )}
+                <div style={{ display: "grid", gap: 12, background: "white", padding: 14, borderRadius: 10, border: "1px solid #dcfce7" }}>
+                  <div><strong>Salon Slug:</strong> <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4 }}>{lastApprovedLead.salon?.slug}</code></div>
+                  <div>
+                    <strong style={{ fontSize: "0.85rem", color: "#475569" }}>Setup / Password Invite Link:</strong>
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <input readOnly value={lastApprovedLead.inviteLink || ""} style={{ flex: 1, minHeight: 36, padding: "4px 8px", fontSize: "0.82rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(lastApprovedLead.inviteLink || ""); alert("Setup link copied to clipboard!"); }} style={{ minHeight: 36, padding: "4px 12px", fontSize: "0.82rem", background: "#10b981", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: "0.85rem", color: "#475569" }}>Direct Owner Login Link:</strong>
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <input readOnly value={lastApprovedLead.loginLink || ""} style={{ flex: 1, minHeight: 36, padding: "4px 8px", fontSize: "0.82rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(lastApprovedLead.loginLink || ""); alert("Login link copied to clipboard!"); }} style={{ minHeight: 36, padding: "4px 12px", fontSize: "0.82rem", background: "#10b981", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" className="secondary-button" onClick={() => setLastApprovedLead(null)} style={{ padding: "4px 10px", minHeight: 30, fontSize: "0.8rem", cursor: "pointer" }}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
         {loading ? (
           <PageLoader
             title="Loading demo pipeline"
