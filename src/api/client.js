@@ -1,7 +1,17 @@
 import axios from "axios";
 import { normalizePhoneFields, validatePhoneFields } from "../utils/phone";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://resparkbackend-production-ba7b.up.railway.app/api/v1";
+const getApiBase = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    if (!envUrl || envUrl.includes("localhost") || envUrl.includes("127.0.0.1") || envUrl.includes("5050")) {
+      return "https://saasbackend-production-9177.up.railway.app/api/v1";
+    }
+  }
+  return envUrl || "https://saasbackend-production-9177.up.railway.app/api/v1";
+};
+
+const API_BASE = getApiBase();
 
 export const api = axios.create({ baseURL: API_BASE });
 

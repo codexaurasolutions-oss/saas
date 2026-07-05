@@ -351,7 +351,20 @@ const OwnerRoute = ({ moduleKey, action = "view", featureKey, element }) => {
   return element;
 };
 
+const SuperAdminRoute = ({ element }) => {
+  const { auth } = useAuth();
+  if (!auth) return <Navigate to="/login" replace />;
+  if (auth.user?.systemRole !== "SUPER_ADMIN") {
+    return <AccessNotice title="Super Admin Area" message="You do not have permission to access the SaaS control panel." />;
+  }
+  return element;
+};
+
 const Home = () => {
+  const { auth } = useAuth();
+  if (auth?.user?.systemRole === "SUPER_ADMIN") {
+    return <Navigate to="/super-admin/dashboard" replace />;
+  }
   return <OwnerDashboard />;
 };
 
@@ -555,6 +568,17 @@ export default function App() {
           <Route path="/admin/my-commission" element={<OwnerRoute moduleKey="myCommission" element={<MyCommissionPage />} />} />
           <Route path="/admin/my-payroll" element={<OwnerRoute moduleKey="myPayroll" element={<MyPayrollPage />} />} />
           <Route path="/admin/my-profile" element={<OwnerRoute moduleKey="myProfile" element={<MyProfilePage />} />} />
+
+          {/* Super Admin Area */}
+          <Route path="/super-admin/dashboard" element={<SuperAdminRoute element={<SuperAdminDashboard />} />} />
+          <Route path="/super-admin/salons" element={<SuperAdminRoute element={<SuperAdminSalonsPage />} />} />
+          <Route path="/super-admin/plans" element={<SuperAdminRoute element={<SuperAdminPlansPage />} />} />
+          <Route path="/super-admin/demo-leads" element={<SuperAdminRoute element={<SuperAdminDemoLeadsPage />} />} />
+          <Route path="/super-admin/subscriptions" element={<SuperAdminRoute element={<SuperAdminSubscriptionsPage />} />} />
+          <Route path="/super-admin/support-tickets" element={<SuperAdminRoute element={<SuperAdminSupportTicketsPage />} />} />
+          <Route path="/super-admin/settings" element={<SuperAdminRoute element={<SuperAdminSettingsPage />} />} />
+          <Route path="/super-admin/audit-logs" element={<SuperAdminRoute element={<SuperAdminAuditLogsPage />} />} />
+
           <Route path="/branches" element={<Navigate to="/admin/branches" replace />} />
           <Route path="/services" element={<Navigate to="/admin/services" replace />} />
           <Route path="/customers" element={<Navigate to="/admin/customers" replace />} />
