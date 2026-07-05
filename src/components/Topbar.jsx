@@ -534,25 +534,37 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       {/* Top White Row */}
       <div className="respark-top-row">
         <div className="respark-logo-area">
-          {/* <img src="/skillify-logo.png" alt="Skillify" className="respark-brand-image" /> */}
-          <div className="respark-salon-name">{salonName}</div>
+          {auth?.user?.systemRole === "SUPER_ADMIN" ? (
+            <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0, fontWeight: 800, fontSize: "1.2rem", color: "#1e1b4b" }}>
+              Super Admin
+            </div>
+          ) : (
+            <div className="respark-salon-name">{salonName}</div>
+          )}
         </div>
 
         {/* Centered Search Bar */}
-        {canGlobalSearch ? (
+        {(canGlobalSearch || auth?.user?.systemRole === "SUPER_ADMIN") ? (
           <div className="respark-search-wrap" style={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
             <div className="respark-search-bar">
               <Search size={16} color="#64748b" />
               <input
                 type="text"
-                placeholder="Search guests, services, products, staff, invoices..."
+                placeholder={auth?.user?.systemRole === "SUPER_ADMIN" ? "Search salons, tenants, leads..." : "Search guests, services, products, staff, invoices..."}
                 value={quickSearch}
-                onFocus={() => setSearchOpen(true)}
+                onFocus={() => auth?.user?.systemRole !== "SUPER_ADMIN" && setSearchOpen(true)}
                 onChange={(event) => setQuickSearch(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") setSearchOpen(false);
                   if (event.key === "Enter") {
                     const term = quickSearch.trim();
+                    if (auth?.user?.systemRole === "SUPER_ADMIN") {
+                      if (term) {
+                        navigate(`/super-admin/salons?q=${encodeURIComponent(term)}`);
+                        setQuickSearch("");
+                      }
+                      return;
+                    }
                     const first = searchResults[0];
                     if (first?.to) {
                       navigate(first.to);

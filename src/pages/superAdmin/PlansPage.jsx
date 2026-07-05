@@ -3,6 +3,31 @@ import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 
+const defaultFeatureFlags = {
+  pos: true,
+  appointments: true,
+  inventory: true,
+  crm: true,
+  campaigns: true,
+  ecommerce: true,
+  digitalCatalog: true,
+  catalogAnalytics: true,
+  feedback: true,
+  reports: true,
+  memberships: true,
+  packages: true,
+  loyalty: true,
+  couponsGiftCards: true,
+  whatsapp: true,
+  enquiries: true,
+  expenses: true,
+  payroll: true,
+  customerPortal: true,
+  publicCatalog: true,
+  onlineOrders: true,
+  messageTemplates: true
+};
+
 const emptyForm = {
   name: "",
   monthlyPrice: 0,
@@ -14,7 +39,7 @@ const emptyForm = {
   invoiceLimit: 1000,
   storageLimit: 5,
   isCustom: false,
-  featureFlagsText: JSON.stringify({ pos: true, reports: true, crm: true }, null, 2)
+  featureFlags: defaultFeatureFlags
 };
 
 const formatApiError = (error, fallback) => {
@@ -54,7 +79,7 @@ export default function PlansPage() {
           invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
           storageLimit: Number(firstPlan.storageLimit || 999),
           isCustom: Boolean(firstPlan.isCustom),
-          featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+          featureFlags: firstPlan.featureFlags || defaultFeatureFlags
         });
       }
     } catch (err) {
@@ -84,7 +109,7 @@ export default function PlansPage() {
             invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
             storageLimit: Number(firstPlan.storageLimit || 999),
             isCustom: Boolean(firstPlan.isCustom),
-            featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+            featureFlags: firstPlan.featureFlags || defaultFeatureFlags
           });
         }
       }
@@ -119,7 +144,7 @@ export default function PlansPage() {
         invoiceLimit: Number(firstPlan.invoiceLimit || 99999),
         storageLimit: Number(firstPlan.storageLimit || 999),
         isCustom: Boolean(firstPlan.isCustom),
-        featureFlagsText: JSON.stringify(firstPlan.featureFlags || {}, null, 2)
+        featureFlags: firstPlan.featureFlags || defaultFeatureFlags
       });
       setEditingId(firstPlan.id);
     } else {
@@ -132,7 +157,6 @@ export default function PlansPage() {
     event.preventDefault();
     setStatus({ error: "", success: "" });
     try {
-      const parsedFlags = JSON.parse(form.featureFlagsText);
       const payload = {
         name: form.name,
         monthlyPrice: Number(form.monthlyPrice),
@@ -144,7 +168,7 @@ export default function PlansPage() {
         invoiceLimit: Number(form.invoiceLimit),
         storageLimit: Number(form.storageLimit),
         isCustom: Boolean(form.isCustom),
-        featureFlags: parsedFlags
+        featureFlags: form.featureFlags || defaultFeatureFlags
       };
       if (editingId) {
         await api.patch(`/super-admin/plans/${editingId}`, payload);
@@ -172,7 +196,7 @@ export default function PlansPage() {
       invoiceLimit: Number(row.invoiceLimit || 99999),
       storageLimit: Number(row.storageLimit || 999),
       isCustom: Boolean(row.isCustom),
-      featureFlagsText: JSON.stringify(row.featureFlags || {}, null, 2)
+      featureFlags: row.featureFlags || defaultFeatureFlags
     });
   };
 
@@ -195,20 +219,46 @@ export default function PlansPage() {
         <div className="panel-card">
           <h3>{editingId ? "Update Plan" : "Create Plan"}</h3>
           <form onSubmit={submit} className="form-grid">
-            <input placeholder="Plan name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <input type="number" min="0" placeholder="Monthly price" value={form.monthlyPrice} onChange={(event) => setForm({ ...form, monthlyPrice: event.target.value })} />
-            <input type="number" min="0" placeholder="Yearly price" value={form.yearlyPrice} onChange={(event) => setForm({ ...form, yearlyPrice: event.target.value })} />
-            <input type="number" min="0" placeholder="Trial days" value={form.trialDays} onChange={(event) => setForm({ ...form, trialDays: event.target.value })} />
-            <input type="number" min="0" placeholder="Branch limit (9999 = unlimited)" value={form.branchLimit} onChange={(event) => setForm({ ...form, branchLimit: event.target.value })} />
-            <input type="number" min="0" placeholder="User limit" value={form.userLimit} onChange={(event) => setForm({ ...form, userLimit: event.target.value })} />
-            <input type="number" min="0" placeholder="Customer limit" value={form.customerLimit} onChange={(event) => setForm({ ...form, customerLimit: event.target.value })} />
-            <input type="number" min="0" placeholder="Invoice limit" value={form.invoiceLimit} onChange={(event) => setForm({ ...form, invoiceLimit: event.target.value })} />
-            <input type="number" min="0" placeholder="Storage limit (GB placeholder)" value={form.storageLimit} onChange={(event) => setForm({ ...form, storageLimit: event.target.value })} />
-            <label className="checkbox-row" style={{ gridColumn: "1 / -1" }}>
-              <input type="checkbox" checked={Boolean(form.isCustom)} onChange={(event) => setForm({ ...form, isCustom: event.target.checked })} />
-              Mark this as a custom plan
+            <label>
+              <span>Plan Name</span>
+              <input placeholder="Plan name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </label>
-            <textarea rows="8" style={{ gridColumn: "1 / -1" }} value={form.featureFlagsText} onChange={(event) => setForm({ ...form, featureFlagsText: event.target.value })} />
+            <label>
+              <span>Monthly Price (INR)</span>
+              <input type="number" min="0" placeholder="Monthly price" value={form.monthlyPrice} onChange={(event) => setForm({ ...form, monthlyPrice: event.target.value })} />
+            </label>
+            <label>
+              <span>Yearly Price (INR)</span>
+              <input type="number" min="0" placeholder="Yearly price" value={form.yearlyPrice} onChange={(event) => setForm({ ...form, yearlyPrice: event.target.value })} />
+            </label>
+            <label>
+              <span>Trial Duration (Days)</span>
+              <input type="number" min="0" placeholder="Trial days" value={form.trialDays} onChange={(event) => setForm({ ...form, trialDays: event.target.value })} />
+            </label>
+            <label>
+              <span>Branch Limit (9999 = unlimited)</span>
+              <input type="number" min="0" placeholder="Branch limit" value={form.branchLimit} onChange={(event) => setForm({ ...form, branchLimit: event.target.value })} />
+            </label>
+            <label>
+              <span>User Account Limit</span>
+              <input type="number" min="0" placeholder="User limit" value={form.userLimit} onChange={(event) => setForm({ ...form, userLimit: event.target.value })} />
+            </label>
+            <label>
+              <span>Customer Record Limit</span>
+              <input type="number" min="0" placeholder="Customer limit" value={form.customerLimit} onChange={(event) => setForm({ ...form, customerLimit: event.target.value })} />
+            </label>
+            <label>
+              <span>Monthly Invoice Limit</span>
+              <input type="number" min="0" placeholder="Invoice limit" value={form.invoiceLimit} onChange={(event) => setForm({ ...form, invoiceLimit: event.target.value })} />
+            </label>
+            <label>
+              <span>Cloud Storage (GB)</span>
+              <input type="number" min="0" placeholder="Storage limit" value={form.storageLimit} onChange={(event) => setForm({ ...form, storageLimit: event.target.value })} />
+            </label>
+            <label className="checkbox-row" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={Boolean(form.isCustom)} onChange={(event) => setForm({ ...form, isCustom: event.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+              <span>Mark this as a custom plan</span>
+            </label>
             <div className="form-actions" style={{ gridColumn: "1 / -1" }}>
               <button>{editingId ? "Save Plan" : "Create Plan"}</button>
               {editingId && <button type="button" className="secondary-button" onClick={resetForm}>Cancel Edit</button>}
