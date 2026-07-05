@@ -270,42 +270,6 @@ export default function SalonsPage() {
               <span>Business Phone</span>
               <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
             </label>
-            <label>
-              <span>Street Address</span>
-              <input placeholder="Address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
-            </label>
-            <label>
-              <span>City</span>
-              <input placeholder="City" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
-            </label>
-            <label>
-              <span>Country</span>
-              <input placeholder="Country" value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} />
-            </label>
-            <label>
-              <span>Timezone</span>
-              <input placeholder="Timezone" value={form.timezone} onChange={(event) => setForm({ ...form, timezone: event.target.value })} />
-            </label>
-            <label>
-              <span>Currency Code (e.g. INR)</span>
-              <input placeholder="Currency" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} />
-            </label>
-            <label>
-              <span>Tax Rate (%)</span>
-              <input type="number" min="0" placeholder="Tax rate" value={form.taxRate} onChange={(event) => setForm({ ...form, taxRate: event.target.value })} />
-            </label>
-            <label>
-              <span>Trial Start Date</span>
-              <input type="date" value={form.trialStartsAt} onChange={(event) => setForm({ ...form, trialStartsAt: event.target.value })} />
-            </label>
-            <label>
-              <span>Trial End Date</span>
-              <input type="date" value={form.trialEndsAt} onChange={(event) => setForm({ ...form, trialEndsAt: event.target.value })} />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              <span>Internal Note</span>
-              <textarea rows="4" placeholder="Internal note" value={form.internalNote} onChange={(event) => setForm({ ...form, internalNote: event.target.value })} />
-            </label>
             {!editingId && (
               <label>
                 <span>Owner Full Name</span>
