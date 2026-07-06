@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import PageLoader from "../../components/PageLoader";
 import PublicMobileMenu from "../../components/PublicMobileMenu";
@@ -15,6 +15,7 @@ const navItems = [
 
 export default function DemoCheckoutPage() {
   const { leadId, planId } = useParams();
+  const nav = useNavigate();
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -77,14 +78,15 @@ export default function DemoCheckoutPage() {
           setSubmitting(true);
           try {
             // 4. Verify Razorpay Payment Signature
-            await api.post(`/public/demo-checkout/verify-razorpay`, {
+            const verifyRes = await api.post(`/public/demo-checkout/verify-razorpay`, {
               leadId,
               planId,
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature
             });
-            setSuccess(true);
+            const { setupToken, email, loginAccessToken } = verifyRes.data;
+            nav(`/reset-password?token=${setupToken}&email=${email}&access=${loginAccessToken}`);
           } catch (err) {
             setError(formatApiError(err, "Payment verification failed. Please contact support."));
           } finally {
