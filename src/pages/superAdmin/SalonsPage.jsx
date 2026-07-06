@@ -92,6 +92,7 @@ export default function SalonsPage() {
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const activeFeatureCount = useMemo(() => Object.values(featureFlags).filter(Boolean).length, [featureFlags]);
 
@@ -137,6 +138,7 @@ export default function SalonsPage() {
     setForm(emptyForm);
     setFeatureFlags(defaultFlags);
     setEditingId("");
+    setIsModalOpen(false);
   };
 
   const createOrUpdateSalon = async (event) => {
@@ -150,10 +152,10 @@ export default function SalonsPage() {
       };
       if (editingId) {
         await api.patch(`/super-admin/salons/${editingId}`, payload);
-        setStatus({ error: "", success: "Salon updated." });
+        setStatus({ error: "", success: "Salon updated successfully." });
       } else {
         await api.post("/super-admin/salons", payload);
-        setStatus({ error: "", success: "Salon created." });
+        setStatus({ error: "", success: "Salon created successfully." });
       }
       resetForm();
       await load();
@@ -194,6 +196,7 @@ export default function SalonsPage() {
       ownerPassword: ""
     });
     setFeatureFlags({ ...defaultFlags, ...(salon.featureFlags || {}) });
+    setIsModalOpen(true);
   };
 
   const updateStatus = async (salonId, nextStatus) => {
@@ -244,64 +247,77 @@ export default function SalonsPage() {
           <button type="button" className="secondary-button" onClick={() => { setQuery(""); setStatusFilter(""); }}>Reset</button>
         </div>
       </div>
-      <div className="two-col">
-        <div className="panel-card">
-          <h3>{editingId ? "Update Salon" : "Create Salon"}</h3>
-          <form onSubmit={createOrUpdateSalon} className="form-grid">
-            <label>
-              <span>Salon Name</span>
-              <input placeholder="Salon name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            </label>
-            <label>
-              <span>URL Slug</span>
-              <input placeholder="Slug" value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value })} />
-            </label>
-            <label>
-              <span>Business Type</span>
-              <select value={form.businessType} onChange={(event) => setForm({ ...form, businessType: event.target.value })}>
-                {businessTypes.map((item) => <option key={item} value={item}>{item}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Business Email</span>
-              <input placeholder="Email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            </label>
-            <label>
-              <span>Business Phone</span>
-              <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
-            </label>
-            {!editingId && (
-              <label>
-                <span>Owner Full Name</span>
-                <input placeholder="Owner name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
-              </label>
-            )}
-            {!editingId && (
-              <label>
-                <span>Owner Email</span>
-                <input placeholder="Owner email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
-              </label>
-            )}
-            {!editingId && (
-              <label>
-                <span>Owner Password</span>
-                <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />
-              </label>
-            )}
-            <div className="form-actions" style={{ gridColumn: "1 / -1" }}>
-              <button>{editingId ? "Save Salon" : "Create Salon"}</button>
-              {editingId && <button type="button" className="secondary-button" onClick={resetForm}>Cancel Edit</button>}
+      {/* Modal Overlay for Add/Edit Salon */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={resetForm}>
+          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingId ? "✏️ Edit Tenant Salon" : "🏢 Add New Tenant Salon"}</h3>
+              <button type="button" className="modal-close-btn" onClick={resetForm}>&times;</button>
             </div>
-          </form>
-          {status.error && <p className="error-text">{status.error}</p>}
-          {status.success && <p className="success-text">{status.success}</p>}
-        </div>
-
-        <div className="panel-card">
-          <div className="section-heading">
-            <h3>Tenant Directory</h3>
-            <span className="badge">{salons.length} salons</span>
+            <form onSubmit={createOrUpdateSalon} className="form-grid">
+              <label>
+                <span>Salon Name</span>
+                <input placeholder="Salon name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              </label>
+              <label>
+                <span>URL Slug</span>
+                <input placeholder="Slug" value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value })} />
+              </label>
+              <label>
+                <span>Business Type</span>
+                <select value={form.businessType} onChange={(event) => setForm({ ...form, businessType: event.target.value })}>
+                  {businessTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Business Email</span>
+                <input placeholder="Email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+              </label>
+              <label>
+                <span>Business Phone</span>
+                <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
+              </label>
+              {!editingId && (
+                <label>
+                  <span>Owner Full Name</span>
+                  <input placeholder="Owner name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
+                </label>
+              )}
+              {!editingId && (
+                <label>
+                  <span>Owner Email</span>
+                  <input placeholder="Owner email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+                </label>
+              )}
+              {!editingId && (
+                <label>
+                  <span>Owner Password</span>
+                  <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />
+                </label>
+              )}
+              <div className="form-actions" style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+                <button type="submit" style={{ width: "100%" }}>{editingId ? "Save Changes" : "Create Workspace"}</button>
+              </div>
+            </form>
+            {status.error && <p className="error-text" style={{ marginTop: 12 }}>{status.error}</p>}
+            {status.success && <p className="success-text" style={{ marginTop: 12 }}>{status.success}</p>}
           </div>
+        </div>
+      )}
+
+      <div>
+        <div className="panel-card" style={{ maxWidth: "100%" }}>
+          <div className="section-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <h3 style={{ margin: 0 }}>Tenant Directory</h3>
+              <span className="badge" style={{ background: "#e0e7ff", color: "#4f46e5" }}>{salons.length} salons</span>
+            </div>
+            <button type="button" onClick={() => { resetForm(); setIsModalOpen(true); }} style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 38, padding: "8px 16px" }}>
+              <span>+ Add New Salon</span>
+            </button>
+          </div>
+
           <div className="list-stack">
             {loading ? (
               <PageLoader
@@ -310,28 +326,73 @@ export default function SalonsPage() {
                 message="Pulling tenant status, locations, and plan assignments."
               />
             ) : salons.length ? (
-              salons.map((salon) => (
-                <div key={salon.id} className="list-item">
-                  <div className="item-head">
-                    <div>
-                      <strong>{salon.name}</strong>
-                      <div className="item-meta">{salon.businessType || "Salon"} | {salon.city || "-"}, {salon.country || "-"}</div>
-                      <div className="item-meta">{salon.status}</div>
+              salons.map((salon) => {
+                const planName = salon.subscriptions?.[0]?.plan?.name || "No plan";
+                const firstLetter = (salon.name || "S").charAt(0).toUpperCase();
+
+                // Status Styling
+                let statusBg = "#f1f5f9";
+                let statusColor = "#64748b";
+                if (salon.status === "ACTIVE") {
+                  statusBg = "#ecfdf5";
+                  statusColor = "#10b981";
+                } else if (salon.status === "TRIAL") {
+                  statusBg = "#eff6ff";
+                  statusColor = "#3b82f6";
+                } else if (salon.status === "SUSPENDED") {
+                  statusBg = "#fef2f2";
+                  statusColor = "#ef4444";
+                }
+
+                return (
+                  <div key={salon.id} className="tenant-row">
+                    <div className="tenant-info-block">
+                      <div className="tenant-avatar">{firstLetter}</div>
+                      <div className="tenant-meta-stack">
+                        <h4 className="tenant-title">{salon.name}</h4>
+                        <div className="tenant-subtext">
+                          <strong>Slug:</strong> {salon.slug} &bull; <strong>Type:</strong> {salon.businessType || "Salon"}
+                        </div>
+                        <div className="tenant-subtext" style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                          {salon.email || "No email"} &bull; {salon.phone || "No phone"}
+                        </div>
+                      </div>
                     </div>
-                    <span className="badge">{salon.subscriptions?.[0]?.plan?.name || "No plan"}</span>
+
+                    <div className="tenant-badges-block">
+                      <span className="badge" style={{ background: "#f5f3ff", color: "#8b5cf6", fontWeight: 700 }}>
+                        Plan: {planName}
+                      </span>
+                      <span className="badge" style={{ background: statusBg, color: statusColor, fontWeight: 700 }}>
+                        {salon.status}
+                      </span>
+                    </div>
+
+                    <div className="tenant-actions">
+                      <button type="button" className="btn-compact secondary-button" onClick={() => openDetail(salon.id)}>
+                        View Detail
+                      </button>
+                      <button type="button" className="btn-compact secondary-button" onClick={() => startEdit(salon)}>
+                        Edit
+                      </button>
+                      {salon.status !== "ACTIVE" && (
+                        <button type="button" className="btn-compact" onClick={() => updateStatus(salon.id, "ACTIVE")}>
+                          Activate
+                      </button>
+                      )}
+                      {salon.status === "ACTIVE" && (
+                        <button type="button" className="btn-compact danger-button" onClick={() => updateStatus(salon.id, "SUSPENDED")}>
+                          Suspend
+                      </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="inline-actions" style={{ marginTop: 10 }}>
-                    <button type="button" className="secondary-button" onClick={() => openDetail(salon.id)}>View Detail</button>
-                    <button type="button" className="secondary-button" onClick={() => startEdit(salon)}>Edit</button>
-                    <button type="button" onClick={() => updateStatus(salon.id, "ACTIVE")}>Activate</button>
-                    <button type="button" className="danger-button" onClick={() => updateStatus(salon.id, "SUSPENDED")}>Suspend</button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <EmptyState
                 title="No salons found"
-                message="Try broadening your search or create the first tenant from the form on the left."
+                message="Try broadening your search or click '+ Add New Salon' above to get started."
               />
             )}
           </div>
