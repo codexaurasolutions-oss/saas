@@ -233,25 +233,48 @@ export default function DemoLeadsPage() {
           </div>
         </div>
       </div>
-      <div className="panel-card" style={{ marginBottom: 18 }}>
-        <div className="form-grid">
-          <label>
-              <span className="muted">Search lead by name, email, phone, or message</span>
-              <input value={filters.q} placeholder="Search lead by name, email, phone, or message" onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))} />
-            </label>
-          <label>
-              <span className="muted">Statuses</span>
-              <select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
-            <option value="">All statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONTACTED">Contacted</option>
-            <option value="MEETING_SCHEDULED">Meeting Scheduled</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-            </label>
-          <button type="button" className="secondary-button" onClick={() => load(filters)}>Apply Filters</button>
-          <button type="button" className="secondary-button" onClick={() => setFilters({ q: "", status: "" })}>Reset</button>
+      <div className="panel-card" style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Search Leads</span>
+            <input
+              value={filters.q}
+              placeholder="Search lead by name, email, phone, or message"
+              onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))}
+              style={{ width: "100%", height: 40 }}
+            />
+          </div>
+          <div style={{ width: 220 }}>
+            <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Status</span>
+            <select
+              value={filters.status}
+              onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+              style={{ width: "100%", height: 40 }}
+            >
+              <option value="">All statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONTACTED">Contacted</option>
+              <option value="MEETING_SCHEDULED">Meeting Scheduled</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => load(filters)}
+            style={{ height: 40, padding: "0 20px" }}
+          >
+            Apply Filters
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setFilters({ q: "", status: "" })}
+            style={{ height: 40, padding: "0 20px" }}
+          >
+            Reset
+          </button>
         </div>
       </div>
       <div className="panel-card">
@@ -305,46 +328,90 @@ export default function DemoLeadsPage() {
             message="Fetching new lead submissions, approval drafts, and invite status."
           />
         ) : rows.length ? (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Lead</th>
-                  <th>Approval Setup</th>
-                  <th>Status</th>
-                  <th>Review</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const draft = draftsById[row.id];
-                  return (
-                    <tr key={row.id}>
-                    <td>
-                      <strong>{row.name}</strong>
-                      <div>{row.email}</div>
-                      <div>{row.phone}</div>
-                      <div className="muted">{row.message || "-"}</div>
-                    </td>
-                    <td style={{ minWidth: 280 }}>
-                      {["PENDING", "CONTACTED"].includes(row.status) && (
-                        <div style={{ display: "grid", gap: 8 }}>
+          <div className="list-stack">
+            {rows.map((row) => {
+              const draft = draftsById[row.id] || emptyDraft;
+              const firstLetter = (row.name || "L").charAt(0).toUpperCase();
+
+              // Status Styling
+              let statusBg = "#f1f5f9";
+              let statusColor = "#64748b";
+              if (row.status === "APPROVED") {
+                statusBg = "#ecfdf5";
+                statusColor = "#10b981";
+              } else if (row.status === "MEETING_SCHEDULED") {
+                statusBg = "#eff6ff";
+                statusColor = "#3b82f6";
+              } else if (row.status === "REJECTED") {
+                statusBg = "#fef2f2";
+                statusColor = "#ef4444";
+              } else if (row.status === "CONTACTED") {
+                statusBg = "#f5f3ff";
+                statusColor = "#8b5cf6";
+              }
+
+              const isBusy = busyId === row.id;
+
+              return (
+                <div key={row.id} className="lead-card">
+                  {/* Column 1: Lead Profile */}
+                  <div className="lead-profile" style={{ flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div className="tenant-avatar" style={{ background: "linear-gradient(135deg, #4f46e5, #3730a3)" }}>{firstLetter}</div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>{row.name}</h4>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                          Submitted: {new Date(row.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", color: "#334155", background: "#f8fafc", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                      <div>📧 <a href={`mailto:${row.email}`} style={{ color: "#4f46e5", fontWeight: 600 }}>{row.email}</a></div>
+                      <div>📞 <a href={`tel:${row.phone}`} style={{ color: "#4f46e5", fontWeight: 600 }}>{row.phone}</a></div>
+                      {row.message && (
+                        <div style={{ marginTop: 8, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #cbd5e1", paddingLeft: 8 }}>
+                          "{row.message}"
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      <span className="badge" style={{ background: statusBg, color: statusColor, fontWeight: 700 }}>
+                        {row.status}
+                      </span>
+                      {row.paymentCompleted ? (
+                        <span className="badge" style={{ background: "#ecfdf5", color: "#10b981", fontWeight: 700 }}>
+                          Paid (Demo Checkout)
+                        </span>
+                      ) : row.status === "MEETING_SCHEDULED" && (
+                        <span className="badge" style={{ background: "#fff7ed", color: "#c2410c" }}>
+                          Pending Payment
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Column 2: Approval Setup */}
+                  <div className="lead-setup-box">
+                    <h5>⚙️ Onboarding & Meeting Setup</h5>
+
+                    {["PENDING", "CONTACTED"].includes(row.status) && (
+                      <div style={{ display: "grid", gap: 10 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                           <label>
-                            <span className="muted">Salon name</span>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Salon Name</span>
                             <input
-                              value={draft.salonName}
+                              value={draft.salonName || ""}
                               placeholder="Salon name"
                               onChange={(event) => patchDraft(row.id, { salonName: event.target.value })}
                             />
                           </label>
                           <label>
-                            <span className="muted">Select Option Plan</span>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Select Plan</span>
                             <select
-                              value={draft.planId}
+                              value={draft.planId || ""}
                               onChange={(event) => patchDraft(row.id, { planId: event.target.value })}
                             >
+                              <option value="">Choose plan...</option>
                               {plans.map((plan) => (
                                 <option key={plan.id} value={plan.id}>
                                   {plan.name}
@@ -352,190 +419,185 @@ export default function DemoLeadsPage() {
                               ))}
                             </select>
                           </label>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 90px", gap: 8 }}>
-                            <label>
-                              <span className="muted">Business type</span>
-                              <input
-                                value={draft.businessType}
-                                placeholder="Business type"
-                                onChange={(event) => patchDraft(row.id, { businessType: event.target.value })}
-                              />
-                            </label>
-                            <label>
-                              <span className="muted">Trial days</span>
-                              <input
-                                type="number"
-                                min="1"
-                                max="30"
-                                value={draft.trialDays}
-                                onChange={(event) => patchDraft(row.id, { trialDays: Number(event.target.value || 7) })}
-                              />
-                            </label>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 80px", gap: 10 }}>
+                          <label>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Business Type</span>
+                            <input
+                              value={draft.businessType || ""}
+                              placeholder="Salon"
+                              onChange={(event) => patchDraft(row.id, { businessType: event.target.value })}
+                            />
+                          </label>
+                          <label>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Trial Days</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="30"
+                              value={draft.trialDays || 7}
+                              onChange={(event) => patchDraft(row.id, { trialDays: Number(event.target.value || 7) })}
+                            />
+                          </label>
+                        </div>
+
+                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px dashed #e2e8f0", display: "grid", gap: 10 }}>
+                          <label>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Meeting Scheduled Date & Time</span>
+                            <input
+                              type="datetime-local"
+                              value={draft.meetingScheduledAt || ""}
+                              onChange={(event) => patchDraft(row.id, { meetingScheduledAt: event.target.value })}
+                            />
+                          </label>
+                          <label>
+                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Meeting Invitation Link</span>
+                            <input
+                              type="text"
+                              value={draft.meetingLink || ""}
+                              placeholder="Google Meet link"
+                              onChange={(event) => patchDraft(row.id, { meetingLink: event.target.value })}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {row.status === "MEETING_SCHEDULED" && (
+                      <div style={{ display: "grid", gap: 12 }}>
+                        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: 14, borderRadius: 12 }}>
+                          <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e40af", marginBottom: 6 }}>📅 Scheduled Walkthrough</div>
+                          <div style={{ fontSize: "0.8rem", color: "#1e3a8a" }}>
+                            🕒 {row.meetingScheduledAt ? new Date(row.meetingScheduledAt).toLocaleString() : "-"}
                           </div>
-                          
-                          <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px dashed #ddd", display: "grid", gap: 6 }}>
-                            <strong>Walkthrough Setup</strong>
-                            <label>
-                              <span className="muted">Meeting Date & Time</span>
-                              <input
-                                type="datetime-local"
-                                value={draft.meetingScheduledAt}
-                                onChange={(event) => patchDraft(row.id, { meetingScheduledAt: event.target.value })}
-                              />
-                            </label>
-                            <label>
-                              <span className="muted">Meeting Link</span>
-                              <input
-                                type="text"
-                                value={draft.meetingLink}
-                                placeholder="Google Meet link"
-                                onChange={(event) => patchDraft(row.id, { meetingLink: event.target.value })}
-                              />
-                            </label>
+                          <div style={{ fontSize: "0.8rem", marginTop: 6 }}>
+                            🔗 <a href={row.meetingLink} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Join Google Meet</a>
                           </div>
                         </div>
+                        <label>
+                          <span className="info-label" style={{ fontSize: "0.75rem" }}>Target Subscription Plan</span>
+                          <select
+                            value={draft.planId || ""}
+                            onChange={(event) => patchDraft(row.id, { planId: event.target.value })}
+                          >
+                            <option value="">Choose plan...</option>
+                            {plans.map((plan) => (
+                              <option key={plan.id} value={plan.id}>
+                                {plan.name} (INR {plan.monthlyPrice})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    )}
+
+                    {["APPROVED", "REJECTED"].includes(row.status) && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, color: "#475569", fontSize: "0.9rem" }}>
+                        <div style={{ fontWeight: 700, color: "#0f172a" }}>✅ Onboarding Process Complete</div>
+                        <div>Workspace setup has been finalized.</div>
+                        {row.salon && (
+                          <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.8rem", display: "grid", gap: 4 }}>
+                            <div>🏢 <strong>Salon Name:</strong> {row.salon.name}</div>
+                            <div>🔗 <strong>URL Slug:</strong> <code>{row.salon.slug}</code></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Column 3: Review & Actions */}
+                  <div className="lead-actions-panel">
+                    <div>
+                      <span className="info-label" style={{ display: "block", marginBottom: 6, fontSize: "0.75rem" }}>Internal Review Note</span>
+                      <textarea
+                        rows="3"
+                        value={draft.reviewNote || ""}
+                        placeholder="Review notes, feedback, or logs..."
+                        onChange={(event) => patchDraft(row.id, { reviewNote: event.target.value })}
+                        disabled={row.status === "APPROVED"}
+                        style={{ width: "100%", fontSize: "0.85rem", padding: 8, borderRadius: 8 }}
+                      />
+                      {row.reviewedByName && (
+                        <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: 4 }}>
+                          &bull; Reviewed by {row.reviewedByName} on {new Date(row.reviewedAt).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+                      {row.status === "PENDING" && (
+                        <>
+                          <button type="button" className="btn-compact secondary-button" onClick={() => markContacted(row.id)} disabled={isBusy}>
+                            Mark Contacted
+                          </button>
+                          <button type="button" className="btn-compact" onClick={() => scheduleMeeting(row.id)} disabled={isBusy || !draft.meetingScheduledAt}>
+                            {isBusy ? "Scheduling..." : "Schedule Meeting"}
+                          </button>
+                          <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
+                            Approve (Trial)
+                          </button>
+                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
+                            Reject Lead
+                          </button>
+                        </>
+                      )}
+
+                      {row.status === "CONTACTED" && (
+                        <>
+                          <button type="button" className="btn-compact" onClick={() => scheduleMeeting(row.id)} disabled={isBusy || !draft.meetingScheduledAt}>
+                            {isBusy ? "Scheduling..." : "Schedule Meeting"}
+                          </button>
+                          <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
+                            Approve (Trial)
+                          </button>
+                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
+                            Reject Lead
+                          </button>
+                        </>
                       )}
 
                       {row.status === "MEETING_SCHEDULED" && (
-                        <div style={{ display: "grid", gap: 8 }}>
-                          <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "10px 12px", borderRadius: 12 }}>
-                            <div style={{ fontSize: 13, fontWeight: "bold", color: "#0369a1", marginBottom: 4 }}>Scheduled Walkthrough</div>
-                            <div style={{ fontSize: 13 }}>📅 {row.meetingScheduledAt ? new Date(row.meetingScheduledAt).toLocaleString() : "-"}</div>
-                            <div style={{ fontSize: 13, marginTop: 4 }}>
-                              🔗 <a href={row.meetingLink} target="_blank" rel="noreferrer" style={{ color: "#0284c7", fontWeight: "bold", textDecoration: "underline" }}>Join Meeting Link</a>
-                            </div>
-                          </div>
-                          <label>
-                            <span className="muted">Target Subscription Plan</span>
-                            <select
-                              value={draft.planId}
-                              onChange={(event) => patchDraft(row.id, { planId: event.target.value })}
-                            >
-                              {plans.map((plan) => (
-                                <option key={plan.id} value={plan.id}>
-                                  {plan.name} (INR {plan.monthlyPrice})
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-                      )}
-
-                      {["APPROVED", "REJECTED"].includes(row.status) && (
-                        <div className="muted">
-                          Setup completed. 
-                          {row.salon && <div>Workspace is active.</div>}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "start" }}>
-                        <span className={`badge status-${row.status.toLowerCase()}`}>
-                          {row.status}
-                        </span>
-                        {row.paymentCompleted ? (
-                          <span style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "4px 8px", borderRadius: 8, fontSize: 11, fontWeight: "bold" }}>
-                            Paid (Demo Checkout)
-                          </span>
-                        ) : row.status === "MEETING_SCHEDULED" && (
-                          <span style={{ background: "#fff7ed", color: "#c2410c", border: "1px solid #ffedd5", padding: "4px 8px", borderRadius: 8, fontSize: 11 }}>
-                            Pending Payment
-                          </span>
-                        )}
-                        {row.salon && (
-                          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-                            {row.salon.name}
-                            <br />
-                            Slug: {row.salon.slug}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ minWidth: 200 }}>
-                      <textarea
-                        rows="4"
-                        value={draft.reviewNote}
-                        placeholder="Review note"
-                        onChange={(event) => patchDraft(row.id, { reviewNote: event.target.value })}
-                        disabled={row.status === "APPROVED"}
-                      />
-                      <div className="muted" style={{ fontSize: 11 }}>
-                        {row.reviewedByName ? `${row.reviewedByName} • ${new Date(row.reviewedAt).toLocaleString()}` : "Pending review"}
-                      </div>
-                    </td>
-                    <td style={{ fontSize: 12 }}>{new Date(row.createdAt).toLocaleString()}</td>
-                    <td style={{ minWidth: 200 }}>
-                      <div style={{ display: "grid", gap: 8 }}>
-                        {row.status === "PENDING" && (
-                          <>
-                            <button type="button" className="secondary-button" onClick={() => markContacted(row.id)} disabled={busyId === row.id}>
-                              Mark Contacted
-                            </button>
-                            <button type="button" onClick={() => scheduleMeeting(row.id)} disabled={busyId === row.id || !draft.meetingScheduledAt}>
-                              Schedule Meeting
-                            </button>
-                            <button type="button" className="secondary-button" onClick={() => approveLead(row.id)} disabled={busyId === row.id}>
-                              Approve (Trial)
-                            </button>
-                            <button type="button" className="secondary-button" onClick={() => rejectLead(row.id)} disabled={busyId === row.id}>
-                              Reject
-                            </button>
-                          </>
-                        )}
-
-                        {row.status === "CONTACTED" && (
-                          <>
-                            <button type="button" onClick={() => scheduleMeeting(row.id)} disabled={busyId === row.id || !draft.meetingScheduledAt}>
-                              Schedule Meeting
-                            </button>
-                            <button type="button" className="secondary-button" onClick={() => approveLead(row.id)} disabled={busyId === row.id}>
-                              Approve (Trial)
-                            </button>
-                            <button type="button" className="secondary-button" onClick={() => rejectLead(row.id)} disabled={busyId === row.id}>
-                              Reject
-                            </button>
-                          </>
-                        )}
-
-                        {row.status === "MEETING_SCHEDULED" && (
-                          <>
-                            <button type="button" onClick={() => sendPurchaseLink(row.id)} disabled={busyId === row.id}>
-                              Send Purchase Link
-                            </button>
-                            {row.paymentCompleted ? (
-                              <button 
-                                type="button" 
-                                style={{ background: "linear-gradient(135deg,#0f766e,#0d9488)", color: "#ffffff", fontWeight: "bold", border: "none" }} 
-                                onClick={() => approveLead(row.id)} 
-                                disabled={busyId === row.id}
-                              >
-                                Create Paid Account
-                              </button>
-                            ) : (
-                              <button type="button" className="secondary-button" onClick={() => approveLead(row.id)} disabled={busyId === row.id}>
-                                Approve (Trial Override)
-                              </button>
-                            )}
-                            <button type="button" className="secondary-button" onClick={() => rejectLead(row.id)} disabled={busyId === row.id}>
-                              Reject
-                            </button>
-                          </>
-                        )}
-
-                        {row.status === "APPROVED" && (
-                          <button type="button" className="secondary-button" onClick={() => resendInvite(row.id)} disabled={busyId === row.id}>
-                            {busyId === row.id ? "Sending..." : "Resend Invite"}
+                        <>
+                          <button type="button" className="btn-compact" onClick={() => sendPurchaseLink(row.id)} disabled={isBusy}>
+                            {isBusy ? "Sending link..." : "📧 Send Purchase Link"}
                           </button>
-                        )}
+                          {row.paymentCompleted ? (
+                            <button
+                              type="button"
+                              className="btn-compact"
+                              style={{ background: "linear-gradient(135deg, #4f46e5, #4338ca)", color: "#ffffff", fontWeight: "bold", border: "none" }}
+                              onClick={() => approveLead(row.id)}
+                              disabled={isBusy}
+                            >
+                              Create Paid Account
+                            </button>
+                          ) : (
+                            <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
+                              Approve (Trial Override)
+                            </button>
+                          )}
+                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
+                            Reject Lead
+                          </button>
+                        </>
+                      )}
 
-                        {row.inviteSentAt && <div className="muted" style={{ fontSize: 11 }}>Invite sent: {new Date(row.inviteSentAt).toLocaleString()}</div>}
-                      </div>
-                    </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      {row.status === "APPROVED" && (
+                        <button type="button" className="btn-compact secondary-button" onClick={() => resendInvite(row.id)} disabled={isBusy}>
+                          {isBusy ? "Sending..." : "Resend Invite Link"}
+                        </button>
+                      )}
+
+                      {row.inviteSentAt && (
+                        <div style={{ fontSize: "0.75rem", color: "#64748b", textAlign: "center", marginTop: 4 }}>
+                          Invite sent: {new Date(row.inviteSentAt).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <EmptyState

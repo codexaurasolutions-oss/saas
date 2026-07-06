@@ -4136,4 +4136,60 @@ pre {
   font-weight: 700;
 }
 
+/* Demo Lead Redesign */
+.lead-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 0.9fr;
+  gap: 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lead-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .lead-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.lead-profile {
+  display: flex;
+  gap: 16px;
+}
+
+.lead-setup-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.lead-setup-box h5 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 700;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.lead-actions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: space-between;
+}
+
 
