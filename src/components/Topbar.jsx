@@ -553,7 +553,15 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
                 placeholder={auth?.user?.systemRole === "SUPER_ADMIN" ? "Search salons, tenants, leads..." : "Search guests, services, products, staff, invoices..."}
                 value={quickSearch}
                 onFocus={() => auth?.user?.systemRole !== "SUPER_ADMIN" && setSearchOpen(true)}
-                onChange={(event) => setQuickSearch(event.target.value)}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  setQuickSearch(val);
+                  if (auth?.user?.systemRole === "SUPER_ADMIN") {
+                    const isLeads = window.location.pathname.includes("demo-leads");
+                    const targetPage = isLeads ? "/super-admin/demo-leads" : "/super-admin/salons";
+                    navigate(`${targetPage}?q=${encodeURIComponent(val)}`, { replace: true });
+                  }
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") setSearchOpen(false);
                   if (event.key === "Enter") {

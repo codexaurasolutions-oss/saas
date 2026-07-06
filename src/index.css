@@ -3977,7 +3977,6 @@ pre {
   align-items: center;
   gap: 8px;
 }
-
 .btn-compact {
   min-height: 34px !important;
   padding: 6px 12px !important;
@@ -3985,6 +3984,13 @@ pre {
   font-weight: 600 !important;
   border-radius: 8px !important;
   cursor: pointer;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.8s linear infinite;
 }
 
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
@@ -83,7 +84,15 @@ const formatApiError = (error, fallback) => {
 
 export default function SalonsPage() {
   const [salons, setSalons] = useState([]);
-  const [query, setQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const setQuery = (val) => {
+    setSearchParams((prev) => {
+      if (val) prev.set("q", val);
+      else prev.delete("q");
+      return prev;
+    });
+  };
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedSalon, setSelectedSalon] = useState(null);
   const [editingId, setEditingId] = useState("");
@@ -93,6 +102,7 @@ export default function SalonsPage() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const activeFeatureCount = useMemo(() => Object.values(featureFlags).filter(Boolean).length, [featureFlags]);
 
@@ -144,9 +154,12 @@ export default function SalonsPage() {
   const createOrUpdateSalon = async (event) => {
     event.preventDefault();
     setStatus({ error: "", success: "" });
+    setSaving(true);
     try {
+      const finalSlug = form.slug?.trim() || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       const payload = {
         ...form,
+        slug: finalSlug,
         taxRate: Number(form.taxRate || 0),
         featureFlags
       };
@@ -161,6 +174,8 @@ export default function SalonsPage() {
       await load();
     } catch (error) {
       setStatus({ error: formatApiError(error, "Could not save salon"), success: "" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -258,11 +273,10 @@ export default function SalonsPage() {
             <form onSubmit={createOrUpdateSalon} className="form-grid">
               <label>
                 <span>Salon Name</span>
-                <input placeholder="Salon name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              </label>
-              <label>
-                <span>URL Slug</span>
-                <input placeholder="Slug" value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value })} />
+                <input placeholder="Salon name" value={form.name} onChange={(event) => {
+                  const val = event.target.value;
+                  setForm({ ...form, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') });
+                }} />
               </label>
               <label>
                 <span>Business Type</span>
@@ -297,7 +311,16 @@ export default function SalonsPage() {
                 </label>
               )}
               <div className="form-actions" style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%" }}>{editingId ? "Save Changes" : "Create Workspace"}</button>
+                <button type="submit" style={{ width: "100%" }} disabled={saving}>
+                  {saving ? (
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      <svg className="animate-spin" viewBox="0 0 24 24" style={{ width: 16, height: 16, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%" }} />
+                      {editingId ? "Saving..." : "Creating..."}
+                    </span>
+                  ) : (
+                    editingId ? "Save Changes" : "Create Workspace"
+                  )}
+                </button>
               </div>
             </form>
             {status.error && <p className="error-text" style={{ marginTop: 12 }}>{status.error}</p>}

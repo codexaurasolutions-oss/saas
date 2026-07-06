@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
@@ -17,7 +18,29 @@ const emptyDraft = {
 export default function DemoLeadsPage() {
   const [rows, setRows] = useState([]);
   const [plans, setPlans] = useState([]);
-  const [filters, setFilters] = useState({ q: "", status: "" });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const qFilter = searchParams.get("q") || "";
+  const statusFilter = searchParams.get("status") || "";
+
+  const filters = useMemo(() => ({
+    q: qFilter,
+    status: statusFilter
+  }), [qFilter, statusFilter]);
+
+  const setFilters = (newFilters) => {
+    setSearchParams((prev) => {
+      if (typeof newFilters === "function") {
+        const next = newFilters({ q: qFilter, status: statusFilter });
+        if (next.q) prev.set("q", next.q); else prev.delete("q");
+        if (next.status) prev.set("status", next.status); else prev.delete("status");
+      } else {
+        if (newFilters.q) prev.set("q", newFilters.q); else prev.delete("q");
+        if (newFilters.status) prev.set("status", newFilters.status); else prev.delete("status");
+      }
+      return prev;
+    });
+  };
+
   const [drafts, setDrafts] = useState({});
   const [busyId, setBusyId] = useState("");
   const [feedback, setFeedback] = useState({ error: "", success: "" });
