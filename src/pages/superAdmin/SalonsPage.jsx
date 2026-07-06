@@ -611,9 +611,9 @@ export default function SalonsPage() {
               </div>
 
               {/* Column 3: Feature Toggles */}
-              <div className="detail-card">
+              <div className="detail-card" style={{ display: "flex", flexDirection: "column" }}>
                 <h4>⚡ Feature Access Switchboard</h4>
-                <div className="feature-switch-grid">
+                <div className="feature-switch-grid" style={{ maxHeight: "420px", overflowY: "auto", paddingRight: "6px" }}>
                   {featureFlagKeys.map((key) => {
                     const value = selectedSalon.featureFlags?.[key];
                     const isEnabled = value === true;
