@@ -422,12 +422,12 @@ export default function SalonsPage() {
         </div>
       </div>
 
-      <div className="panel-card" style={{ marginTop: 18 }}>
-        <h3>Salon Detail</h3>
+      <div className="panel-card" style={{ marginTop: 24, padding: "28px", maxWidth: "100%" }}>
+        <h3 style={{ margin: "0 0 10px 0", fontSize: "1.3rem", fontWeight: 700 }}>🔍 Salon Detail Dashboard</h3>
         {!selectedSalon && !detailLoading && (
           <EmptyState
             title="Pick a salon to inspect"
-            message="Owner users, subscriptions, feature access, and usage relationships will appear here."
+            message="Owner users, subscriptions, feature access, and usage details will appear here."
           />
         )}
         {detailLoading && (
@@ -439,54 +439,220 @@ export default function SalonsPage() {
         )}
         {selectedSalon && (
           <>
-            <div className="item-head">
+            {/* Header section */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 20, marginBottom: 20, gap: 16 }}>
               <div>
-                <p><strong>{selectedSalon.name}</strong></p>
-                <p>{selectedSalon.businessType || "Salon"} | {selectedSalon.status}</p>
-                <p>{selectedSalon.email || "-"} | {selectedSalon.phone || "-"}</p>
-                <p>{selectedSalon.address || "-"}</p>
-                <p>{selectedSalon.city || "-"}, {selectedSalon.country || "-"} | {selectedSalon.timezone || "-"}</p>
-                <p>Currency {selectedSalon.currency || "PKR"} | Tax {String(selectedSalon.taxRate || 0)}%</p>
-                <p>Trial: {selectedSalon.trialStartsAt ? new Date(selectedSalon.trialStartsAt).toLocaleDateString() : "-"} to {selectedSalon.trialEndsAt ? new Date(selectedSalon.trialEndsAt).toLocaleDateString() : "-"}</p>
-                <p>Internal note: {selectedSalon.internalNote || "-"}</p>
+                <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a", fontWeight: 800 }}>🏢 {selectedSalon.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span className="badge" style={{ background: "#e2e8f0", color: "#475569", fontWeight: 700 }}>
+                    {selectedSalon.businessType || "Salon"}
+                  </span>
+                  <span className="badge" style={{
+                    background: selectedSalon.status === "ACTIVE" ? "#ecfdf5" : selectedSalon.status === "TRIAL" ? "#eff6ff" : "#fef2f2",
+                    color: selectedSalon.status === "ACTIVE" ? "#10b981" : selectedSalon.status === "TRIAL" ? "#3b82f6" : "#ef4444",
+                    fontWeight: 700
+                  }}>
+                    {selectedSalon.status}
+                  </span>
+                  <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                    Slug: <strong>{selectedSalon.slug}</strong>
+                  </span>
+                </div>
               </div>
-              <div className="inline-actions">
-                <button type="button" className="secondary-button" onClick={() => impersonate(selectedSalon.id)}>Impersonate Placeholder</button>
+              <button
+                type="button"
+                onClick={() => impersonate(selectedSalon.id)}
+                style={{
+                  background: "#4f46e5",
+                  color: "white",
+                  border: "none",
+                  minHeight: 40,
+                  padding: "0 18px",
+                  fontWeight: 700,
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)"
+                }}
+              >
+                <span>🔑 Impersonate Workspace</span>
+              </button>
+            </div>
+
+            {/* Metrics dashboard */}
+            <div className="metrics-dashboard">
+              <div className="metric-dashboard-card">
+                <div className="metric-val">{selectedSalon.branches?.length || 0}</div>
+                <div className="metric-lbl">Branches</div>
+              </div>
+              <div className="metric-dashboard-card">
+                <div className="metric-val">{selectedSalon.services?.length || 0}</div>
+                <div className="metric-lbl">Services</div>
+              </div>
+              <div className="metric-dashboard-card">
+                <div className="metric-val">{selectedSalon.customers?.length || 0}</div>
+                <div className="metric-lbl">Guests</div>
+              </div>
+              <div className="metric-dashboard-card">
+                <div className="metric-val">{selectedSalon.users?.length || 0}</div>
+                <div className="metric-lbl">Accounts</div>
               </div>
             </div>
-            <div className="badge-row">
-              <span className="badge">Branches {selectedSalon.branches.length}</span>
-              <span className="badge">Services {selectedSalon.services.length}</span>
-              <span className="badge">Customers {selectedSalon.customers.length}</span>
-              <span className="badge">Users {selectedSalon.users.length}</span>
-            </div>
-            <h4>Users</h4>
-            {selectedSalon.users.length ? selectedSalon.users.map((item) => (
-              <div key={item.id} style={{ padding: "8px 0", borderTop: "1px solid #e2e8f0" }}>
-                {item.user.name} - {item.salonRole} - Login {item.user.isActive ? "Active" : "Inactive"}
-              </div>
-            )) : <EmptyState title="No linked salon users" message="Owner and staff accounts will appear here once assigned." />}
-            <h4>Subscriptions</h4>
-            {selectedSalon.subscriptions.length ? selectedSalon.subscriptions.map((subscription) => (
-              <div key={subscription.id} style={{ padding: "8px 0", borderTop: "1px solid #e2e8f0" }}>
-                {subscription.plan?.name} - {subscription.status} - Payment {subscription.paymentStatus || "PENDING"}
-                <div className="item-meta">Discount {String(subscription.manualDiscount || 0)} | Ends {new Date(subscription.endsAt).toLocaleDateString()}</div>
-              </div>
-            )) : <EmptyState title="No subscriptions yet" message="Active or trial subscription records will surface here for this salon." />}
-            <h4>Feature Flags</h4>
-            {featureFlagKeys.map((key) => {
-              const value = selectedSalon.featureFlags?.[key];
-              return (
-                <div key={key} style={{ padding: "8px 0", borderTop: "1px solid #e2e8f0" }}>
-                  <strong>{key}</strong> - {String(value)}
-                  <div style={{ marginTop: 6 }}>
-                    <button type="button" onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)}>
-                      {value === false ? "Enable" : "Disable"}
-                    </button>
+
+            {/* 3 Column Grid */}
+            <div className="detail-grid">
+
+              {/* Column 1: Config & Contact info */}
+              <div className="detail-card">
+                <h4>📞 Contact & Settings</h4>
+                <div className="info-item">
+                  <span className="info-label">Email</span>
+                  <span className="info-value">{selectedSalon.email || "-"}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Phone</span>
+                  <span className="info-value">{selectedSalon.phone || "-"}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Address</span>
+                  <span className="info-value">{selectedSalon.address || "-"}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Location</span>
+                  <span className="info-value">
+                    {selectedSalon.city || "-"}, {selectedSalon.country || "-"}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Timezone</span>
+                  <span className="info-value">{selectedSalon.timezone || "-"}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Currency / Tax</span>
+                  <span className="info-value">{selectedSalon.currency || "PKR"} / {String(selectedSalon.taxRate || 0)}%</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Trial Begins</span>
+                  <span className="info-value">
+                    {selectedSalon.trialStartsAt ? new Date(selectedSalon.trialStartsAt).toLocaleDateString() : "-"}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Trial Ends</span>
+                  <span className="info-value">
+                    {selectedSalon.trialEndsAt ? new Date(selectedSalon.trialEndsAt).toLocaleDateString() : "-"}
+                  </span>
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <span className="info-label" style={{ display: "block", marginBottom: 6, fontSize: "0.85rem" }}>Internal Note</span>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: 12, borderRadius: 8, fontSize: "0.85rem", color: "#475569", minHeight: 60 }}>
+                    {selectedSalon.internalNote || "No notes saved."}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Column 2: Users & Subscriptions list */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                {/* Users List */}
+                <div className="detail-card" style={{ flex: 1 }}>
+                  <h4>👥 Active Accounts</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {selectedSalon.users?.length ? selectedSalon.users.map((item) => (
+                      <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10 }}>
+                        <div>
+                          <strong style={{ fontSize: "0.9rem", color: "#1e293b", display: "block" }}>{item.user?.name}</strong>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.user?.email}</span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                          <span className="badge" style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "0.7rem", fontWeight: 700 }}>
+                            {item.salonRole}
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: item.user?.isActive ? "#10b981" : "#ef4444", fontWeight: 600 }}>
+                            &bull; {item.user?.isActive ? "Login Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    )) : <EmptyState title="No linked users" message="Owner and staff accounts will appear here once assigned." />}
+                  </div>
+                </div>
+
+                {/* Subscriptions Card */}
+                <div className="detail-card" style={{ flex: 1 }}>
+                  <h4>💳 Subscriptions History</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {selectedSalon.subscriptions?.length ? selectedSalon.subscriptions.map((subscription) => {
+                      const isSubActive = subscription.status === "ACTIVE";
+                      return (
+                        <div key={subscription.id} style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <strong style={{ fontSize: "0.95rem", color: "#1e293b" }}>{subscription.plan?.name}</strong>
+                            <div style={{ display: "flex", gap: 4 }}>
+                              <span className="badge" style={{ background: isSubActive ? "#dcfce7" : "#fee2e2", color: isSubActive ? "#15803d" : "#b91c1c", fontSize: "0.7rem", fontWeight: 700 }}>
+                                {subscription.status}
+                              </span>
+                              <span className="badge" style={{ background: "#f1f5f9", color: "#475569", fontSize: "0.7rem" }}>
+                                {subscription.paymentStatus || "PENDING"}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b" }}>
+                            <span>Discount: {String(subscription.manualDiscount || 0)} INR</span>
+                            <span>Ends: {new Date(subscription.endsAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      );
+                    }) : <EmptyState title="No subscriptions yet" message="Subscription records will surface here." />}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Column 3: Feature Toggles */}
+              <div className="detail-card">
+                <h4>⚡ Feature Access Switchboard</h4>
+                <div className="feature-switch-grid">
+                  {featureFlagKeys.map((key) => {
+                    const value = selectedSalon.featureFlags?.[key];
+                    const isEnabled = value === true;
+                    return (
+                      <div key={key} className="feature-switch-card">
+                        <div>
+                          <span className="feature-name">{key.replace(/([A-Z])/g, ' $1')}</span>
+                          <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                            <span className="feature-status-dot" style={{ background: isEnabled ? "#10b981" : "#cbd5e1" }} />
+                            <span style={{ fontSize: "0.75rem", color: isEnabled ? "#10b981" : "#64748b", fontWeight: 600 }}>
+                              {isEnabled ? "Enabled" : "Disabled"}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-compact"
+                          onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)}
+                          style={{
+                            background: isEnabled ? "#fee2e2" : "#dcfce7",
+                            color: isEnabled ? "#ef4444" : "#15803d",
+                            border: "none",
+                            padding: "6px 12px",
+                            fontWeight: 700,
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          {isEnabled ? "Disable" : "Enable"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
           </>
         )}
       </div>
