@@ -40,19 +40,76 @@ export default function DemoCheckoutPage() {
       });
   }, [leadId, planId]);
 
+  const loadScript = (src) => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     try {
-      await api.post(`/public/demo-checkout/${leadId}`, {
-        planId,
-        paymentSessionId: `demo_pay_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
-      });
-      setSuccess(true);
+      // 1. Dynamically load Razorpay SDK
+      const loaded = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+      if (!loaded) {
+        throw new Error("Failed to load Razorpay payment SDK. Please check your internet connection.");
+      }
+
+      // 2. Call backend to create Razorpay Order
+      const res = await api.post(`/public/demo-checkout/${leadId}/razorpay-order`, { planId });
+      const order = res.data;
+
+      // 3. Configure Razorpay modal options
+      const options = {
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "ReSpark Salon ERP",
+        description: `Subscription to ${info?.planName} Plan`,
+        order_id: order.orderId,
+        handler: async function (response) {
+          setSubmitting(true);
+          try {
+            // 4. Verify Razorpay Payment Signature
+            await api.post(`/public/demo-checkout/verify-razorpay`, {
+              leadId,
+              planId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            setSuccess(true);
+          } catch (err) {
+            setError(formatApiError(err, "Payment verification failed. Please contact support."));
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        prefill: {
+          name: order.leadName,
+          email: order.leadEmail,
+          contact: order.leadPhone
+        },
+        theme: {
+          color: "#0f766e"
+        },
+        modal: {
+          ondismiss: function () {
+            setSubmitting(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      setError(formatApiError(err, "Simulation payment capture failed. Please try again."));
-    } finally {
+      setError(formatApiError(err, "Could not initialize payment check. Please try again."));
       setSubmitting(false);
     }
   };
@@ -149,70 +206,29 @@ export default function DemoCheckoutPage() {
 
             <div className="demo-form-card">
               <form onSubmit={handleCheckoutSubmit} className="demo-form">
-                <div className="section-chip">Simulated Payment Details</div>
+                <div className="section-chip">Razorpay Secure Checkout</div>
                 
                 {error && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
                 
-                <label>
-                  <span className="muted">Cardholder Name</span>
-                  <input
-                    type="text"
-                    required
-                    value={cardName}
-                    placeholder="Enter Cardholder Name"
-                    onChange={(e) => setCardName(e.target.value)}
-                  />
-                </label>
-
-                <label>
-                  <span className="muted">Card Number</span>
-                  <input
-                    type="text"
-                    required
-                    maxLength="19"
-                    value={cardNumber}
-                    placeholder="4111 2222 3333 4444"
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
-                      setCardNumber(val);
-                    }}
-                  />
-                </label>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <label>
-                    <span className="muted">Expiry Date</span>
-                    <input
-                      type="text"
-                      required
-                      maxLength="5"
-                      value={cardExpiry}
-                      placeholder="MM/YY"
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, "");
-                        if (val.length > 2) {
-                          val = val.substr(0, 2) + "/" + val.substr(2, 2);
-                        }
-                        setCardExpiry(val);
-                      }}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="muted">CVV</span>
-                    <input
-                      type="password"
-                      required
-                      maxLength="3"
-                      value={cardCvv}
-                      placeholder="•••"
-                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ""))}
-                    />
-                  </label>
+                <div style={{ background: "#fafaf9", padding: "16px", borderRadius: "12px", border: "1px solid #e7e5e4", display: "grid", gap: "12px", marginBottom: "20px" }}>
+                  <div>
+                    <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Contact Person</span>
+                    <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.leadName}</strong>
+                  </div>
+                  <div>
+                    <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Email Address</span>
+                    <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.leadEmail}</strong>
+                  </div>
+                  {info?.company && (
+                    <div>
+                      <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Company / Salon Name</span>
+                      <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.company}</strong>
+                    </div>
+                  )}
                 </div>
 
-                <div className="trust-card" style={{ fontSize: 13, background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: 12, marginTop: 16, marginBottom: 16 }}>
-                  🛡️ This is a secure checkout simulation sandbox. No real money will be charged.
+                <div className="trust-card" style={{ fontSize: 13, background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: 12, marginBottom: 20 }}>
+                  🛡️ Payments are secured via Razorpay. All cards, UPI (GPay, PhonePe, Paytm), Wallets, and Netbanking are supported.
                 </div>
 
                 <button 
@@ -224,10 +240,10 @@ export default function DemoCheckoutPage() {
                   {submitting ? (
                     <span className="button-progress">
                       <span className="button-spinner" aria-hidden="true" />
-                      Capturing payment...
+                      Loading Razorpay Secure Gateway...
                     </span>
                   ) : (
-                    `Pay INR ${info?.price} & Subscribe`
+                    `Pay INR ${info?.price} via Razorpay`
                   )}
                 </button>
               </form>
