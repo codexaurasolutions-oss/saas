@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
@@ -148,14 +148,199 @@ function SectionBlock({ icon, title, badge, children, defaultOpen = true, classN
   );
 }
 
+function LivePreview({ config, sections, device }) {
+  const radius = CARD_SHAPES.find(s => s.id === config.cardShape)?.radius || "16px";
+  const accent = config.primaryColor || "#c8a97e";
+  const textColor = config.secondaryColor || "#111111";
+  const enabledSections = sections.filter(s => s.enabled);
+
+  const previewStyle = useMemo(() => ({
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    color: textColor,
+    background: "#ffffff",
+    margin: 0,
+    padding: 0,
+    overflowY: "auto",
+    overflowX: "hidden",
+    width: "100%",
+    height: "100%",
+  }), [textColor]);
+
+  const renderHero = () => (
+    <div style={{ position: "relative", background: config.heroImage ? `url(${config.heroImage}) center/cover` : `linear-gradient(135deg, ${accent}22, ${accent}11)`, padding: device === "mobile" ? "40px 16px 32px" : "60px 40px 50px", textAlign: "center" }}>
+      {config.heroImage && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} />}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto" }}>
+        <h1 style={{ fontSize: device === "mobile" ? 22 : 32, fontWeight: 800, margin: "0 0 12px", color: config.heroImage ? "#fff" : textColor, lineHeight: 1.2 }}>{config.heroTitle || "Elevate Your Beauty"}</h1>
+        <p style={{ fontSize: device === "mobile" ? 13 : 15, color: config.heroImage ? "#ffffffcc" : "#666", margin: "0 0 24px", lineHeight: 1.6 }}>{config.heroSubtitle || "Premium salon services"}</p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          {config.heroBtn1Text && <span style={{ padding: "10px 24px", background: accent, color: "#fff", borderRadius: radius, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>{config.heroBtn1Text}</span>}
+          {config.heroBtn2Text && <span style={{ padding: "10px 24px", background: "transparent", color: config.heroImage ? "#fff" : accent, border: `2px solid ${config.heroImage ? "#fff" : accent}`, borderRadius: radius, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>{config.heroBtn2Text}</span>}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAbout = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", display: "flex", gap: 30, flexDirection: config.aboutImage ? "row" : "column", alignItems: "center" }}>
+      {config.aboutImage && <img src={config.aboutImage} alt="" style={{ width: device === "mobile" ? "100%" : "45%", borderRadius: radius, objectFit: "cover", maxHeight: 200 }} />}
+      <div style={{ flex: 1 }}>
+        <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 12px" }}>{config.aboutTitle || "About Us"}</h2>
+        <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6, margin: "0 0 16px" }}>{config.aboutDescription || "Tell your salon story..."}</p>
+        {(config.aboutMission || config.aboutVision) && (
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {config.aboutMission && <div style={{ flex: 1, minWidth: 120, padding: 12, background: `${accent}11`, borderRadius: radius }}><strong style={{ fontSize: 12, color: accent }}>Mission</strong><p style={{ fontSize: 13, margin: "4px 0 0", color: "#555" }}>{config.aboutMission}</p></div>}
+            {config.aboutVision && <div style={{ flex: 1, minWidth: 120, padding: 12, background: `${accent}11`, borderRadius: radius }}><strong style={{ fontSize: 12, color: accent }}>Vision</strong><p style={{ fontSize: 13, margin: "4px 0 0", color: "#555" }}>{config.aboutVision}</p></div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderGallery = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>Gallery</h2>
+      <div style={{ display: "grid", gridTemplateColumns: device === "mobile" ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 8 }}>
+        {(config.galleryImages || []).slice(0, 6).map((img, i) => (
+          <div key={i} style={{ aspectRatio: "1", borderRadius: radius, overflow: "hidden" }}><img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+        ))}
+        {(!config.galleryImages || config.galleryImages.length === 0) && <div style={{ gridColumn: "1/-1", padding: 30, background: "#f9fafb", borderRadius: radius, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>No gallery images yet</div>}
+      </div>
+    </div>
+  );
+
+  const renderServices = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", background: "#f9fafb" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>Services & Products</h2>
+      <div style={{ display: "grid", gridTemplateColumns: device === "mobile" ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ background: "#fff", borderRadius: radius, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,.06)", textAlign: "center" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${accent}22`, margin: "0 auto 12px" }} />
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Service {i}</div>
+            <div style={{ fontSize: 12, color: "#999" }}>Auto-populated</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderTestimonials = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>Client Reviews</h2>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8 }}>
+        {(config.testimonials || []).length > 0 ? config.testimonials.map((t, i) => (
+          <div key={i} style={{ minWidth: device === "mobile" ? 220 : 260, padding: 20, background: "#f9fafb", borderRadius: radius, flexShrink: 0 }}>
+            <div style={{ color: accent, fontSize: 16, marginBottom: 8 }}>{"\u2605".repeat(t.rating || 5)}</div>
+            <p style={{ fontSize: 13, color: "#555", margin: "0 0 12px", lineHeight: 1.5 }}>"{t.text || "Great experience!"}"</p>
+            <div style={{ fontWeight: 600, fontSize: 13 }}>{t.author || "Client"}</div>
+          </div>
+        )) : <div style={{ width: "100%", padding: 30, background: "#f9fafb", borderRadius: radius, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>No reviews yet</div>}
+      </div>
+    </div>
+  );
+
+  const renderBanner = () => config.bannerTitle ? (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", background: config.bannerImage ? `url(${config.bannerImage}) center/cover` : `${accent}15`, textAlign: "center" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 28, fontWeight: 700, margin: "0 0 8px", color: config.bannerImage ? "#fff" : textColor }}>{config.bannerTitle}</h2>
+      {config.bannerSubtitle && <p style={{ fontSize: 14, color: config.bannerImage ? "#ffffffcc" : "#666", margin: "0 0 16px" }}>{config.bannerSubtitle}</p>}
+      {config.bannerBtnText && <span style={{ display: "inline-block", padding: "10px 24px", background: accent, color: "#fff", borderRadius: radius, fontWeight: 600, fontSize: 13 }}>{config.bannerBtnText}</span>}
+    </div>
+  ) : null;
+
+  const renderCTA = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", background: config.ctaImage ? `url(${config.ctaImage}) center/cover` : `${accent}10`, textAlign: "center" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 8px", color: config.ctaImage ? "#fff" : textColor }}>{config.ctaTitle || "Ready to Transform?"}</h2>
+      {config.ctaSubtitle && <p style={{ fontSize: 14, color: config.ctaImage ? "#ffffffcc" : "#666", margin: "0 0 16px" }}>{config.ctaSubtitle}</p>}
+      {config.ctaBtnText && <span style={{ display: "inline-block", padding: "10px 24px", background: accent, color: "#fff", borderRadius: radius, fontWeight: 600, fontSize: 13 }}>{config.ctaBtnText}</span>}
+    </div>
+  );
+
+  const renderContact = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", background: "#f9fafb" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>Contact Us</h2>
+      <div style={{ display: "grid", gridTemplateColumns: device === "mobile" ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+        {config.contactPhone && <div style={{ padding: 16, background: "#fff", borderRadius: radius, textAlign: "center" }}><div style={{ fontSize: 20, marginBottom: 8 }}>&#128222;</div><div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Phone</div><div style={{ fontSize: 13, color: "#666" }}>{config.contactPhone}</div></div>}
+        {config.contactEmail && <div style={{ padding: 16, background: "#fff", borderRadius: radius, textAlign: "center" }}><div style={{ fontSize: 20, marginBottom: 8 }}>&#9993;</div><div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Email</div><div style={{ fontSize: 13, color: "#666" }}>{config.contactEmail}</div></div>}
+        {config.contactAddress && <div style={{ padding: 16, background: "#fff", borderRadius: radius, textAlign: "center" }}><div style={{ fontSize: 20, marginBottom: 8 }}>&#128205;</div><div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Address</div><div style={{ fontSize: 13, color: "#666" }}>{config.contactAddress}</div></div>}
+      </div>
+    </div>
+  );
+
+  const renderHours = () => (
+    <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px" }}>
+      <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>Business Hours</h2>
+      <div style={{ maxWidth: 400, margin: "0 auto" }}>
+        {(config.businessHours || []).map((bh, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #eee", fontSize: 14 }}>
+            <span style={{ fontWeight: 600 }}>{bh.day}</span><span style={{ color: "#666" }}>{bh.hours}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSocial = () => {
+    const links = [
+      { label: "Instagram", url: config.socialInstagram },
+      { label: "Facebook", url: config.socialFacebook },
+      { label: "YouTube", url: config.socialYoutube },
+      { label: "TikTok", url: config.socialTiktok },
+      { label: "Twitter", url: config.socialTwitter },
+    ].filter(l => l.url);
+    if (links.length === 0) return null;
+    return (
+      <div style={{ padding: device === "mobile" ? "32px 16px" : "50px 40px", textAlign: "center" }}>
+        <h2 style={{ fontSize: device === "mobile" ? 20 : 24, fontWeight: 700, margin: "0 0 16px" }}>Follow Us</h2>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          {links.map((l, i) => (
+            <span key={i} style={{ padding: "8px 16px", background: accent, color: "#fff", borderRadius: radius, fontSize: 13, fontWeight: 600 }}>{l.label}</span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSection = (sec) => {
+    switch (sec.type) {
+      case "hero": return renderHero();
+      case "about": return renderAbout();
+      case "gallery": return renderGallery();
+      case "services": return renderServices();
+      case "testimonials": return renderTestimonials();
+      case "banner": return renderBanner();
+      case "cta": return renderCTA();
+      case "contact": return renderContact();
+      case "hours": return renderHours();
+      case "social": return renderSocial();
+      default: return null;
+    }
+  };
+
+  return (
+    <div style={previewStyle}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", gap: 10, background: "#fff", position: "sticky", top: 0, zIndex: 10 }}>
+        {config.logoUrl ? <img src={config.logoUrl} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: "cover" }} /> : <div style={{ width: 28, height: 28, borderRadius: 6, background: accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12 }}>{(config.salonName || "S")[0]}</div>}
+        <span style={{ fontWeight: 700, fontSize: 14 }}>{config.salonName || "Your Salon"}</span>
+      </div>
+      {enabledSections.length > 0 ? enabledSections.map(sec => (
+        <div key={sec.id}>{renderSection(sec)}</div>
+      )) : (
+        <div style={{ padding: 60, textAlign: "center", color: "#9ca3af" }}>Enable sections to see preview</div>
+      )}
+      <div style={{ padding: "20px 16px", background: textColor, color: "#fff", textAlign: "center", fontSize: 12 }}>
+        {config.footerText || `\u00A9 ${new Date().getFullYear()} ${config.salonName || "Salon"}. All rights reserved.`}
+      </div>
+    </div>
+  );
+}
+
 export default function WebsiteEditorPage() {
   const { auth } = useAuth();
   const [config, setConfig] = useState(emptyConfig);
   const [sections, setSections] = useState(DEFAULT_SECTIONS);
   const [saving, setSaving] = useState(false);
-  const [iframeKey, setIframeKey] = useState(Date.now());
   const [status, setStatus] = useState({ error: "", success: "" });
   const [activeTab, setActiveTab] = useState("sections");
+  const [previewDevice, setPreviewDevice] = useState("desktop");
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
 
@@ -193,7 +378,6 @@ export default function WebsiteEditorPage() {
     setStatus({ error: "", success: "" });
     try {
       await api.post("/owner/website/config", { ...config, sections });
-      setIframeKey(Date.now());
       setStatus({ error: "", success: "Published!" });
       setTimeout(() => setStatus({ error: "", success: "" }), 3000);
     } catch (err) {
@@ -231,7 +415,6 @@ export default function WebsiteEditorPage() {
   const enabledCount = sections.filter(s => s.enabled).length;
 
   const renderSectionEditor = () => {
-    const activeSections = sections.filter(s => s.enabled);
     return (
       <>
         {sections.find(s => s.type === "hero")?.enabled && (
@@ -404,7 +587,6 @@ export default function WebsiteEditorPage() {
         <div className="we-sidebar-scroll">
           {activeTab === "sections" ? (
             <div className="we-tab-content">
-              {/* Section Order */}
               <div className="we-section-list-header">
                 <span>Section Order</span>
                 <span className="we-section-count">{enabledCount} active</span>
@@ -423,7 +605,6 @@ export default function WebsiteEditorPage() {
                 ))}
               </div>
 
-              {/* Add Section */}
               <div className="we-add-section-header">Add Section</div>
               <div className="we-add-section-grid">
                 {ADDABLE_TYPES.filter(t => !sections.find(s => s.type === t.type)).map(t => (
@@ -435,17 +616,14 @@ export default function WebsiteEditorPage() {
 
               <div className="we-divider" />
 
-              {/* Section Editors */}
               {renderSectionEditor()}
 
-              {/* Footer */}
               <SectionBlock icon="\u{1F4DD}" title="Footer" defaultOpen={false}>
                 <Field label="Footer Text"><Textarea value={config.footerText} onChange={v => update("footerText", v)} rows={2} placeholder="All rights reserved..." /></Field>
               </SectionBlock>
             </div>
           ) : (
             <div className="we-tab-content">
-              {/* Design Tab */}
               <SectionBlock icon="\u{1F3A8}" title="Colors & Branding">
                 <div className="we-color-grid">
                   <ColorField label="Accent / Buttons" value={config.primaryColor} onChange={v => update("primaryColor", v)} />
@@ -473,12 +651,18 @@ export default function WebsiteEditorPage() {
         </div>
       </div>
 
-      {/* Preview */}
+      {/* Live Preview */}
       <div className="we-preview-area">
         <div className="we-preview-toolbar">
-          <div className="we-preview-device">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="2" width="16" height="12" rx="1.5" /><line x1="5" y1="16" x2="13" y2="16" /></svg>
-            Desktop
+          <div className="we-device-toggle">
+            <button className={`we-device-btn ${previewDevice === "desktop" ? "active" : ""}`} onClick={() => setPreviewDevice("desktop")}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="2" width="16" height="12" rx="1.5" /><line x1="5" y1="16" x2="13" y2="16" /></svg>
+              Desktop
+            </button>
+            <button className={`we-device-btn ${previewDevice === "mobile" ? "active" : ""}`} onClick={() => setPreviewDevice("mobile")}>
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="1" width="12" height="16" rx="2" /><line x1="6" y1="15" x2="10" y2="15" /></svg>
+              Mobile
+            </button>
           </div>
           {slug && (
             <a href={`/site/${slug}`} target="_blank" rel="noopener noreferrer" className="we-preview-link">
@@ -487,12 +671,12 @@ export default function WebsiteEditorPage() {
             </a>
           )}
         </div>
-        <div className="we-preview-frame">
-          {slug ? (
-            <iframe key={iframeKey} src={`/site/${slug}`} className="we-iframe" title="Preview" />
-          ) : (
-            <div className="we-preview-empty">Configure your salon slug first</div>
-          )}
+        <div className={`we-preview-frame ${previewDevice === "mobile" ? "we-mobile-frame" : ""}`}>
+          {previewDevice === "mobile" && <div className="we-mobile-notch" />}
+          <div className={`we-preview-inner ${previewDevice === "mobile" ? "we-mobile-inner" : ""}`}>
+            <LivePreview config={config} sections={sections} device={previewDevice} />
+          </div>
+          {previewDevice === "mobile" && <div className="we-mobile-bar" />}
         </div>
       </div>
     </div>
