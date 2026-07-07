@@ -42,13 +42,13 @@ export default function CheckoutPage() {
                 <h4 style={{ margin: 0 }}>Luxury Styling</h4>
                 <p style={{ margin: 0, color: 'var(--sf-text-light)', fontSize: '0.9rem' }}>Qty: 1</p>
               </div>
-              <div style={{ fontWeight: 600 }}>$120.00</div>
+              <div style={{ fontWeight: 600 }}>{salon.currency || "INR"} 120.00</div>
             </div>
 
             <div style={{ borderTop: '1px solid #eee', paddingTop: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: 'var(--sf-text-light)' }}>
                 <span>Subtotal</span>
-                <span>$120.00</span>
+                <span>{salon.currency || "INR"} 120.00</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: 'var(--sf-text-light)' }}>
                 <span>Taxes</span>
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, paddingTop: 24, borderTop: '1px solid #eee', fontSize: '1.5rem', fontWeight: 700 }}>
                 <span>Total</span>
-                <span>$120.00</span>
+                <span>{salon.currency || "INR"} 120.00</span>
               </div>
             </div>
           </div>

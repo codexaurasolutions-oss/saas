@@ -124,7 +124,7 @@ export default function HomePage() {
               <div className="sf-product-info">
                 <span className="sf-product-category">Sample Category</span>
                 <h3 className="sf-product-title">Luxury Treatment {i}</h3>
-                <p className="sf-product-price">$99.00</p>
+                <p className="sf-product-price">{salon.currency || "INR"} 99.00</p>
                 <div style={{ marginTop: 'auto', paddingTop: '20px', paddingBottom: '24px' }}>
                   <span className="sf-btn-outline">Purchase Now</span>
                 </div>
