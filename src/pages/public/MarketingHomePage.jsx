@@ -38,18 +38,6 @@ const features = [
 
 const featureCategories = [
   {
-    title: "SaaS Control",
-    icon: Shield,
-    color: "#6366f1",
-    bg: "#eef2ff",
-    features: [
-      "Super Admin controls salons, plans, subscriptions, feature flags, and maintenance mode.",
-      "Multi-tenant isolation keeps salon data separated at API and database level.",
-      "Plan limits govern branches, users, customers, invoices, and feature access.",
-      "Demo lead pipeline with automated approval and workspace provisioning."
-    ]
-  },
-  {
     title: "Unified Owner/Admin Panel",
     icon: LayoutDashboard,
     color: "#0d9488",
@@ -107,6 +95,18 @@ const featureCategories = [
       "Campaign management with templates, scheduling, and conversion tracking.",
       "SMS and email campaigns with audience targeting and delivery reports.",
       "Loyalty points, coupons, gift cards, and referral programs."
+    ]
+  },
+  {
+    title: "Customer Experience",
+    icon: Star,
+    color: "#f97316",
+    bg: "#fff7ed",
+    features: [
+      "Customer portal for bookings, orders, invoices, and loyalty history.",
+      "Feedback collection, ratings, and satisfaction reports.",
+      "Enquiry capture, assignment, follow-ups, and conversion tracking.",
+      "Support tickets with thread trails, internal notes, and priority management."
     ]
   }
 ];
