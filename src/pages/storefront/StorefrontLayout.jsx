@@ -8,6 +8,7 @@ export default function StorefrontLayout() {
   const [salon, setSalon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const addToCart = (item) => {
     setCart([...cart, item]);
@@ -20,7 +21,6 @@ export default function StorefrontLayout() {
         const fullSalon = { ...res.data.salon, websiteConfig: res.data.websiteConfig, uiSettings: res.data.uiSettings, footerContent: res.data.footerContent };
         setSalon(fullSalon);
         setLoading(false);
-        // Apply website config colors as CSS variables
         const wc = res.data.websiteConfig || {};
         const ui = res.data.uiSettings || {};
         const root = document.documentElement;
@@ -53,12 +53,18 @@ export default function StorefrontLayout() {
             {salon.logoUrl ? <img src={salon.logoUrl} alt={salon.name} /> : <div style={{ width: 40, height: 40, background: '#111', borderRadius: 8 }} />}
             {salon.name}
           </Link>
+
+          <button className="sf-hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
+            <span className={`sf-hamburger-line ${mobileMenuOpen ? "open" : ""}`} />
+            <span className={`sf-hamburger-line ${mobileMenuOpen ? "open" : ""}`} />
+            <span className={`sf-hamburger-line ${mobileMenuOpen ? "open" : ""}`} />
+          </button>
           
-          <nav className="sf-nav-links">
-            <Link to={`/site/${salon.slug}`}>Home</Link>
-            <Link to={`/site/${salon.slug}/collections`}>Collections</Link>
-            <Link to={`/site/${salon.slug}/about`}>About Us</Link>
-            <Link to={`/site/${salon.slug}/contact`}>Contact</Link>
+          <nav className={`sf-nav-links ${mobileMenuOpen ? "sf-nav-open" : ""}`}>
+            <Link to={`/site/${salon.slug}`} onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to={`/site/${salon.slug}/collections`} onClick={() => setMobileMenuOpen(false)}>Collections</Link>
+            <Link to={`/site/${salon.slug}/about`} onClick={() => setMobileMenuOpen(false)}>About Us</Link>
+            <Link to={`/site/${salon.slug}/contact`} onClick={() => setMobileMenuOpen(false)}>Contact</Link>
           </nav>
           
           <div className="sf-header-actions">
