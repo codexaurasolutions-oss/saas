@@ -332,6 +332,10 @@ export default function MarketingHomePage() {
 
   return (
     <div className="public-site">
+      <style>{`
+        .salon-img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 768px) { .salon-img-grid { grid-template-columns: 1fr; } .salon-hero-img { height: 200px !important; } .salon-cta-img { height: 240px !important; } }
+      `}</style>
       {isLoading ? (
         <div className="page-shell" style={{ minHeight: "100vh" }}>
           <div className="panel-card">
@@ -390,13 +394,16 @@ export default function MarketingHomePage() {
               <span>Role-based access</span>
             </div>
           </div>
-          <div className="public-hero-card" style={{ width: "100%" }}>
+          <div className="public-hero-card" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
             <div className="premium-illustration-container">
               <div className="svg-glow-backdrop" />
               {location.pathname === "/" && <DashboardPreview />}
               {location.pathname === "/features" && <FeaturesPreview />}
               {location.pathname === "/pricing" && <PricingPreview />}
               {location.pathname === "/platform" && <PlatformPreview />}
+            </div>
+            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.12)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <img className="salon-hero-img" src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=450&fit=crop&crop=center" alt="Premium salon interior" style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
             </div>
           </div>
         </section>
@@ -439,6 +446,22 @@ export default function MarketingHomePage() {
             </div>
           ))}
         </section>
+
+        {location.pathname === "/" && (
+          <>
+            <section className="public-section" style={{ paddingTop: 40 }}>
+              <div className="salon-img-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
+                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
+                  <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop" alt="Salon styling station" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                </div>
+                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
+                  <img src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400&h=300&fit=crop" alt="Spa treatment room" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                </div>
+                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
+                  <img src="https://images.unsplash.com/photo-1633681122886-333f05b1054d?w=400&h=300&fit=crop" alt="Beauty salon interior" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                </div>
+              </div>
+            </section>
 
         {location.pathname === "/" && (
           <>
@@ -634,6 +657,12 @@ export default function MarketingHomePage() {
             </section>
           </>
         )}
+
+        <section className="public-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.1)" }}>
+            <img className="salon-cta-img" src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1200&h=400&fit=crop&crop=center" alt="Modern salon workspace" style={{ width: "100%", height: 360, objectFit: "cover", display: "block" }} />
+          </div>
+        </section>
 
         <section className="public-section public-cta-band">
           <div>
