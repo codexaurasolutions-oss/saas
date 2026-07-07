@@ -338,6 +338,7 @@ export default function WebsiteEditorPage() {
   const [config, setConfig] = useState(emptyConfig);
   const [sections, setSections] = useState(DEFAULT_SECTIONS);
   const [saving, setSaving] = useState(false);
+  const [iframeKey, setIframeKey] = useState(Date.now());
   const [status, setStatus] = useState({ error: "", success: "" });
   const [activeTab, setActiveTab] = useState("sections");
   const [previewDevice, setPreviewDevice] = useState("desktop");
@@ -378,6 +379,7 @@ export default function WebsiteEditorPage() {
     setStatus({ error: "", success: "" });
     try {
       await api.post("/owner/website/config", { ...config, sections });
+      setIframeKey(Date.now());
       setStatus({ error: "", success: "Published!" });
       setTimeout(() => setStatus({ error: "", success: "" }), 3000);
     } catch (err) {
@@ -651,7 +653,7 @@ export default function WebsiteEditorPage() {
         </div>
       </div>
 
-      {/* Live Preview */}
+      {/* Preview */}
       <div className="we-preview-area">
         <div className="we-preview-toolbar">
           <div className="we-device-toggle">
@@ -674,7 +676,11 @@ export default function WebsiteEditorPage() {
         <div className={`we-preview-frame ${previewDevice === "mobile" ? "we-mobile-frame" : ""}`}>
           {previewDevice === "mobile" && <div className="we-mobile-notch" />}
           <div className={`we-preview-inner ${previewDevice === "mobile" ? "we-mobile-inner" : ""}`}>
-            <LivePreview config={config} sections={sections} device={previewDevice} />
+            {slug ? (
+              <iframe key={iframeKey} src={`/site/${slug}`} className={`we-iframe ${previewDevice === "mobile" ? "we-iframe-mobile" : ""}`} title="Preview" />
+            ) : (
+              <div className="we-preview-empty">Configure your salon slug first</div>
+            )}
           </div>
           {previewDevice === "mobile" && <div className="we-mobile-bar" />}
         </div>

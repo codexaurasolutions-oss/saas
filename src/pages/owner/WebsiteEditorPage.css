@@ -874,3 +874,16 @@
   color: #9ca3af;
   font-size: 0.9rem;
 }
+
+.we-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  min-height: 600px;
+}
+
+.we-iframe-mobile {
+  width: 375px;
+  min-width: 375px;
+  max-width: 375px;
+}
