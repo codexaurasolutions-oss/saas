@@ -1,121 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../../api/client";
-import EmptyState from "../../components/EmptyState";
-import PageLoader from "../../components/PageLoader";
 import PublicMobileMenu from "../../components/PublicMobileMenu";
-
-// Premium Interactive Visual Mocks instead of missing SVGs
-function DashboardPreview() {
-  return (
-    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "16px", borderRadius: "16px" }}>
-          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.05em" }}>Enterprise Live Revenue</div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6", marginTop: "4px" }}>₹3,84,240</div>
-          <div style={{ display: "flex", gap: "8px", fontSize: "0.75rem", color: "#14b8a6", marginTop: "6px", alignItems: "center", fontWeight: 600 }}>
-            <span>↑ 24% this month</span>
-            <span style={{ color: "#94a3b8" }}>• 12 Branches Active</span>
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "12px", borderRadius: "12px" }}>
-            <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Active Invoices</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: "2px", color: "#38bdf8" }}>4,924</div>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "12px", borderRadius: "12px" }}>
-            <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Staff Scheduled</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: "2px", color: "#fb7185" }}>184</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeaturesPreview() {
-  return (
-    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Workspace RBAC Access Control</h4>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Salon Owner</span>
-            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Full Administrative Access</span>
-          </div>
-          <span style={{ padding: "4px 10px", background: "rgba(20, 184, 166, 0.1)", color: "#14b8a6", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 700 }}>Owner</span>
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Receptionist</span>
-            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>POS, Catalog & Bookings Only</span>
-          </div>
-          <span style={{ padding: "4px 10px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 700 }}>Reception</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PricingPreview() {
-  return (
-    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Choose Standard or Custom Tiers</h4>
-        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Starter Plan</span>
-          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>₹4,999 / mo</strong>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Growth Plan</span>
-          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>₹9,999 / mo</strong>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
-          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Enterprise Scale</span>
-          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>Custom Quote</strong>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PlatformPreview() {
-  return (
-    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Database Sandbox Tenancy</h4>
-        <div style={{ borderLeft: "3px solid #0d9488", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Multi-Tenant Isolation</span>
-          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Each salon is logically isolated at the query level using secure client references.</span>
-        </div>
-        <div style={{ borderLeft: "3px solid #38bdf8", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Secure JWT Authentication</span>
-          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Cryptographic access tokens ensure backend routers confirm actor role and permissions.</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -125,145 +11,45 @@ const navLinks = [
   { label: "Request Demo", to: "/book-demo" }
 ];
 
-const brandLogo = "/logo-respark.svg";
-
-const featureGroups = [
-  {
-    title: "SaaS Control",
-    points: ["Super Admin controls salons, plans, subscriptions, feature flags, and maintenance mode.", "Multi-tenant isolation keeps salon data separated at API and database level.", "Plan limits govern branches, users, customers, invoices, and feature access."]
-  },
-  {
-    title: "Unified Owner/Admin Panel",
-    points: ["One shared panel for owner, receptionist, manager, staff, and accountant users.", "Role-based sidebar and backend permission checks keep every user inside assigned scope.", "Branch-aware operations, custom roles, archived users, and staff-service assignment are built in."]
-  },
-  {
-    title: "Billing + Operations",
-    points: ["POS creates invoices with backend-calculated totals, payment updates, receipt HTML, and PDF output.", "Customers carry notes, tags, source, birthdays, anniversaries, and billing history.", "Reports cover sales, payments, branches, staff-service output, customer totals, and CSV export."]
-  }
-];
-
-const platformSections = [
-  {
-    eyebrow: "Unified Experience",
-    title: "One login surface for every internal team member",
-    copy: "Instead of building separate staff panels, the platform keeps owner, front desk, manager, and specialist access inside one clean workspace with role-based visibility."
-  },
-  {
-    eyebrow: "Operational Safety",
-    title: "Backend-first enforcement for serious billing flows",
-    copy: "Permissions, feature flags, maintenance mode, invoice totals, and payment transitions are all enforced on the backend, not only hidden in the UI."
-  },
-  {
-    eyebrow: "Growth Readiness",
-    title: "A strong Phase 1 base for multi-branch salon businesses",
-    copy: "The architecture is ready for future modules like appointments, inventory, memberships, and storefront expansion without rewriting the tenancy model."
-  }
-];
-
-const pageContent = {
-  "/": {
-    heroEyebrow: "Salon ERP Platform",
-    title: "Run your entire salon business from one calm, controlled operating system.",
-    subtitle: "ReSpark brings Super Admin controls, a unified owner/admin panel, POS billing, team permissions, CRM, support, and reporting into one responsive platform for modern salon businesses.",
-    primaryCta: "Request Demo",
-    secondaryCta: "See Pricing"
-  },
-  "/features": {
-    heroEyebrow: "Feature Stack",
-    title: "Every essential Phase 1 feature, mapped into one connected workflow.",
-    subtitle: "From tenant isolation to invoice PDFs, from staff roles to branch-wise reporting, the platform is designed so the front desk, owner, and support team can operate with clarity."
-  },
-  "/pricing": {
-    heroEyebrow: "Plans & Pricing",
-    title: "Choose the plan that matches your salon growth stage.",
-    subtitle: "Transparent limits, clear feature access, and room for custom plans when a growing salon group needs a more tailored rollout."
-  },
-  "/platform": {
-    heroEyebrow: "Inside The Platform",
-    title: "Built specifically for salons that need discipline, visibility, and scale.",
-    subtitle: "This is not a generic dashboard. The product structure follows real salon operations: branches, services, users, permissions, POS, payments, support, and SaaS-level controls."
-  }
+const salonImages = {
+  hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600&h=900&fit=crop&crop=center",
+  styling: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=400&fit=crop",
+  spa: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop",
+  beauty: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600&h=400&fit=crop",
+  interior: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600&h=400&fit=crop",
+  cta: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=500&fit=crop&crop=center",
+  team: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=600&fit=crop"
 };
 
-const defaultPlans = [
-  {
-    id: "starter",
-    name: "Starter",
-    monthlyPrice: 4999,
-    yearlyPrice: 49990,
-    trialDays: 14,
-    branchLimit: 9999,
-    userLimit: 5,
-    customerLimit: 500,
-    invoiceLimit: 1000,
-    storageLimit: 5,
-    featureFlags: { pos: true, crm: true, reports: true }
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    monthlyPrice: 9999,
-    yearlyPrice: 99990,
-    trialDays: 14,
-    branchLimit: 9999,
-    userLimit: 20,
-    customerLimit: 3000,
-    invoiceLimit: 10000,
-    storageLimit: 20,
-    featureFlags: { pos: true, crm: true, reports: true, whatsapp: true, digitalCatalog: true }
-  },
-  {
-    id: "scale",
-    name: "Scale",
-    monthlyPrice: 17999,
-    yearlyPrice: 179990,
-    trialDays: 21,
-    branchLimit: 9999,
-    userLimit: 100,
-    customerLimit: 20000,
-    invoiceLimit: 50000,
-    storageLimit: 100,
-    featureFlags: { pos: true, crm: true, reports: true, whatsapp: true, digitalCatalog: true, customerPortal: true, loyalty: true }
-  }
+const features = [
+  { icon: "🏪", title: "Multi-Branch Control", desc: "Manage unlimited branches from one dashboard. Branch-wise reporting, staff, and inventory." },
+  { icon: "💳", title: "POS & Invoicing", desc: "Lightning-fast POS with backend-calculated totals, PDF receipts, and payment tracking." },
+  { icon: "👥", title: "Customer CRM", desc: "Complete customer profiles with notes, tags, birthdays, anniversaries, and billing history." },
+  { icon: "📊", title: "Smart Reports", desc: "Sales, revenue, staff performance, branch comparison, and exportable CSV reports." },
+  { icon: "🔐", title: "Role-Based Access", desc: "Owner, manager, receptionist, staff - each role gets exactly the access they need." },
+  { icon: "🎫", title: "Support System", desc: "Built-in ticketing with thread trails, internal notes, and support event history." }
+];
+
+const stats = [
+  { value: "4,924+", label: "Active Invoices" },
+  { value: "184", label: "Staff Members" },
+  { value: "12", label: "Branches Active" },
+  { value: "24%", label: "Monthly Growth" }
 ];
 
 const industries = ["Hair Salons", "Beauty Studios", "Spa Chains", "Nail Bars", "Tattoo Studios", "Beauty Clinics", "Pet Grooming"];
 
-const publicFeatureCards = [
-  "Unified owner/admin workspace",
-  "Permission-based sidebar",
-  "Super Admin salon controls",
-  "Plan and subscription limits",
-  "Branch and service management",
-  "Staff assignment and custom roles",
-  "Customer CRM and billing history",
-  "POS, invoices, payments, receipts, PDF",
-  "Sales, customer, branch, and staff reports",
-  "Support tickets with thread trail",
-  "Demo lead capture and public website",
-  "Maintenance mode and feature flag blocking"
+const defaultPlans = [
+  { id: "starter", name: "Starter", monthlyPrice: 4999, yearlyPrice: 49990, branchLimit: 9999, userLimit: 5, customerLimit: 500, invoiceLimit: 1000, storageLimit: 5, featureFlags: { pos: true, crm: true, reports: true } },
+  { id: "growth", name: "Growth", monthlyPrice: 9999, yearlyPrice: 99990, branchLimit: 9999, userLimit: 20, customerLimit: 3000, invoiceLimit: 10000, storageLimit: 20, featureFlags: { pos: true, crm: true, reports: true, whatsapp: true, digitalCatalog: true } },
+  { id: "scale", name: "Scale", monthlyPrice: 17999, yearlyPrice: 179990, branchLimit: 9999, userLimit: 100, customerLimit: 20000, invoiceLimit: 50000, storageLimit: 100, featureFlags: { pos: true, crm: true, reports: true, whatsapp: true, digitalCatalog: true, customerPortal: true, loyalty: true } }
 ];
 
-const proofStrip = [
-  { label: "Billing safe", value: "Backend totals" },
-  { label: "Access model", value: "RBAC + feature flags" },
-  { label: "Reports", value: "Branch and staff aware" },
-  { label: "Deployment shape", value: "Unified multi-tenant SaaS" }
+const testimonials = [
+  { name: "Priya Sharma", role: "Owner, Luxe Studio", text: "ReSpark transformed how we manage 3 branches. The POS is lightning fast and reports give me real-time visibility.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&fit=crop" },
+  { name: "Rahul Mehta", role: "Director, Glamour Salon", text: "Finally a platform built for Indian salons. The multi-branch feature alone saved us hours of manual coordination.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&fit=crop" },
+  { name: "Ananya Patel", role: "Manager, Spa Bliss", text: "Customer CRM is amazing. We track every client's preferences, birthdays, and history. Our retention increased 40%.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&fit=crop" }
 ];
-
-function getCurrencyMeta(currencyCode) {
-  const code = String(currencyCode || "INR").toUpperCase();
-  if (code === "INR") return { code, locale: "en-IN" };
-  if (code === "PKR") return { code, locale: "en-PK" };
-  if (code === "AED") return { code, locale: "en-AE" };
-  if (code === "USD") return { code, locale: "en-US" };
-  return { code, locale: "en-IN" };
-}
-
-function formatPrice(value, currencyCode) {
-  const meta = getCurrencyMeta(currencyCode);
-  return new Intl.NumberFormat(meta.locale, { maximumFractionDigits: 0 }).format(Number(value || 0));
-}
 
 export default function MarketingHomePage() {
   const location = useLocation();
@@ -274,443 +60,371 @@ export default function MarketingHomePage() {
   useEffect(() => {
     let active = true;
     Promise.all([api.get("/public/settings"), api.get("/public/plans").catch(() => ({ data: [] }))])
-      .then(([settingsResponse, plansResponse]) => {
+      .then(([settingsRes, plansRes]) => {
         if (!active) return;
-        setSettings(settingsResponse.data);
-        setPlans(Array.isArray(plansResponse.data) && plansResponse.data.length ? plansResponse.data : defaultPlans);
+        setSettings(settingsRes.data);
+        setPlans(Array.isArray(plansRes.data) && plansRes.data.length ? plansRes.data : defaultPlans);
       })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, []);
 
-  const page = pageContent[location.pathname] || pageContent["/"];
   const whatsappHref = settings?.whatsappNumber
     ? `https://wa.me/${String(settings.whatsappNumber).replace(/[^\d]/g, "")}`
     : null;
   const pricingCurrency = String(settings?.defaultCurrency || "INR").toUpperCase();
+  const currencySymbol = pricingCurrency === "PKR" ? "Rs" : pricingCurrency === "AED" ? "AED" : "₹";
 
-  const selectedPageFeatures = useMemo(() => {
-    if (location.pathname === "/features") return publicFeatureCards;
-    if (location.pathname === "/pricing") {
-      return [
-        "Monthly and yearly billing visibility",
-        "Branch, user, customer, invoice, and storage limits",
-        "Custom plan support for special rollouts",
-        "Feature-based growth path instead of vague package names"
-      ];
-    }
-    if (location.pathname === "/platform") {
-      return [
-        "Clean tenant isolation",
-        "Role and feature enforcement",
-        "Supportable SaaS architecture",
-        "Responsive interface for daily operations"
-      ];
-    }
-    return [
-      "Multi-branch control",
-      "POS and invoice handling",
-      "Customer CRM",
-      "Permission-led staff access"
-    ];
-  }, [location.pathname]);
+  const isHome = location.pathname === "/";
+  const isFeatures = location.pathname === "/features";
+  const isPricing = location.pathname === "/pricing";
+  const isPlatform = location.pathname === "/platform";
 
   useEffect(() => {
-    document.title = `${page.title} | ${settings?.systemName || "ReSpark"}`;
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.setAttribute("name", "description");
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute("content", page.subtitle);
-  }, [page, settings]);
+    const titles = { "/": "ReSpark - Salon ERP Platform", "/features": "Features | ReSpark", "/pricing": "Pricing | ReSpark", "/platform": "Platform | ReSpark" };
+    document.title = titles[location.pathname] || "ReSpark";
+  }, [location.pathname]);
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, border: "4px solid #e2e8f0", borderTopColor: "#0d9488", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Loading ReSpark...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="public-site">
-      <style>{`
-        .salon-img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        @media (max-width: 768px) { .salon-img-grid { grid-template-columns: 1fr; } .salon-hero-img { height: 200px !important; } .salon-cta-img { height: 240px !important; } }
-      `}</style>
-      {isLoading ? (
-        <div className="page-shell" style={{ minHeight: "100vh" }}>
-          <div className="panel-card">
-            <PageLoader title="Loading ReSpark website" message="We are preparing plans, public settings, and the latest marketing content." />
-          </div>
-        </div>
-      ) : (
-        <>
-      <div className="public-orb orb-one" />
-      <div className="public-orb orb-two" />
-      <header className="public-nav-shell">
-        <div className="public-nav">
-          <Link to="/" className="brand-mark">
-            <img src={brandLogo} alt="ReSpark" className="brand-logo" />
-            <span className="brand-lockup">
-              <strong>{settings?.systemName || "ReSpark"}</strong>
-              <small>Salon ERP Platform</small>
-            </span>
+    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      {/* HEADER */}
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0d9488, #14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 16 }}>R</div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "#0f172a", lineHeight: 1.2 }}>ReSpark</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Salon ERP Platform</div>
+            </div>
           </Link>
-          <nav className="public-nav-links">
-            {navLinks.map((item) => (
-              <Link key={item.to} to={item.to} className={location.pathname === item.to ? "active" : ""}>
-                {item.label}
-              </Link>
+          <nav style={{ display: "flex", gap: 32, alignItems: "center" }}>
+            {navLinks.map(item => (
+              <Link key={item.to} to={item.to} style={{ textDecoration: "none", fontSize: 14, fontWeight: 500, color: location.pathname === item.to ? "#0d9488" : "#64748b", transition: "color 0.2s" }}>{item.label}</Link>
             ))}
           </nav>
-          <div className="public-nav-cta">
-            <Link to="/book-demo" className="nav-demo-link">Request Demo</Link>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <Link to="/login" style={{ textDecoration: "none", fontSize: 14, fontWeight: 600, color: "#64748b", padding: "8px 16px" }}>Login</Link>
+            <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 14, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, #0d9488, #14b8a6)", padding: "10px 24px", borderRadius: 10, boxShadow: "0 2px 8px rgba(13,148,136,0.3)" }}>Request Demo</Link>
           </div>
           <PublicMobileMenu
-            brand={{ label: settings?.systemName || "ReSpark", sublabel: "Salon ERP Platform", logo: brandLogo, to: "/" }}
+            brand={{ label: "ReSpark", sublabel: "Salon ERP Platform", logo: "/logo-respark.svg", to: "/" }}
             items={navLinks}
             cta={{ label: "Book Demo", to: "/book-demo" }}
           />
         </div>
       </header>
 
-      <main className="public-main">
-        <section className="public-hero">
-          <div className="public-hero-copy">
-            <div className="eyebrow-pill">{page.heroEyebrow}</div>
-            <h1>{page.title}</h1>
-            <p>{page.subtitle}</p>
-            <div className="public-hero-actions">
-              <Link to="/book-demo" className="cta-primary">
-                {page.primaryCta || "Request Demo"}
-              </Link>
-              <Link to={location.pathname === "/pricing" ? "/features" : "/pricing"} className="cta-secondary">
-                {page.secondaryCta || "Explore Plans"}
-              </Link>
-            </div>
-            <div className="public-mini-proof">
-              <span>Unified panel</span>
-              <span>MySQL-backed</span>
-              <span>PDF invoices</span>
-              <span>Role-based access</span>
-            </div>
-          </div>
-          <div className="public-hero-card" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
-            <div className="premium-illustration-container">
-              <div className="svg-glow-backdrop" />
-              {location.pathname === "/" && <DashboardPreview />}
-              {location.pathname === "/features" && <FeaturesPreview />}
-              {location.pathname === "/pricing" && <PricingPreview />}
-              {location.pathname === "/platform" && <PlatformPreview />}
-            </div>
-            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.12)", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <img className="salon-hero-img" src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=450&fit=crop&crop=center" alt="Premium salon interior" style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
-            </div>
-          </div>
-        </section>
-
-        <section className="public-trust">
-
-          <div className="trust-card">
-            <small>Best fit for</small>
-            <strong>Growing salon teams</strong>
-          </div>
-          <div className="trust-card">
-            <small>Support region</small>
-            <strong>{[settings?.defaultCity, settings?.defaultCountry].filter(Boolean).join(", ") || "Global"}</strong>
-          </div>
-          <div className="trust-card">
-            <small>Primary contact</small>
-            <strong>{settings?.contactEmail || "hello@respark.local"}</strong>
-          </div>
-          <div className="trust-card">
-            <small>Demo access</small>
-            <strong>{settings?.demoBookingUrl ? "Open" : "Request based"}</strong>
-          </div>
-        </section>
-
-        {settings?.maintenanceMode ? (
-          <section className="public-section" style={{ paddingTop: 0 }}>
-            <div className="feature-panel warm">
-              <div className="section-chip">Maintenance Notice</div>
-              <h2>Platform maintenance mode is currently active.</h2>
-              <p>Public information is still available, but internal salon workspaces may be temporarily restricted while maintenance is in progress.</p>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="public-proof-ribbon">
-          {proofStrip.map((item) => (
-            <div key={item.label} className="proof-ribbon-card">
-              <small>{item.label}</small>
-              <strong>{item.value}</strong>
-            </div>
-          ))}
-        </section>
-
-        {location.pathname === "/" && (
+      <main>
+        {/* ============ HOME PAGE ============ */}
+        {isHome && (
           <>
-            <section className="public-section" style={{ paddingTop: 40 }}>
-              <div className="salon-img-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
-                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop" alt="Salon styling station" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+            {/* HERO */}
+            <section style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #f0fdfa 0%, #f8fafc 50%, #ecfdf5 100%)" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 60px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+                <div>
+                  <div style={{ display: "inline-block", padding: "6px 16px", background: "#ccfbf1", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 20 }}>SALON ERP PLATFORM</div>
+                  <h1 style={{ fontSize: "3.5rem", fontWeight: 900, color: "#0f172a", lineHeight: 1.1, margin: "0 0 20px", letterSpacing: "-0.02em" }}>
+                    Run your entire salon business from one calm, <span style={{ color: "#0d9488" }}>controlled</span> operating system.
+                  </h1>
+                  <p style={{ fontSize: "1.15rem", color: "#64748b", lineHeight: 1.7, margin: "0 0 32px", maxWidth: 520 }}>
+                    ReSpark brings Super Admin controls, a unified owner/admin panel, POS billing, team permissions, CRM, support, and reporting into one responsive platform for modern salon businesses.
+                  </p>
+                  <div style={{ display: "flex", gap: 16, marginBottom: 40 }}>
+                    <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, #0d9488, #14b8a6)", padding: "16px 36px", borderRadius: 12, boxShadow: "0 4px 16px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>Request Demo</Link>
+                    <Link to="/pricing" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#0d9488", background: "#fff", padding: "16px 36px", borderRadius: 12, border: "2px solid #0d9488", transition: "all 0.2s" }}>See Pricing</Link>
+                  </div>
+                  <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                    {["Unified panel", "MySQL-backed", "PDF invoices", "Role-based access"].map(item => (
+                      <span key={item} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#14b8a6" }} />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400&h=300&fit=crop" alt="Spa treatment room" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
-                </div>
-                <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1633681122886-333f05b1054d?w=400&h=300&fit=crop" alt="Beauty salon interior" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", transition: "transform .3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                <div style={{ position: "relative" }}>
+                  {/* Dashboard Mock */}
+                  <div style={{ borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: 24, color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", position: "relative", zIndex: 2 }}>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
+                    </div>
+                    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 16, borderRadius: 16, marginBottom: 16 }}>
+                      <div style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.05em" }}>Enterprise Live Revenue</div>
+                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6", marginTop: 4 }}>₹3,84,240</div>
+                      <div style={{ display: "flex", gap: 8, fontSize: "0.75rem", color: "#14b8a6", marginTop: 6, fontWeight: 600 }}>
+                        <span>↑ 24% this month</span>
+                        <span style={{ color: "#94a3b8" }}>• 12 Branches Active</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 12, borderRadius: 12 }}>
+                        <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Active Invoices</div>
+                        <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: 2, color: "#38bdf8" }}>4,924</div>
+                      </div>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 12, borderRadius: 12 }}>
+                        <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Staff Scheduled</div>
+                        <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: 2, color: "#fb7185" }}>184</div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Salon Image behind dashboard */}
+                  <div style={{ position: "absolute", top: 40, right: -30, width: 200, height: 200, borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.15)", zIndex: 1, opacity: 0.9 }}>
+                    <img src={salonImages.styling} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
                 </div>
               </div>
             </section>
 
-        {location.pathname === "/" && (
-          <>
-            <section className="public-section two-panel">
-              <div className="feature-panel warm">
-                <div className="section-chip">Why teams choose it</div>
-                <h2>One operational rhythm from front desk to owner reporting.</h2>
-                <p>
-                  The platform reduces scattered processes by keeping customers, services, staff access, invoices,
-                  payments, reports, and support inside one unified operational structure.
-                </p>
-                <div className="public-badges">
-                  {selectedPageFeatures.map((item) => <span key={item}>{item}</span>)}
-                </div>
-              </div>
-              <div className="feature-panel cool">
-                <div className="section-chip">Industries</div>
-                <h2>Built around salon-style workflows, not generic retail assumptions.</h2>
-                <ul className="public-list">
-                  {industries.map((item) => <li key={item}>{item}</li>)}
-                </ul>
-              </div>
-            </section>
-
-            <section className="public-section">
-              <div className="section-heading">
-                <div className="section-chip">Core Pillars</div>
-                <h2>The four areas that make the platform reliable in daily use.</h2>
-              </div>
-              <div className="public-card-grid">
-                {featureGroups.map((group) => (
-                  <article key={group.title} className="public-card tilt-card">
-                    <h3>{group.title}</h3>
-                    <ul className="public-list">
-                      {group.points.map((point) => <li key={point}>{point}</li>)}
-                    </ul>
-                  </article>
-                ))}
-              </div>
-            </section>
-            <section className="public-section spotlight-grid">
-              <div className="spotlight-card dark-panel">
-                <div className="section-chip">Owner Experience</div>
-                <h3>From reception tasks to owner-level visibility, all in one rhythm.</h3>
-                <p>Front desk billing, service selection, staff mapping, payment updates, and reporting all stay connected so small mistakes do not multiply later.</p>
-              </div>
-              <div className="spotlight-card light-panel">
-                <div className="section-chip">SaaS Visibility</div>
-                <h3>Super Admin always stays in control of plan access and platform safety.</h3>
-                <p>Salons, subscriptions, feature flags, maintenance mode, and support oversight stay above tenant level where they belong.</p>
-              </div>
-            </section>
-          </>
-        )}
-
-        {location.pathname === "/features" && (
-          <>
-            <section className="public-section">
-              <div className="section-heading">
-                <div className="section-chip">According to SRS</div>
-                <h2>Phase 1 feature coverage across SaaS control, salon operations, and reporting.</h2>
-              </div>
-              <div className="feature-tile-grid">
-                {publicFeatureCards.map((item, index) => (
-                  <div key={item} className="feature-tile" style={{ animationDelay: `${index * 60}ms` }}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{item}</strong>
+            {/* STATS BAR */}
+            <section style={{ background: "#0f172a", padding: "40px 24px" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
+                {stats.map(s => (
+                  <div key={s.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6" }}>{s.value}</div>
+                    <div style={{ fontSize: 13, color: "#94a3b8", marginTop: 4 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
             </section>
-            <section className="public-section two-panel">
-              <div className="feature-panel warm">
-                <div className="section-chip">Operational Modules</div>
-                <p>Branches, categories, services, staff/users, custom roles, customers, POS, invoices, payments, reports, settings, and support all work together in the owner workspace.</p>
-                <ul className="public-list">
-                  <li>Service-to-staff assignment for clean POS selection</li>
-                  <li>Customer CRM notes, tags, dates, source, and billing history</li>
-                  <li>Receipt HTML, invoice PDF, and payment tracking</li>
-                </ul>
-              </div>
-              <div className="feature-panel cool">
-                <div className="section-chip">SaaS Modules</div>
-                <p>Salons, plans, subscriptions, demo leads, support supervision, settings, maintenance mode, and feature flags are controlled from Super Admin.</p>
-                <ul className="public-list">
-                  <li>Salon activation, suspension, trial, and expiry visibility</li>
-                  <li>Plan limits, custom plans, subscription history, and upgrade flow</li>
-                  <li>Ticket supervision with internal notes and support event trail</li>
-                </ul>
-              </div>
-            </section>
-          </>
-        )}
 
-        {location.pathname === "/pricing" && (
-          <>
-            <section className="public-section">
-              <div className="section-heading">
-                <div className="section-chip">Transparent Tiers</div>
-                <h2>Pricing that shows both limits and real usage capacity.</h2>
+            {/* SALON IMAGES GRID */}
+            <section style={{ padding: "80px 24px", background: "#fff" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
+                <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>OUR WORLD</div>
+                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Built for Premium Salons</h2>
+                <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 600, margin: "0 auto" }}>From luxury spas to neighborhood studios, ReSpark powers the modern salon experience.</p>
               </div>
-              {!plans.length ? <EmptyState title="Pricing plans unavailable right now" message="Default pricing cards will appear here once public plan rows are available for this environment." /> : null}
-              <div className="pricing-grid-custom">
-                {plans.map((plan, index) => (
-                  <article key={plan.id} className={`price-card-premium ${index === 1 ? "featured" : ""}`}>
-                    <div className="price-header">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                        <span style={{ fontSize: "0.72rem", textTransform: "uppercase", color: "#0d9488", fontWeight: 700, letterSpacing: "0.05em" }}>{plan.isCustom ? "Custom tier" : "Standard tier"}</span>
-                        {index === 1 && <span style={{ padding: "2px 8px", background: "#ccfbf1", color: "#0f766e", borderRadius: 99, fontSize: "0.65rem", fontWeight: 800 }}>POPULAR</span>}
-                      </div>
-                      <h3>{plan.name}</h3>
-                      <div className="price-amt">
-                        <span className="currency">{pricingCurrency === "PKR" ? "Rs" : pricingCurrency === "AED" ? "AED" : "₹"}</span>
-                        <span className="val">{formatPrice(plan.monthlyPrice, pricingCurrency)}</span>
-                        <span className="period">/mo</span>
-                      </div>
-                      <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>Yearly billing: {pricingCurrency === "PKR" ? "Rs" : pricingCurrency === "AED" ? "AED" : "₹"}{formatPrice(plan.yearlyPrice, pricingCurrency)} / yr</p>
-                    </div>
-                    
-                    <ul className="price-limits-list">
-                      <li><span>Branches</span><strong>Unlimited</strong></li>
-                      <li><span>Staff Users</span><strong>{plan.userLimit} Users</strong></li>
-                      <li><span>CRM Customers</span><strong>{plan.customerLimit} Customers</strong></li>
-                      <li><span>Monthly Invoices</span><strong>{plan.invoiceLimit} Invoices</strong></li>
-                      <li><span>Cloud Storage</span><strong>{plan.storageLimit || 0} GB</strong></li>
-                    </ul>
-
-                    <div className="public-badges" style={{ marginBottom: 24, minHeight: 48 }}>
-                      {Object.entries(plan.featureFlags || {}).filter(([, enabled]) => enabled).slice(0, 5).map(([key]) => (
-                        <span key={`${plan.id}-${key}`} style={{ fontSize: "0.72rem", padding: "4px 8px", borderRadius: 6 }}>{key}</span>
-                      ))}
-                    </div>
-                    
-                    <Link to="/book-demo" className="plan-link" style={{ width: "100%", textAlign: "center", display: "block" }}>Request Plan Walkthrough</Link>
-                  </article>
+              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                {[salonImages.styling, salonImages.spa, salonImages.beauty].map((img, i) => (
+                  <div key={i} style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,0.08)", transition: "all 0.3s", cursor: "pointer" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.15)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,0.08)"; }}>
+                    <img src={img} alt="" style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
+                  </div>
                 ))}
               </div>
             </section>
-            <section className="public-section two-panel">
-              <div className="feature-panel warm">
-                <div className="section-chip">Custom Plans</div>
-                <h2>Need a different rollout shape?</h2>
-                <p>Custom plan handling is supported for special branch counts, feature combinations, or rollout structures that do not fit the standard ladder.</p>
-              </div>
-              <div className="feature-panel cool">
-                <div className="section-chip">Upgrade Path</div>
-                <h2>Move up cleanly as the salon grows.</h2>
-                <p>Subscriptions track status, payment state, manual discounts, and history so growth decisions stay operationally visible.</p>
-              </div>
-            </section>
-            <section className="public-section pricing-note-card">
-              <div>
-                <div className="section-chip">Pricing Philosophy</div>
-                <h3>No vague promises. Just clear limits, feature access, and upgrade logic.</h3>
-              </div>
-              <p>That makes the pricing page useful in real sales conversations, not just visually attractive.</p>
-            </section>
-          </>
-        )}
 
-        {location.pathname === "/platform" && (
-          <>
-            <section className="public-section">
-              <div className="section-heading">
-                <div className="section-chip">Platform Story</div>
-                <h2>A platform shape that matches how salon teams actually work.</h2>
+            {/* FEATURES */}
+            <section style={{ padding: "80px 24px", background: "#f8fafc" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
+                <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURES</div>
+                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Everything Your Salon Needs</h2>
+                <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 600, margin: "0 auto" }}>One platform to manage branches, staff, customers, billing, and growth.</p>
               </div>
-              <div className="platform-flow">
-                {platformSections.map((section) => (
-                  <article key={section.title} className="platform-step">
-                    <small>{section.eyebrow}</small>
-                    <h3>{section.title}</h3>
-                    <p>{section.copy}</p>
-                  </article>
+              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+                {features.map((f, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0", transition: "all 0.2s", cursor: "default" }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                    <div style={{ fontSize: 36, marginBottom: 16 }}>{f.icon}</div>
+                    <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{f.title}</h3>
+                    <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
+                  </div>
                 ))}
               </div>
             </section>
-            <section className="public-section two-panel">
-              <div className="feature-panel warm">
-                <div className="section-chip">Architecture</div>
-                <p>React frontend, Node + Express backend, SQL database, salon-scoped APIs, role checks, feature flags, and backend-calculated billing totals.</p>
-              </div>
-              <div className="feature-panel cool">
-                <div className="section-chip">Supportability</div>
-                <p>Support threads, maintenance mode, demo leads, audit visibility, and tenant-aware admin controls make the platform easier to manage after launch too.</p>
+
+            {/* WHY CHOOSE US */}
+            <section style={{ padding: "80px 24px", background: "#fff" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+                <div>
+                  <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>WHY REARK</div>
+                  <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 20px", lineHeight: 1.2 }}>One operational rhythm from front desk to owner reporting.</h2>
+                  <p style={{ fontSize: "1.05rem", color: "#64748b", lineHeight: 1.7, margin: "0 0 32px" }}>
+                    The platform reduces scattered processes by keeping customers, services, staff access, invoices, payments, reports, and support inside one unified operational structure.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {["Multi-branch control", "POS and invoice handling", "Customer CRM", "Permission-led staff access"].map(item => (
+                      <div key={item} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 8, background: "#ccfbf1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#0f766e", fontWeight: 700 }}>✓</div>
+                        <span style={{ fontSize: 15, color: "#334155", fontWeight: 500 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.1)" }}>
+                  <img src={salonImages.interior} alt="Salon workspace" style={{ width: "100%", height: 400, objectFit: "cover" }} />
+                </div>
               </div>
             </section>
-            <section className="public-section architecture-bars">
-              <div className="architecture-bar"><span>Frontend</span><strong>React</strong></div>
-              <div className="architecture-bar"><span>Backend</span><strong>Node + Express</strong></div>
-              <div className="architecture-bar"><span>Database</span><strong>MySQL</strong></div>
-              <div className="architecture-bar"><span>Control layer</span><strong>RBAC + tenancy + feature flags</strong></div>
+
+            {/* INDUSTRIES */}
+            <section style={{ padding: "60px 24px", background: "#f8fafc" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#0d9488", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>INDUSTRIES</p>
+                <h3 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#0f172a", margin: "0 0 32px" }}>Built for salon-style workflows</h3>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                  {industries.map(ind => (
+                    <span key={ind} style={{ padding: "10px 24px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 100, fontSize: 14, fontWeight: 500, color: "#334155" }}>{ind}</span>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* TESTIMONIALS */}
+            <section style={{ padding: "80px 24px", background: "#fff" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
+                <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>TESTIMONIALS</div>
+                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>What Salon Owners Say</h2>
+              </div>
+              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+                {testimonials.map((t, i) => (
+                  <div key={i} style={{ background: "#f8fafc", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
+                      <img src={t.avatar} alt={t.name} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+                      <div>
+                        <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 15 }}>{t.name}</div>
+                        <div style={{ fontSize: 13, color: "#64748b" }}>{t.role}</div>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>"{t.text}"</p>
+                  </div>
+                ))}
+              </div>
             </section>
           </>
         )}
 
-        <section className="public-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.1)" }}>
-            <img className="salon-cta-img" src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1200&h=400&fit=crop&crop=center" alt="Modern salon workspace" style={{ width: "100%", height: 360, objectFit: "cover", display: "block" }} />
-          </div>
-        </section>
+        {/* ============ FEATURES PAGE ============ */}
+        {isFeatures && (
+          <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURE STACK</div>
+              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Every essential feature, mapped into one connected workflow.</h1>
+              <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>From tenant isolation to invoice PDFs, from staff roles to branch-wise reporting.</p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+              {features.map((f, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0", display: "flex", gap: 20, alignItems: "flex-start" }}>
+                  <div style={{ fontSize: 36, flexShrink: 0 }}>{f.icon}</div>
+                  <div>
+                    <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{f.title}</h3>
+                    <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="public-section public-cta-band">
-          <div>
-            <div className="section-chip">Ready for walkthrough</div>
-            <h2>See the platform with your own salon use case mapped live.</h2>
-            <p>We can walk through branch structure, roles, services, billing flow, reports, and support controls in one demo.</p>
-          </div>
-          <div className="cta-stack">
-            <Link to="/book-demo" className="cta-primary">Request Demo</Link>
-            <Link to="/pricing" className="cta-secondary">Review Pricing</Link>
-          </div>
-        </section>
+        {/* ============ PRICING PAGE ============ */}
+        {isPricing && (
+          <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>PLANS & PRICING</div>
+              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Choose the plan that matches your salon growth stage.</h1>
+              <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>Transparent limits, clear feature access, and room for custom plans.</p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+              {plans.map((plan, i) => (
+                <div key={plan.id} style={{ background: "#fff", borderRadius: 20, padding: 32, border: i === 1 ? "2px solid #0d9488" : "1px solid #e2e8f0", position: "relative", boxShadow: i === 1 ? "0 8px 30px rgba(13,148,136,0.15)" : "none" }}>
+                  {i === 1 && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#0d9488", color: "#fff", padding: "4px 16px", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>MOST POPULAR</div>}
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#0d9488", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Standard tier</div>
+                  <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 16px" }}>{plan.name}</h3>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+                    <span style={{ fontSize: 20, color: "#64748b" }}>{currencySymbol}</span>
+                    <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#0f172a" }}>{Number(plan.monthlyPrice).toLocaleString("en-IN")}</span>
+                    <span style={{ fontSize: 14, color: "#64748b" }}>/mo</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 24px" }}>Yearly: {currencySymbol}{Number(plan.yearlyPrice).toLocaleString("en-IN")}/yr</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+                    {[`Unlimited Branches`, `${plan.userLimit} Staff Users`, `${plan.customerLimit} Customers`, `${plan.invoiceLimit} Invoices/mo`, `${plan.storageLimit} GB Storage`].map(item => (
+                      <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#475569" }}>
+                        <span style={{ color: "#14b8a6", fontWeight: 700 }}>✓</span> {item}
+                      </div>
+                    ))}
+                  </div>
+                  <Link to="/book-demo" style={{ display: "block", textAlign: "center", padding: "14px", background: i === 1 ? "linear-gradient(135deg, #0d9488, #14b8a6)" : "#f8fafc", color: i === 1 ? "#fff" : "#0d9488", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", border: i === 1 ? "none" : "1px solid #e2e8f0" }}>Request Walkthrough</Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="public-section" style={{ paddingTop: 0 }}>
-          <div className="feature-panel cool">
-            <div className="section-chip">Policy & Contact</div>
-            <div className="public-hero-actions">
-              <Link to={settings?.termsUrl || "/terms"} className="cta-secondary">Terms</Link>
-              <Link to={settings?.privacyUrl || "/privacy"} className="cta-secondary">Privacy</Link>
-              <Link to={settings?.demoBookingUrl || "/book-demo"} className="cta-secondary">Book Demo</Link>
+        {/* ============ PLATFORM PAGE ============ */}
+        {isPlatform && (
+          <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>PLATFORM</div>
+              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Built specifically for salons that need discipline, visibility, and scale.</h1>
+              <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>This is not a generic dashboard. The product structure follows real salon operations.</p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+              {[
+                { title: "Multi-Tenant Isolation", desc: "Each salon is logically isolated at the query level using secure client references." },
+                { title: "Secure JWT Authentication", desc: "Cryptographic access tokens ensure backend routers confirm actor role and permissions." },
+                { title: "RBAC + Feature Flags", desc: "Permissions, feature flags, and maintenance mode enforced on the backend." },
+                { title: "Branch-Aware Architecture", desc: "Services, products, invoices, and reports are branch-scoped for clean operations." }
+              ].map((item, i) => (
+                <div key={i} style={{ background: "#f8fafc", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0" }}>
+                  <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{item.title}</h3>
+                  <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 40 }}>
+              {[{ label: "Frontend", value: "React" }, { label: "Backend", value: "Node + Express" }, { label: "Database", value: "MySQL" }, { label: "Control", value: "RBAC + Tenancy" }].map((b, i) => (
+                <div key={i} style={{ background: "#0f172a", borderRadius: 12, padding: 20, textAlign: "center" }}>
+                  <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>{b.label}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#14b8a6" }}>{b.value}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* CTA BAND (all pages) */}
+        <section style={{ padding: "80px 24px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", textAlign: "center" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <div style={{ display: "inline-block", padding: "6px 16px", background: "rgba(20,184,166,0.1)", color: "#14b8a6", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>READY FOR WALKTHROUGH</div>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#fff", margin: "0 0 16px" }}>See the platform with your salon use case mapped live.</h2>
+            <p style={{ fontSize: "1.1rem", color: "#94a3b8", marginBottom: 32 }}>We can walk through branch structure, roles, services, billing flow, reports, and support controls in one demo.</p>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+              <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#0f172a", background: "#fff", padding: "16px 36px", borderRadius: 12 }}>Request Demo</Link>
+              <Link to="/pricing" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#fff", background: "transparent", padding: "16px 36px", borderRadius: 12, border: "2px solid rgba(255,255,255,0.2)" }}>Review Pricing</Link>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="public-footer">
-        <div className="footer-brand">
-          <img src={brandLogo} alt="ReSpark" className="footer-brand-logo" />
-          <div>
-            <strong>{settings?.systemName || "ReSpark"}</strong>
-            <p>{settings?.supportEmail || "support@respark.local"}</p>
+      {/* FOOTER */}
+      <footer style={{ padding: "40px 24px", background: "#fff", borderTop: "1px solid #e2e8f0" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #0d9488, #14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 12 }}>R</div>
+            <span style={{ fontWeight: 700, color: "#0f172a" }}>{settings?.systemName || "ReSpark"}</span>
           </div>
-        </div>
-        <div className="footer-links">
-          <Link to="/features">Features</Link>
-          <Link to="/pricing">Pricing</Link>
-          <Link to="/platform">Platform</Link>
-          <Link to={settings?.termsUrl || "/terms"}>Terms</Link>
-          <Link to={settings?.privacyUrl || "/privacy"}>Privacy</Link>
+          <div style={{ display: "flex", gap: 24 }}>
+            <Link to="/features" style={{ textDecoration: "none", fontSize: 14, color: "#64748b" }}>Features</Link>
+            <Link to="/pricing" style={{ textDecoration: "none", fontSize: 14, color: "#64748b" }}>Pricing</Link>
+            <Link to="/platform" style={{ textDecoration: "none", fontSize: 14, color: "#64748b" }}>Platform</Link>
+            <Link to="/terms" style={{ textDecoration: "none", fontSize: 14, color: "#64748b" }}>Terms</Link>
+            <Link to="/privacy" style={{ textDecoration: "none", fontSize: 14, color: "#64748b" }}>Privacy</Link>
+          </div>
+          <div style={{ fontSize: 13, color: "#94a3b8" }}>© {new Date().getFullYear()} {settings?.systemName || "ReSpark"}. All rights reserved.</div>
         </div>
       </footer>
 
+      {/* WHATSAPP FAB */}
       {whatsappHref && (
-        <a href={whatsappHref} target="_blank" rel="noreferrer" className="whatsapp-fab">
-          WhatsApp
+        <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ position: "fixed", bottom: 24, right: 24, background: "#25d366", color: "#fff", padding: "14px 24px", borderRadius: 100, fontWeight: 700, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 16px rgba(37,211,102,0.4)", zIndex: 1000, display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 18 }}>💬</span> WhatsApp
         </a>
-      )}
-        </>
       )}
     </div>
   );
