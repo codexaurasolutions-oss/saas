@@ -53,7 +53,7 @@ export const isPhoneLikeKey = (key) => phoneKeys.has(key) || phoneKeyPattern.tes
 export const normalizePhoneFields = (value, key = "") => {
   if (Array.isArray(value)) return value.map((item) => normalizePhoneFields(item));
   if (!value || typeof value !== "object") {
-    if (!key || !isPhoneLikeKey(key) || value == null || value === "" || typeof value === "boolean") return value;
+    if (!key || !isPhoneLikeKey(key) || value == null || value === "") return value;
     return normalizeIndianPhone(value);
   }
   return Object.fromEntries(
@@ -69,7 +69,7 @@ export const validatePhoneFields = (value, path = []) => {
   if (!value || typeof value !== "object") return;
   Object.entries(value).forEach(([key, entryValue]) => {
     const nextPath = [...path, key];
-    if (isPhoneLikeKey(key) && typeof entryValue !== "boolean" && entryValue !== undefined && entryValue !== null && entryValue !== "" && !isValidIndianPhone(entryValue)) {
+    if (isPhoneLikeKey(key) && entryValue !== undefined && entryValue !== null && entryValue !== "" && !isValidIndianPhone(entryValue)) {
       const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
       throw new Error(`${label} must be a valid Indian +91 mobile number`);
     }
