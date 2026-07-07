@@ -82,6 +82,8 @@ const CategoryDetailPage = lazyWithRetry(() => import("./pages/storefront/Catego
 const ProductDetailPage = lazyWithRetry(() => import("./pages/storefront/ProductDetailPage.jsx"));
 const CartPage = lazyWithRetry(() => import("./pages/storefront/CartPage.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/storefront/CheckoutPage.jsx"));
+const AboutPage = lazyWithRetry(() => import("./pages/storefront/AboutPage.jsx"));
+const ContactPage = lazyWithRetry(() => import("./pages/storefront/ContactPage.jsx"));
 const LegalContentPage = lazyWithRetry(() => import("./pages/shared/LegalContentPage.jsx"));
 const WebsiteEditorPage = lazyWithRetry(() => import("./pages/owner/WebsiteEditorPage.jsx"));
 const WebsiteAnalyticsPage = lazyWithRetry(() => import("./pages/owner/WebsiteAnalyticsPage.jsx"));
@@ -410,10 +412,11 @@ export default function App() {
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="contact" element={<ContactPage />} />
           <Route path="terms" element={<LegalContentPage scope="salon" title="Terms & Conditions" contentKey="termsAndConditions" />} />
           <Route path="privacy" element={<LegalContentPage scope="salon" title="Privacy Policy" contentKey="privacyPolicy" />} />
-          <Route path="about" element={<HomePage />} /> {/* Placeholder */}
-          <Route path="book" element={<HomePage />} /> {/* Placeholder */}
+          <Route path="book" element={<HomePage />} />
         </Route>
 
         <Route path="/terms" element={<LegalContentPage scope="global" title="Terms & Conditions" contentKey="termsUrl" />} />

@@ -12,11 +12,15 @@ const FALLBACK_CAT_IMAGES = [
 ];
 const FALLBACK_PROD_IMG = "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop";
 
+const PRODUCTS_PER_PAGE = 12;
+
 export default function HomePage() {
   const { salon } = useOutletContext();
   const [services, setServices] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+  const [loading, setLoading] = useState(true);
   const categoryRollerRef = useRef(null);
 
   const scrollRoller = (dir) => {
@@ -41,144 +45,173 @@ export default function HomePage() {
     ]).then(([salonRes, catRes, prodRes]) => {
       setServices(salonRes.data?.services || []);
       setCategories(catRes.data || []);
-      setProducts(prodRes.data || []);
-    }).catch(() => {});
+      setAllProducts(prodRes.data || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, [salon.slug]);
+
+  const visibleProducts = allProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < allProducts.length;
+  const currency = salon.currency || "INR";
 
   return (
     <>
-      {/* Section 1: Hero */}
+      {/* Hero */}
       <section className="sf-hero">
         <div className="sf-hero-content">
-          <h1>{config.heroTitle}</h1>
-          <p>{config.heroSubtitle}</p>
+          <h1>{config.heroTitle || salon.name}</h1>
+          <p>{config.heroSubtitle || "Discover premium salon services and products."}</p>
           <div className="sf-hero-buttons">
-            <Link to={`/site/${salon.slug}/collections`} className="sf-btn sf-btn-primary">Shop Collections</Link>
-            <Link to={`/site/${salon.slug}/book`} className="sf-btn sf-btn-secondary">Book Appointment</Link>
+            <Link to={`/site/${salon.slug}/collections`} className="sf-btn sf-btn-primary">{config.heroBtn1Text || "Shop Collections"}</Link>
+            <Link to={`/site/${salon.slug}/book`} className="sf-btn sf-btn-secondary">{config.heroBtn2Text || "Book Appointment"}</Link>
           </div>
         </div>
         <div className="sf-hero-visual">
           {config.heroImage ? (
-            <img src={config.heroImage} alt="Salon Hero" />
+            <img src={config.heroImage} alt={salon.name} />
           ) : (
             <div className="sf-placeholder-img">Image</div>
           )}
         </div>
       </section>
 
-      {/* Section 2: Featured Collections */}
-      <section className="sf-section" style={{ background: '#fafafa' }}>
+      {/* Categories Roller */}
+      {categories.length > 0 && (
+        <section className="sf-section" style={{ background: "#fafafa" }}>
+          <div className="sf-section-header">
+            <span style={{ color: "var(--sf-accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, fontSize: "0.8rem" }}>Discover</span>
+            <h2>Featured Collections</h2>
+            <p>Explore our carefully curated categories</p>
+          </div>
+          <div className="sf-roller-wrapper">
+            <button className="sf-roller-btn left" onClick={() => scrollRoller("left")}>&larr;</button>
+            <div className="sf-category-roller" ref={categoryRollerRef}>
+              {categories.map((cat, idx) => (
+                <Link to={`/site/${salon.slug}/category/${cat.id}`} key={cat.id} className="sf-category-circle-card">
+                  <div className="sf-category-circle">
+                    <img src={cat.imageUrl || FALLBACK_CAT_IMAGES[idx % FALLBACK_CAT_IMAGES.length]} alt={cat.name} />
+                  </div>
+                  <h3 className="sf-category-circle-title">{cat.name}</h3>
+                </Link>
+              ))}
+            </div>
+            <button className="sf-roller-btn right" onClick={() => scrollRoller("right")}>&rarr;</button>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <Link to={`/site/${salon.slug}/collections`} className="sf-btn sf-btn-secondary">View All Collections</Link>
+          </div>
+        </section>
+      )}
+
+      {/* All Products */}
+      <section className="sf-section">
         <div className="sf-section-header">
-          <span style={{ color: 'var(--sf-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.8rem' }}>Discover</span>
-          <h2>Featured Collections</h2>
-          <p>Explore our carefully curated categories</p>
+          <span style={{ color: "var(--sf-accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, fontSize: "0.8rem" }}>Trending</span>
+          <h2>Our Products</h2>
+          <p>{allProducts.length > 0 ? `${allProducts.length} product${allProducts.length !== 1 ? "s" : ""} available` : "Browse our collection"}</p>
         </div>
-        
-        <div className="sf-roller-wrapper">
-          <button className="sf-roller-btn left" onClick={() => scrollRoller('left')}>&larr;</button>
-          
-          <div className="sf-category-roller" ref={categoryRollerRef}>
-            {categories.length > 0 ? categories.map((cat, idx) => (
-              <Link to={`/site/${salon.slug}/category/${cat.id}`} key={cat.id} className="sf-category-circle-card">
-                <div className="sf-category-circle">
-                  <img src={cat.imageUrl || FALLBACK_CAT_IMAGES[idx % FALLBACK_CAT_IMAGES.length]} alt={cat.name} />
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 60, color: "#999" }}>Loading products...</div>
+        ) : (
+          <>
+            <div className="sf-grid">
+              {visibleProducts.map(product => (
+                <Link to={`/site/${salon.slug}/product/${product.id}`} key={product.id} className="sf-product-card">
+                  <div className="sf-product-media">
+                    {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
+                      <div className="sf-product-badge" style={{ background: "#ef4444" }}>
+                        {Math.round((1 - Number(product.salePrice) / Number(product.sellingPrice)) * 100)}% OFF
+                      </div>
+                    )}
+                    <img src={product.imageUrl || FALLBACK_PROD_IMG} alt={product.name} />
+                  </div>
+                  <div className="sf-product-info">
+                    {product.category && <span className="sf-product-category">{product.category.name}</span>}
+                    <h3 className="sf-product-title">{product.name}</h3>
+                    <p className="sf-product-price">
+                      <span style={{ fontWeight: 700 }}>{currency} {Number(product.salePrice || product.sellingPrice).toFixed(2)}</span>
+                      {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
+                        <span style={{ textDecoration: "line-through", opacity: 0.5, marginLeft: 6, fontSize: "0.85em" }}>{currency} {Number(product.sellingPrice).toFixed(2)}</span>
+                      )}
+                    </p>
+                    <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
+                      <span className="sf-btn-outline">View Details</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div style={{ textAlign: "center", marginTop: 40 }}>
+                <button
+                  onClick={() => setVisibleCount(v => v + PRODUCTS_PER_PAGE)}
+                  style={{
+                    padding: "14px 48px",
+                    background: "transparent",
+                    color: "var(--sf-accent, #c8a97e)",
+                    border: "2px solid var(--sf-accent, #c8a97e)",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    fontSize: "1rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Load More ({allProducts.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {allProducts.length === 0 && services.length === 0 && (
+              <div style={{ textAlign: "center", padding: 60, color: "#999" }}>
+                <p>No products available yet. Check back soon!</p>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Featured Products from Services (if no e-commerce products) */}
+      {!loading && allProducts.length === 0 && services.length > 0 && (
+        <section className="sf-section">
+          <div className="sf-section-header">
+            <span style={{ color: "var(--sf-accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, fontSize: "0.8rem" }}>Our Services</span>
+            <h2>Popular Services</h2>
+          </div>
+          <div className="sf-grid">
+            {services.slice(0, 8).map((service, idx) => (
+              <div key={service.id || idx} className="sf-product-card">
+                <div className="sf-product-media">
+                  <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop&sig=${idx}`} alt={service.name} />
                 </div>
-                <h3 className="sf-category-circle-title">{cat.name}</h3>
-              </Link>
-            )) : FALLBACK_CAT_IMAGES.map((img, idx) => (
-              <div key={idx} className="sf-category-circle-card">
-                <div className="sf-category-circle">
-                  <img src={img} alt="Category" />
+                <div className="sf-product-info">
+                  <span className="sf-product-category">Service</span>
+                  <h3 className="sf-product-title">{service.name}</h3>
+                  <p className="sf-product-price">{currency} {Number(service.price).toFixed(2)}</p>
+                  <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
+                    <Link to={`/site/${salon.slug}/book`} className="sf-btn-outline">Book Now</Link>
+                  </div>
                 </div>
-                <h3 className="sf-category-circle-title">Collection {idx + 1}</h3>
               </div>
             ))}
           </div>
+        </section>
+      )}
 
-          <button className="sf-roller-btn right" onClick={() => scrollRoller('right')}>&rarr;</button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 40 }}>
-          <Link to={`/site/${salon.slug}/collections`} className="sf-btn sf-btn-secondary">View All Collections</Link>
-        </div>
-      </section>
-
-      {/* Section 3: Popular Services/Products */}
-      <section className="sf-section">
+      {/* Why Choose Us */}
+      <section className="sf-section" style={{ background: "#fff" }}>
         <div className="sf-section-header">
-          <span style={{ color: 'var(--sf-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.8rem' }}>Trending</span>
-          <h2>Popular Experiences</h2>
-          <p>Our most booked services and top-rated products</p>
-        </div>
-        
-        <div className="sf-grid">
-          {products.slice(0, 8).map(product => (
-            <Link to={`/site/${salon.slug}/product/${product.id}`} key={product.id} className="sf-product-card">
-              <div className="sf-product-media">
-                {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
-                  <div className="sf-product-badge" style={{ background: "#ef4444" }}>Sale</div>
-                )}
-                <img src={product.imageUrl || FALLBACK_PROD_IMG} alt={product.name} />
-              </div>
-              <div className="sf-product-info">
-                {product.category && <span className="sf-product-category">{product.category.name}</span>}
-                <h3 className="sf-product-title">{product.name}</h3>
-                <p className="sf-product-price">
-                  <span style={{ fontWeight: 700 }}>{salon.currency || "INR"} {Number(product.salePrice || product.sellingPrice).toFixed(2)}</span>
-                  {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
-                    <span style={{ textDecoration: "line-through", opacity: 0.5, marginLeft: 6, fontSize: "0.85em" }}>{salon.currency || "INR"} {Number(product.sellingPrice).toFixed(2)}</span>
-                  )}
-                </p>
-                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
-                  <span className="sf-btn-outline">View Details</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-          {products.length === 0 && services.slice(0, 4).map((service, idx) => (
-            <Link to={`/site/${salon.slug}/product/${service.id}`} key={service.id || idx} className="sf-product-card">
-              <div className="sf-product-media">
-                <div className="sf-product-badge">Top Rated</div>
-                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop&sig=${idx}`} alt={service.name} />
-              </div>
-              <div className="sf-product-info">
-                <span className="sf-product-category">Signature Service</span>
-                <h3 className="sf-product-title">{service.name}</h3>
-                <p className="sf-product-price">{salon.currency || "INR"} {service.price}</p>
-                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
-                  <span className="sf-btn-outline">Book Now</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-          {products.length === 0 && services.length === 0 && [1, 2, 3, 4].map(i => (
-            <Link to={`/site/${salon.slug}/product/${i}`} key={i} className="sf-product-card">
-              <div className="sf-product-media">
-                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop&sig=${i}`} alt="Sample Product" />
-              </div>
-              <div className="sf-product-info">
-                <span className="sf-product-category">Sample Category</span>
-                <h3 className="sf-product-title">Luxury Treatment {i}</h3>
-                <p className="sf-product-price">{salon.currency || "INR"} 99.00</p>
-                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
-                  <span className="sf-btn-outline">View Details</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 4: Why Choose Us (Features Split) */}
-      <section className="sf-section" style={{ background: '#fff' }}>
-        <div className="sf-section-header">
-          <span style={{ color: 'var(--sf-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.8rem' }}>The {salon.name} Standard</span>
+          <span style={{ color: "var(--sf-accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, fontSize: "0.8rem" }}>The {salon.name} Standard</span>
           <h2>Why Choose Us</h2>
           <p>Experience the difference of true professional care.</p>
         </div>
         <div className="sf-features-split">
           <div className="sf-features-image">
-            <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop&sig=100" alt="Premium Salon" />
+            <img src={config.aboutImage || "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&fit=crop&sig=100"} alt={salon.name} />
             <div className="sf-features-image-badge">
               <span className="sf-features-badge-number">10+</span>
               <span className="sf-features-badge-text">Years of Excellence</span>
@@ -209,76 +242,45 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-      {/* Section 5: The Story / About */}
-      <section className="sf-section" style={{ padding: '120px 20px' }}>
-        <div className="sf-about">
-          <div className="sf-about-images">
-            <img src="https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=800&auto=format&fit=crop" alt="Salon interior" />
-            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800&auto=format&fit=crop" alt="Stylist working" style={{ marginTop: 60 }} />
-          </div>
-          <div className="sf-about-content">
-            <span style={{ color: 'var(--sf-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.8rem' }}>Our Heritage</span>
-            <h2 className="sf-about-headline">The Story Behind {salon.name}</h2>
-            <p style={{ fontSize: '1.1rem', color: 'var(--sf-text-light)', lineHeight: 1.8, marginBottom: 32 }}>
-              We believe in delivering an exceptional experience tailored to your unique style. Our team of professionals is dedicated to making you look and feel your absolute best in a luxurious, relaxing environment.
-            </p>
-            <Link to={`/site/${salon.slug}/about`} className="sf-btn sf-btn-primary">Discover Our Story</Link>
-          </div>
-        </div>
-      </section>
-      {/* Section 6: Client Reviews (Marquee) */}
-      <section className="sf-section" style={{ padding: '80px 0', overflow: 'hidden' }}>
+
+      {/* CTA Banner */}
+      {config.ctaTitle && (
+        <section className="sf-section" style={{ background: "var(--sf-accent, #c8a97e)", color: "#fff", textAlign: "center", padding: "80px 20px" }}>
+          <h2 style={{ fontSize: "2.5rem", marginBottom: 12, color: "#fff" }}>{config.ctaTitle}</h2>
+          <p style={{ fontSize: "1.1rem", opacity: 0.9, marginBottom: 32 }}>{config.ctaSubtitle}</p>
+          <Link to={config.ctaBtnLink || `/site/${salon.slug}/collections`} className="sf-btn sf-btn-secondary" style={{ borderColor: "#fff", color: "#fff" }}>
+            {config.ctaBtnText || "Shop Now"}
+          </Link>
+        </section>
+      )}
+
+      {/* Testimonials */}
+      <section className="sf-section" style={{ padding: "80px 0", overflow: "hidden" }}>
         <div className="sf-section-header">
-          <span style={{ color: 'var(--sf-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.8rem' }}>Testimonials</span>
+          <span style={{ color: "var(--sf-accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, fontSize: "0.8rem" }}>Testimonials</span>
           <h2>Client Stories</h2>
         </div>
-        
         <div className="sf-marquee-container">
-          {/* Double content for seamless looping */}
           <div className="sf-marquee-content">
             {[1, 2].map((loop) => (
-              <div key={loop} style={{ display: 'flex', gap: '24px' }}>
-                <div className="sf-review-card">
-                  <div className="sf-review-header">
-                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" className="sf-review-avatar" alt="Sarah" />
-                    <div>
-                      <span className="sf-review-author">Sarah Jenkins</span>
-                      <div className="sf-review-stars">★★★★★</div>
+              <div key={loop} style={{ display: "flex", gap: "24px" }}>
+                {(config.testimonials?.length > 0 ? config.testimonials : [
+                  { author: "Sarah Jenkins", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&fit=crop", text: "Absolutely the best salon experience I've ever had. The stylists truly listened to what I wanted and delivered perfection.", rating: 5 },
+                  { author: "Michael R.", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&fit=crop", text: "The atmosphere is incredibly relaxing. I came in for a massage and facial, and felt like a completely new person leaving.", rating: 5 },
+                  { author: "Emma Watson", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&fit=crop", text: "Top-notch products and amazing service. They really know how to treat their clients. Highly recommended!", rating: 5 },
+                  { author: "Chloe M.", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&fit=crop", text: "I got my bridal makeup done here and it stayed flawless all day. The team was so supportive and professional.", rating: 5 }
+                ]).map((review, i) => (
+                  <div className="sf-review-card" key={i}>
+                    <div className="sf-review-header">
+                      <img src={review.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&fit=crop"} className="sf-review-avatar" alt={review.author} />
+                      <div>
+                        <span className="sf-review-author">{review.author}</span>
+                        <div className="sf-review-stars">{"★".repeat(review.rating || 5)}</div>
+                      </div>
                     </div>
+                    <p className="sf-review-text">"{review.text}"</p>
                   </div>
-                  <p className="sf-review-text">"Absolutely the best salon experience I've ever had. The stylists truly listened to what I wanted and delivered perfection."</p>
-                </div>
-                <div className="sf-review-card">
-                  <div className="sf-review-header">
-                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop" className="sf-review-avatar" alt="Michael" />
-                    <div>
-                      <span className="sf-review-author">Michael R.</span>
-                      <div className="sf-review-stars">★★★★★</div>
-                    </div>
-                  </div>
-                  <p className="sf-review-text">"The atmosphere is incredibly relaxing. I came in for a massage and facial, and felt like a completely new person leaving."</p>
-                </div>
-                <div className="sf-review-card">
-                  <div className="sf-review-header">
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop" className="sf-review-avatar" alt="Emma" />
-                    <div>
-                      <span className="sf-review-author">Emma Watson</span>
-                      <div className="sf-review-stars">★★★★★</div>
-                    </div>
-                  </div>
-                  <p className="sf-review-text">"Top-notch products and amazing service. They really know how to treat their clients. Highly recommended!"</p>
-                </div>
-                <div className="sf-review-card">
-                  <div className="sf-review-header">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" className="sf-review-avatar" alt="Chloe" />
-                    <div>
-                      <span className="sf-review-author">Chloe M.</span>
-                      <div className="sf-review-stars">★★★★★</div>
-                    </div>
-                  </div>
-                  <p className="sf-review-text">"I got my bridal makeup done here and it stayed flawless all day. The team was so supportive and professional."</p>
-                </div>
+                ))}
               </div>
             ))}
           </div>
