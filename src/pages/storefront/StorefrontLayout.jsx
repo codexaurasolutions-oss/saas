@@ -20,9 +20,16 @@ export default function StorefrontLayout() {
         const fullSalon = { ...res.data.salon, websiteConfig: res.data.websiteConfig, uiSettings: res.data.uiSettings, footerContent: res.data.footerContent };
         setSalon(fullSalon);
         setLoading(false);
-        // Apply UI settings as CSS variables
+        // Apply website config colors as CSS variables
+        const wc = res.data.websiteConfig || {};
         const ui = res.data.uiSettings || {};
         const root = document.documentElement;
+        const primaryColor = wc.primaryColor || ui.buttonColor || "#c8a97e";
+        const secondaryColor = wc.secondaryColor || "#111111";
+        root.style.setProperty("--sf-primary", secondaryColor);
+        root.style.setProperty("--sf-accent", primaryColor);
+        root.style.setProperty("--sf-secondary", secondaryColor);
+        root.style.setProperty("--sf-text", secondaryColor);
         if (ui.buttonColor) root.style.setProperty("--button-bg", ui.buttonColor);
         if (ui.buttonHoverColor) root.style.setProperty("--button-bg-hover", ui.buttonHoverColor);
         if (ui.sidebarColor) root.style.setProperty("--sidebar-bg", ui.sidebarColor);
@@ -51,6 +58,7 @@ export default function StorefrontLayout() {
             <Link to={`/site/${salon.slug}`}>Home</Link>
             <Link to={`/site/${salon.slug}/collections`}>Collections</Link>
             <Link to={`/site/${salon.slug}/about`}>About Us</Link>
+            <Link to={`/site/${salon.slug}/contact`}>Contact</Link>
           </nav>
           
           <div className="sf-header-actions">
