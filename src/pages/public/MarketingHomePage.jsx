@@ -155,35 +155,33 @@ export default function MarketingHomePage() {
                   </div>
                 </div>
                 <div style={{ position: "relative" }}>
-                  {/* Dashboard Mock */}
-                  <div style={{ borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: 24, color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", position: "relative", zIndex: 2 }}>
-                    <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-                    </div>
-                    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 16, borderRadius: 16, marginBottom: 16 }}>
-                      <div style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.05em" }}>Enterprise Live Revenue</div>
-                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6", marginTop: 4 }}>₹3,84,240</div>
-                      <div style={{ display: "flex", gap: 8, fontSize: "0.75rem", color: "#14b8a6", marginTop: 6, fontWeight: 600 }}>
-                        <span>↑ 24% this month</span>
-                        <span style={{ color: "#94a3b8" }}>• 12 Branches Active</span>
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 12, borderRadius: 12 }}>
-                        <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Active Invoices</div>
-                        <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: 2, color: "#38bdf8" }}>4,924</div>
-                      </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 12, borderRadius: 12 }}>
-                        <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Staff Scheduled</div>
-                        <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: 2, color: "#fb7185" }}>184</div>
+                  {/* Main Salon Banner Image */}
+                  <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", position: "relative" }}>
+                    <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=600&fit=crop&crop=center" alt="Premium salon interior" style={{ width: "100%", height: 420, objectFit: "cover", display: "block" }} />
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "40px 24px 24px" }}>
+                      <div style={{ display: "flex", gap: 16 }}>
+                        <div style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", borderRadius: 12, padding: "12px 16px", color: "#fff" }}>
+                          <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 2 }}>Live Revenue</div>
+                          <div style={{ fontSize: 20, fontWeight: 800 }}>₹3,84,240</div>
+                        </div>
+                        <div style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", borderRadius: 12, padding: "12px 16px", color: "#fff" }}>
+                          <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 2 }}>Active Invoices</div>
+                          <div style={{ fontSize: 20, fontWeight: 800 }}>4,924</div>
+                        </div>
+                        <div style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", borderRadius: 12, padding: "12px 16px", color: "#fff" }}>
+                          <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 2 }}>Staff</div>
+                          <div style={{ fontSize: 20, fontWeight: 800 }}>184</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  {/* Salon Image behind dashboard */}
-                  <div style={{ position: "absolute", top: 40, right: -30, width: 200, height: 200, borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.15)", zIndex: 1, opacity: 0.9 }}>
-                    <img src={salonImages.styling} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {/* Floating badge */}
+                  <div style={{ position: "absolute", top: -16, right: -16, background: "#fff", borderRadius: 16, padding: "12px 20px", boxShadow: "0 8px 30px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 10, zIndex: 3 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #10b981, #34d399)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18 }}>✓</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>12 Branches</div>
+                      <div style={{ fontSize: 11, color: "#10b981", fontWeight: 600 }}>↑ 24% growth</div>
+                    </div>
                   </div>
                 </div>
               </div>
