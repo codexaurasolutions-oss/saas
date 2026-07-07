@@ -4,6 +4,17 @@ import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
+import { CheckCircle, XCircle, Clock, Mail, Phone, Calendar, Building2, Send, ChevronDown, ArrowRight, RotateCcw } from "lucide-react";
+
+const PIPELINE = [
+  { value: "NEW", label: "New", color: "#3b82f6", bg: "#eff6ff" },
+  { value: "CONNECTED", label: "Connected", color: "#8b5cf6", bg: "#f5f3ff" },
+  { value: "IN_PROGRESS", label: "In Progress", color: "#f59e0b", bg: "#fffbeb" },
+  { value: "CONVERTED", label: "Converted", color: "#10b981", bg: "#ecfdf5" },
+  { value: "CANCELED", label: "Canceled", color: "#ef4444", bg: "#fef2f2" }
+];
+
+const getStatusMeta = (status) => PIPELINE.find(s => s.value === status) || PIPELINE[0];
 
 const emptyDraft = {
   planId: "",
@@ -12,7 +23,7 @@ const emptyDraft = {
   trialDays: 30,
   reviewNote: "",
   meetingScheduledAt: "",
-  meetingLink: "https://meet.google.com/abc-defg-hij"
+  meetingLink: ""
 };
 
 export default function DemoLeadsPage() {
@@ -49,18 +60,23 @@ export default function DemoLeadsPage() {
 
   const load = async (nextFilters = filters) => {
     setLoading(true);
-    const [leadResponse, planResponse] = await Promise.all([
-      api.get("/super-admin/demo-leads", {
-        params: {
-          ...(nextFilters.q ? { q: nextFilters.q } : {}),
-          ...(nextFilters.status ? { status: nextFilters.status } : {})
-        }
-      }),
-      api.get("/super-admin/plans")
-    ]);
-    setRows(leadResponse.data);
-    setPlans(planResponse.data);
-    setLoading(false);
+    try {
+      const [leadResponse, planResponse] = await Promise.all([
+        api.get("/super-admin/demo-leads", {
+          params: {
+            ...(nextFilters.q ? { q: nextFilters.q } : {}),
+            ...(nextFilters.status ? { status: nextFilters.status } : {})
+          }
+        }),
+        api.get("/super-admin/plans")
+      ]);
+      setRows(leadResponse.data);
+      setPlans(planResponse.data);
+    } catch (error) {
+      setFeedback({ error: formatApiError(error, "Could not load demo leads."), success: "" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -79,17 +95,15 @@ export default function DemoLeadsPage() {
         if (!active) return;
         setRows(leadResponse.data);
         setPlans(planResponse.data);
-        setLoading(false);
       } catch (error) {
         if (!active) return;
         setFeedback({ error: formatApiError(error, "Could not load demo leads."), success: "" });
-        setLoading(false);
+      } finally {
+        if (active) setLoading(false);
       }
     };
     run();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [filters]);
 
   const draftsById = useMemo(() => {
@@ -100,7 +114,7 @@ export default function DemoLeadsPage() {
         salonName: row.salon?.name || `${row.name.split(" ")[0] || row.name} Salon`,
         planId: row.selectedPlanId || plans[0]?.id || "",
         meetingScheduledAt: row.meetingScheduledAt ? new Date(row.meetingScheduledAt).toISOString().slice(0, 16) : "",
-        meetingLink: row.meetingLink || "https://meet.google.com/abc-defg-hij"
+        meetingLink: row.meetingLink || ""
       };
     }
     return map;
@@ -109,22 +123,33 @@ export default function DemoLeadsPage() {
   const patchDraft = (leadId, next) => {
     setDrafts((current) => ({
       ...current,
-      [leadId]: {
-        ...(draftsById[leadId] || emptyDraft),
-        ...next
-      }
+      [leadId]: { ...(draftsById[leadId] || emptyDraft), ...next }
     }));
   };
 
-  const markContacted = async (leadId) => {
+  const updateStatus = async (leadId, newStatus) => {
+    setBusyId(leadId);
+    setFeedback({ error: "", success: "" });
+    try {
+      await api.patch(`/super-admin/demo-leads/${leadId}/status`, { status: newStatus });
+      setFeedback({ error: "", success: `Lead moved to "${getStatusMeta(newStatus).label}".` });
+      await load();
+    } catch (error) {
+      setFeedback({ error: formatApiError(error, "Could not update status."), success: "" });
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  const markConnected = async (leadId) => {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
     try {
       await api.post(`/super-admin/demo-leads/${leadId}/contacted`);
-      setFeedback({ error: "", success: "Lead marked as contacted." });
+      setFeedback({ error: "", success: "Lead marked as Connected." });
       await load();
     } catch (error) {
-      setFeedback({ error: formatApiError(error, "Could not update lead status."), success: "" });
+      setFeedback({ error: formatApiError(error, "Could not update lead."), success: "" });
     } finally {
       setBusyId("");
     }
@@ -134,12 +159,17 @@ export default function DemoLeadsPage() {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
     const draft = draftsById[leadId];
+    if (!draft.meetingScheduledAt || !draft.meetingLink) {
+      setFeedback({ error: "Please fill meeting date/time and meeting link before scheduling.", success: "" });
+      setBusyId("");
+      return;
+    }
     try {
       await api.post(`/super-admin/demo-leads/${leadId}/schedule-meeting`, {
         meetingScheduledAt: draft.meetingScheduledAt,
         meetingLink: draft.meetingLink
       });
-      setFeedback({ error: "", success: "Walkthrough meeting scheduled and email invitation sent!" });
+      setFeedback({ error: "", success: "Meeting scheduled and email invitation sent!" });
       await load();
     } catch (error) {
       setFeedback({ error: formatApiError(error, "Could not schedule meeting."), success: "" });
@@ -152,11 +182,14 @@ export default function DemoLeadsPage() {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
     const draft = draftsById[leadId];
+    if (!draft.planId) {
+      setFeedback({ error: "Please select a subscription plan before sending the purchase link.", success: "" });
+      setBusyId("");
+      return;
+    }
     try {
-      await api.post(`/super-admin/demo-leads/${leadId}/send-purchase-link`, {
-        planId: draft.planId
-      });
-      setFeedback({ error: "", success: "Subscription purchase link sent to customer email!" });
+      await api.post(`/super-admin/demo-leads/${leadId}/send-purchase-link`, { planId: draft.planId });
+      setFeedback({ error: "", success: "Purchase link sent to customer email!" });
       await load();
     } catch (error) {
       setFeedback({ error: formatApiError(error, "Could not send purchase link."), success: "" });
@@ -169,34 +202,40 @@ export default function DemoLeadsPage() {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
     setLastApprovedLead(null);
+    const draft = draftsById[leadId];
+    if (!draft.planId) {
+      setFeedback({ error: "Please select a subscription plan before creating the workspace.", success: "" });
+      setBusyId("");
+      return;
+    }
     try {
-      const response = await api.post(`/super-admin/demo-leads/${leadId}/approve`, draftsById[leadId]);
+      const response = await api.post(`/super-admin/demo-leads/${leadId}/approve`, draft);
       setLastApprovedLead(response.data);
       setFeedback({
-        error: response.data.emailError ? `Demo approved but email delivery failed: ${response.data.emailError}` : "",
-        success: response.data.owner.isDemoAccount 
-          ? `Demo approved. Invite prepared for ${response.data.owner.email}. Salon ID: ${response.data.salon.id}`
-          : `Active paid workspace created. Login details and password setup link sent to ${response.data.owner.email}.`
+        error: response.data.emailError ? `Workspace created but email failed: ${response.data.emailError}` : "",
+        success: response.data.owner.isDemoAccount
+          ? `Demo workspace created for ${response.data.owner.email}. Salon: ${response.data.salon.name}`
+          : `Paid workspace created. Login details sent to ${response.data.owner.email}.`
       });
       await load();
     } catch (error) {
-      setFeedback({ error: formatApiError(error, "Could not approve demo lead."), success: "" });
+      setFeedback({ error: formatApiError(error, "Could not create workspace."), success: "" });
     } finally {
       setBusyId("");
     }
   };
 
-  const rejectLead = async (leadId) => {
+  const cancelLead = async (leadId) => {
     setBusyId(leadId);
     setFeedback({ error: "", success: "" });
     try {
       await api.post(`/super-admin/demo-leads/${leadId}/reject`, {
-        reviewNote: draftsById[leadId]?.reviewNote || "Rejected by Super Admin"
+        reviewNote: draftsById[leadId]?.reviewNote || "Canceled by Super Admin"
       });
-      setFeedback({ error: "", success: "Demo lead rejected." });
+      setFeedback({ error: "", success: "Lead has been canceled." });
       await load();
     } catch (error) {
-      setFeedback({ error: formatApiError(error, "Could not reject demo lead."), success: "" });
+      setFeedback({ error: formatApiError(error, "Could not cancel lead."), success: "" });
     } finally {
       setBusyId("");
     }
@@ -208,8 +247,8 @@ export default function DemoLeadsPage() {
     try {
       const response = await api.post(`/super-admin/demo-leads/${leadId}/resend-invite`);
       setFeedback({
-        error: response.data.emailError ? `Invite prepared but email delivery failed: ${response.data.emailError}` : "",
-        success: `Invite resent. Delivery mode: ${response.data.delivery.mode.toUpperCase()}`
+        error: response.data.emailError ? `Invite prepared but email failed: ${response.data.emailError}` : "",
+        success: `Invite resent. Delivery: ${response.data.delivery.mode.toUpperCase()}`
       });
       await load();
     } catch (error) {
@@ -219,384 +258,334 @@ export default function DemoLeadsPage() {
     }
   };
 
+  const pipelineCounts = useMemo(() => {
+    const counts = {};
+    PIPELINE.forEach(s => { counts[s.value] = 0; });
+    rows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+    return counts;
+  }, [rows]);
+
   return (
     <div className="page-shell super-admin-page">
-      <div className="hero-card" style={{ padding: 24, marginBottom: 20 }}>
-        <div className="item-head">
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div>
-            <h1 style={{ marginTop: 0 }}>Demo Leads</h1>
-            <p style={{ marginBottom: 0 }}>Review inbound interest, provision workspace setups, and keep invite workflows moving smoothly.</p>
+            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 800, color: "#0f172a" }}>Demo Pipeline</h1>
+            <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.9rem" }}>Track and manage demo lead lifecycle from first contact to conversion.</p>
           </div>
-          <div className="badge-row">
-            <span className="badge">Leads {rows.length}</span>
-            <span className="badge">Plans {plans.length}</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => load(filters)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>
+              <RotateCcw size={14} /> Refresh
+            </button>
           </div>
         </div>
       </div>
-      <div className="panel-card" style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Search Leads</span>
-            <input
-              value={filters.q}
-              placeholder="Search lead by name, email, phone, or message"
-              onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))}
-              style={{ width: "100%", height: 40 }}
-            />
-          </div>
-          <div style={{ width: 220 }}>
-            <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Status</span>
-            <select
-              value={filters.status}
-              onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
-              style={{ width: "100%", height: 40 }}
-            >
-              <option value="">All statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONTACTED">Contacted</option>
-              <option value="MEETING_SCHEDULED">Meeting Scheduled</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
-          </div>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => load(filters)}
-            style={{ height: 40, padding: "0 20px" }}
-          >
-            Apply Filters
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setFilters({ q: "", status: "" })}
-            style={{ height: 40, padding: "0 20px" }}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-      <div className="panel-card">
-        {feedback.error && <p className="error-text">{feedback.error}</p>}
-        {feedback.success && <p className="success-text">{feedback.success}</p>}
 
-        {lastApprovedLead && (
-          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", marginBottom: 20, padding: 18, borderRadius: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ color: "#166534", margin: "0 0 6px 0", fontSize: "1.05rem" }}>✅ Workspace Setup Ready!</h4>
-                <p style={{ margin: "0 0 12px 0", fontSize: "0.9rem", color: "#1e3a1e" }}>
-                  The salon workspace has been created for <strong>{lastApprovedLead.owner?.email}</strong>.
-                </p>
-                {lastApprovedLead.emailError && (
-                  <div style={{ color: "#b91c1c", background: "#fee2e2", padding: "8px 12px", borderRadius: 8, fontSize: "0.85rem", marginBottom: 12, border: "1px solid #fca5a5" }}>
-                    ⚠️ Email delivery timed out. You can manually copy the invitation details below to send via WhatsApp or SMS.
+      {/* Pipeline Summary */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+        {PIPELINE.map(stage => (
+          <div
+            key={stage.value}
+            onClick={() => setFilters({ q: filters.q, status: filters.status === stage.value ? "" : stage.value })}
+            style={{
+              padding: "14px 16px",
+              background: filters.status === stage.value ? stage.bg : "#fff",
+              border: `2px solid ${filters.status === stage.value ? stage.color : "#e2e8f0"}`,
+              borderRadius: 12,
+              cursor: "pointer",
+              transition: "all 0.15s"
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 600, color: stage.color, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{stage.label}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#0f172a" }}>{pipelineCounts[stage.value]}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20, flexWrap: "wrap" }}>
+        <input
+          value={filters.q}
+          placeholder="Search by name, email, phone..."
+          onChange={(e) => setFilters({ q: e.target.value, status: filters.status })}
+          style={{ flex: 1, minWidth: 250, height: 40, padding: "0 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none" }}
+        />
+        <button
+          onClick={() => setFilters({ q: "", status: "" })}
+          style={{ height: 40, padding: "0 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#64748b" }}
+        >
+          Clear Filters
+        </button>
+      </div>
+
+      {/* Feedback Toast */}
+      {feedback.error && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 10, marginBottom: 16, color: "#991b1b", fontSize: 14, fontWeight: 500 }}>
+          <XCircle size={18} /> {feedback.error}
+          <span onClick={() => setFeedback({ error: "", success: "" })} style={{ marginLeft: "auto", cursor: "pointer", color: "#dc2626", fontWeight: 700 }}>x</span>
+        </div>
+      )}
+      {feedback.success && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 10, marginBottom: 16, color: "#065f46", fontSize: 14, fontWeight: 500 }}>
+          <CheckCircle size={18} /> {feedback.success}
+          <span onClick={() => setFeedback({ error: "", success: "" })} style={{ marginLeft: "auto", cursor: "pointer", color: "#059669", fontWeight: 700 }}>x</span>
+        </div>
+      )}
+
+      {/* Approved Lead Banner */}
+      {lastApprovedLead && (
+        <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+            <div>
+              <h4 style={{ color: "#065f46", margin: "0 0 8px", fontSize: "1rem", fontWeight: 700 }}>Workspace Created!</h4>
+              <p style={{ margin: "0 0 12px", fontSize: 14, color: "#064e3b" }}>
+                Salon workspace created for <strong>{lastApprovedLead.owner?.email}</strong>.
+              </p>
+              {lastApprovedLead.emailError && (
+                <div style={{ color: "#991b1b", background: "#fef2f2", padding: "8px 12px", borderRadius: 8, fontSize: 13, marginBottom: 12, border: "1px solid #fca5a5" }}>
+                  Email delivery timed out. Copy the details below to send manually.
+                </div>
+              )}
+              <div style={{ display: "grid", gap: 8, background: "#fff", padding: 14, borderRadius: 10, border: "1px solid #d1fae5" }}>
+                <div style={{ fontSize: 13 }}><strong>Salon:</strong> {lastApprovedLead.salon?.name} (<code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4 }}>{lastApprovedLead.salon?.slug}</code>)</div>
+                <div style={{ fontSize: 13 }}>
+                  <strong>Setup Link:</strong>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    <input readOnly value={lastApprovedLead.inviteLink || ""} style={{ flex: 1, padding: "6px 8px", fontSize: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
+                    <button onClick={() => { navigator.clipboard.writeText(lastApprovedLead.inviteLink || ""); alert("Copied!"); }} style={{ padding: "6px 12px", fontSize: 12, background: "#10b981", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>Copy</button>
                   </div>
-                )}
-                <div style={{ display: "grid", gap: 12, background: "white", padding: 14, borderRadius: 10, border: "1px solid #dcfce7" }}>
-                  <div><strong>Salon Slug:</strong> <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4 }}>{lastApprovedLead.salon?.slug}</code></div>
-                  <div>
-                    <strong style={{ fontSize: "0.85rem", color: "#475569" }}>Setup / Password Invite Link:</strong>
-                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                      <input readOnly value={lastApprovedLead.inviteLink || ""} style={{ flex: 1, minHeight: 36, padding: "4px 8px", fontSize: "0.82rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
-                      <button type="button" onClick={() => { navigator.clipboard.writeText(lastApprovedLead.inviteLink || ""); alert("Setup link copied to clipboard!"); }} style={{ minHeight: 36, padding: "4px 12px", fontSize: "0.82rem", background: "#10b981", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <strong style={{ fontSize: "0.85rem", color: "#475569" }}>Direct Owner Login Link:</strong>
-                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                      <input readOnly value={lastApprovedLead.loginLink || ""} style={{ flex: 1, minHeight: 36, padding: "4px 8px", fontSize: "0.82rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
-                      <button type="button" onClick={() => { navigator.clipboard.writeText(lastApprovedLead.loginLink || ""); alert("Login link copied to clipboard!"); }} style={{ minHeight: 36, padding: "4px 12px", fontSize: "0.82rem", background: "#10b981", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>
-                        Copy
-                      </button>
-                    </div>
+                </div>
+                <div style={{ fontSize: 13 }}>
+                  <strong>Login Link:</strong>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    <input readOnly value={lastApprovedLead.loginLink || ""} style={{ flex: 1, padding: "6px 8px", fontSize: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }} />
+                    <button onClick={() => { navigator.clipboard.writeText(lastApprovedLead.loginLink || ""); alert("Copied!"); }} style={{ padding: "6px 12px", fontSize: 12, background: "#10b981", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>Copy</button>
                   </div>
                 </div>
               </div>
-              <button type="button" className="secondary-button" onClick={() => setLastApprovedLead(null)} style={{ padding: "4px 10px", minHeight: 30, fontSize: "0.8rem", cursor: "pointer" }}>
-                Dismiss
-              </button>
             </div>
+            <button onClick={() => setLastApprovedLead(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #d1fae5", borderRadius: 6, cursor: "pointer", fontSize: 12, color: "#065f46", fontWeight: 600 }}>Dismiss</button>
           </div>
-        )}
-        {loading ? (
-          <PageLoader
-            title="Loading demo pipeline"
-            message="Fetching new lead submissions, approval drafts, and invite status."
-          />
-        ) : rows.length ? (
-          <div className="list-stack">
-            {rows.map((row) => {
-              const draft = draftsById[row.id] || emptyDraft;
-              const firstLetter = (row.name || "L").charAt(0).toUpperCase();
+        </div>
+      )}
 
-              // Status Styling
-              let statusBg = "#f1f5f9";
-              let statusColor = "#64748b";
-              if (row.status === "APPROVED") {
-                statusBg = "#ecfdf5";
-                statusColor = "#10b981";
-              } else if (row.status === "MEETING_SCHEDULED") {
-                statusBg = "#eff6ff";
-                statusColor = "#3b82f6";
-              } else if (row.status === "REJECTED") {
-                statusBg = "#fef2f2";
-                statusColor = "#ef4444";
-              } else if (row.status === "CONTACTED") {
-                statusBg = "#f5f3ff";
-                statusColor = "#8b5cf6";
-              }
+      {/* Lead Cards */}
+      {loading ? (
+        <PageLoader title="Loading pipeline" message="Fetching demo leads..." />
+      ) : rows.length ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {rows.map((row) => {
+            const draft = draftsById[row.id] || emptyDraft;
+            const meta = getStatusMeta(row.status);
+            const isBusy = busyId === row.id;
+            const firstLetter = (row.name || "L").charAt(0).toUpperCase();
 
-              const isBusy = busyId === row.id;
-
-              return (
-                <div key={row.id} className="lead-card">
-                  {/* Column 1: Lead Profile */}
-                  <div className="lead-profile" style={{ flexDirection: "column", gap: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div className="tenant-avatar" style={{ background: "linear-gradient(135deg, #4f46e5, #3730a3)" }}>{firstLetter}</div>
-                      <div>
-                        <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>{row.name}</h4>
-                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                          Submitted: {new Date(row.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: "0.85rem", color: "#334155", background: "#f8fafc", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" }}>
-                      <div>📧 <a href={`mailto:${row.email}`} style={{ color: "#4f46e5", fontWeight: 600 }}>{row.email}</a></div>
-                      <div>📞 <a href={`tel:${row.phone}`} style={{ color: "#4f46e5", fontWeight: 600 }}>{row.phone}</a></div>
-                      {row.message && (
-                        <div style={{ marginTop: 8, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #cbd5e1", paddingLeft: 8 }}>
-                          "{row.message}"
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      <span className="badge" style={{ background: statusBg, color: statusColor, fontWeight: 700 }}>
-                        {row.status}
-                      </span>
-                      {row.paymentCompleted ? (
-                        <span className="badge" style={{ background: "#ecfdf5", color: "#10b981", fontWeight: 700 }}>
-                          Paid (Demo Checkout)
-                        </span>
-                      ) : row.status === "MEETING_SCHEDULED" && (
-                        <span className="badge" style={{ background: "#fff7ed", color: "#c2410c" }}>
-                          Pending Payment
-                        </span>
-                      )}
+            return (
+              <div key={row.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden", transition: "box-shadow 0.15s" }}>
+                {/* Card Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #f1f5f9", background: "#fafbfc" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg, #4f46e5, #3730a3)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15 }}>{firstLetter}</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "1rem", color: "#0f172a" }}>{row.name}</div>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>Submitted {new Date(row.createdAt).toLocaleDateString()}</div>
                     </div>
                   </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {row.paymentCompleted && (
+                      <span style={{ padding: "3px 10px", background: "#ecfdf5", color: "#10b981", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>PAID</span>
+                    )}
+                    {row.salon && (
+                      <span style={{ padding: "3px 10px", background: "#eff6ff", color: "#3b82f6", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>WORKSPACE EXISTS</span>
+                    )}
+                    {/* Status Dropdown */}
+                    <div style={{ position: "relative" }}>
+                      <select
+                        value={row.status}
+                        onChange={(e) => updateStatus(row.id, e.target.value)}
+                        disabled={isBusy}
+                        style={{
+                          appearance: "none",
+                          padding: "6px 32px 6px 12px",
+                          background: meta.bg,
+                          color: meta.color,
+                          border: `2px solid ${meta.color}`,
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          cursor: isBusy ? "not-allowed" : "pointer",
+                          outline: "none",
+                          minWidth: 130
+                        }}
+                      >
+                        {PIPELINE.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={14} color={meta.color} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Column 2: Approval Setup */}
-                  <div className="lead-setup-box">
-                    <h5>⚙️ Onboarding & Meeting Setup</h5>
+                {/* Card Body */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
+                  {/* Contact Info */}
+                  <div style={{ padding: "16px 20px", borderRight: "1px solid #f1f5f9" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Contact Details</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#334155" }}>
+                        <Mail size={14} color="#94a3b8" />
+                        <a href={`mailto:${row.email}`} style={{ color: "#4f46e5", fontWeight: 600, textDecoration: "none" }}>{row.email}</a>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#334155" }}>
+                        <Phone size={14} color="#94a3b8" />
+                        <a href={`tel:${row.phone}`} style={{ color: "#4f46e5", fontWeight: 600, textDecoration: "none" }}>{row.phone}</a>
+                      </div>
+                      {row.company && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#334155" }}>
+                          <Building2 size={14} color="#94a3b8" />
+                          <span>{row.company}</span>
+                        </div>
+                      )}
+                    </div>
+                    {row.message && (
+                      <div style={{ marginTop: 10, padding: "8px 10px", background: "#f8fafc", borderRadius: 8, borderLeft: "3px solid #cbd5e1", fontSize: 12, color: "#475569", fontStyle: "italic" }}>
+                        "{row.message}"
+                      </div>
+                    )}
+                  </div>
 
-                    {["PENDING", "CONTACTED"].includes(row.status) && (
-                      <div style={{ display: "grid", gap: 10 }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Salon Name</span>
-                            <input
-                              value={draft.salonName || ""}
-                              placeholder="Salon name"
-                              onChange={(event) => patchDraft(row.id, { salonName: event.target.value })}
-                            />
-                          </label>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Select Plan</span>
-                            <select
-                              value={draft.planId || ""}
-                              onChange={(event) => patchDraft(row.id, { planId: event.target.value })}
-                            >
-                              <option value="">Choose plan...</option>
-                              {plans.map((plan) => (
-                                <option key={plan.id} value={plan.id}>
-                                  {plan.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                  {/* Meeting / Schedule Info */}
+                  <div style={{ padding: "16px 20px", borderRight: "1px solid #f1f5f9" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Meeting & Schedule</div>
+                    {row.meetingScheduledAt ? (
+                      <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#1e40af", marginBottom: 4 }}>
+                          <Calendar size={14} /> Scheduled
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 80px", gap: 10 }}>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Business Type</span>
-                            <input
-                              value={draft.businessType || ""}
-                              placeholder="Salon"
-                              onChange={(event) => patchDraft(row.id, { businessType: event.target.value })}
-                            />
-                          </label>
-                        </div>
+                        <div style={{ fontSize: 12, color: "#1e3a8a" }}>{new Date(row.meetingScheduledAt).toLocaleString()}</div>
+                        {row.meetingLink && (
+                          <a href={row.meetingLink} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, fontSize: 12, color: "#2563eb", fontWeight: 600, textDecoration: "underline" }}>
+                            Join Meeting <ArrowRight size={12} />
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ color: "#94a3b8", fontSize: 13, fontStyle: "italic" }}>No meeting scheduled yet</div>
+                    )}
+                    {row.reviewedByName && (
+                      <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8" }}>
+                        Reviewed by {row.reviewedByName} on {new Date(row.reviewedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
 
-                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px dashed #e2e8f0", display: "grid", gap: 10 }}>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Meeting Scheduled Date & Time</span>
-                            <input
-                              type="datetime-local"
-                              value={draft.meetingScheduledAt || ""}
-                              onChange={(event) => patchDraft(row.id, { meetingScheduledAt: event.target.value })}
-                            />
-                          </label>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Meeting Invitation Link</span>
-                            <input
-                              type="text"
-                              value={draft.meetingLink || ""}
-                              placeholder="Google Meet link"
-                              onChange={(event) => patchDraft(row.id, { meetingLink: event.target.value })}
-                            />
-                          </label>
-                        </div>
+                  {/* Actions */}
+                  <div style={{ padding: "16px 20px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Actions</div>
+
+                    {row.status === "NEW" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <button onClick={() => markConnected(row.id)} disabled={isBusy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: "#8b5cf6", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy ? "not-allowed" : "pointer" }}>
+                          <Phone size={14} /> Mark Connected
+                        </button>
+                        <button onClick={() => cancelLead(row.id)} disabled={isBusy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy ? "not-allowed" : "pointer" }}>
+                          <XCircle size={14} /> Cancel
+                        </button>
                       </div>
                     )}
 
-                    {row.status === "MEETING_SCHEDULED" && (
-                      <div style={{ display: "grid", gap: 12 }}>
-                        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: 14, borderRadius: 12 }}>
-                          <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e40af", marginBottom: 6 }}>📅 Scheduled Walkthrough</div>
-                          <div style={{ fontSize: "0.8rem", color: "#1e3a8a" }}>
-                            🕒 {row.meetingScheduledAt ? new Date(row.meetingScheduledAt).toLocaleString() : "-"}
-                          </div>
-                          <div style={{ fontSize: "0.8rem", marginTop: 6 }}>
-                            🔗 <a href={row.meetingLink} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Join Google Meet</a>
-                          </div>
+                    {row.status === "CONNECTED" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#64748b", marginBottom: 4 }}>Meeting Date & Time</label>
+                          <input type="datetime-local" value={draft.meetingScheduledAt || ""} onChange={(e) => patchDraft(row.id, { meetingScheduledAt: e.target.value })} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 12 }} />
                         </div>
-                        <label>
-                          <span className="info-label" style={{ fontSize: "0.75rem" }}>Target Subscription Plan</span>
-                          <select
-                            value={draft.planId || ""}
-                            onChange={(event) => patchDraft(row.id, { planId: event.target.value })}
-                          >
-                            <option value="">Choose plan...</option>
-                            {plans.map((plan) => (
-                              <option key={plan.id} value={plan.id}>
-                                {plan.name} (INR {plan.monthlyPrice})
-                              </option>
-                            ))}
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#64748b", marginBottom: 4 }}>Meeting Link</label>
+                          <input value={draft.meetingLink || ""} placeholder="https://meet.google.com/..." onChange={(e) => patchDraft(row.id, { meetingLink: e.target.value })} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 12 }} />
+                        </div>
+                        <button onClick={() => scheduleMeeting(row.id)} disabled={isBusy || !draft.meetingScheduledAt || !draft.meetingLink} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: isBusy || !draft.meetingScheduledAt || !draft.meetingLink ? "#e2e8f0" : "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy || !draft.meetingScheduledAt || !draft.meetingLink ? "not-allowed" : "pointer" }}>
+                          <Calendar size={14} /> {isBusy ? "Scheduling..." : "Schedule Meeting"}
+                        </button>
+                        <button onClick={() => cancelLead(row.id)} disabled={isBusy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy ? "not-allowed" : "pointer" }}>
+                          <XCircle size={14} /> Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    {row.status === "IN_PROGRESS" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#64748b", marginBottom: 4 }}>Subscription Plan</label>
+                          <select value={draft.planId || ""} onChange={(e) => patchDraft(row.id, { planId: e.target.value })} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 12 }}>
+                            <option value="">Select plan...</option>
+                            {plans.map(p => <option key={p.id} value={p.id}>{p.name} - INR {p.monthlyPrice}/mo</option>)}
                           </select>
-                        </label>
+                        </div>
+                        <button onClick={() => sendPurchaseLink(row.id)} disabled={isBusy || !draft.planId} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: isBusy || !draft.planId ? "#e2e8f0" : "#f59e0b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy || !draft.planId ? "not-allowed" : "pointer" }}>
+                          <Send size={14} /> {isBusy ? "Sending..." : "Send Purchase Link"}
+                        </button>
+                        <button onClick={() => approveLead(row.id)} disabled={isBusy || !draft.planId} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: isBusy || !draft.planId ? "#e2e8f0" : "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: isBusy || !draft.planId ? "not-allowed" : "pointer" }}>
+                          <CheckCircle size={14} /> Create Workspace
+                        </button>
+                        <button onClick={() => cancelLead(row.id)} disabled={isBusy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy ? "not-allowed" : "pointer" }}>
+                          <XCircle size={14} /> Cancel
+                        </button>
                       </div>
                     )}
 
-                    {["APPROVED", "REJECTED"].includes(row.status) && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, color: "#475569", fontSize: "0.9rem" }}>
-                        <div style={{ fontWeight: 700, color: "#0f172a" }}>✅ Onboarding Process Complete</div>
-                        <div>Workspace setup has been finalized.</div>
+                    {row.status === "CONVERTED" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {row.salon && (
-                          <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.8rem", display: "grid", gap: 4 }}>
-                            <div>🏢 <strong>Salon Name:</strong> {row.salon.name}</div>
-                            <div>🔗 <strong>URL Slug:</strong> <code>{row.salon.slug}</code></div>
+                          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 8, padding: 10, fontSize: 12 }}>
+                            <div style={{ fontWeight: 700, color: "#065f46", marginBottom: 4 }}>Active Salon</div>
+                            <div style={{ color: "#064e3b" }}>{row.salon.name}</div>
+                            <div style={{ color: "#064e3b" }}>Slug: <code style={{ background: "#d1fae5", padding: "1px 4px", borderRadius: 3 }}>{row.salon.slug}</code></div>
+                          </div>
+                        )}
+                        <button onClick={() => resendInvite(row.id)} disabled={isBusy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: isBusy ? "not-allowed" : "pointer" }}>
+                          <RotateCcw size={14} /> {isBusy ? "Sending..." : "Resend Invite"}
+                        </button>
+                      </div>
+                    )}
+
+                    {row.status === "CANCELED" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 10, fontSize: 12, color: "#991b1b" }}>
+                          This lead has been canceled.
+                        </div>
+                        {row.reviewNote && (
+                          <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic" }}>
+                            Note: {row.reviewNote}
                           </div>
                         )}
                       </div>
                     )}
-                  </div>
 
-                  {/* Column 3: Review & Actions */}
-                  <div className="lead-actions-panel">
-                    <div>
-                      <span className="info-label" style={{ display: "block", marginBottom: 6, fontSize: "0.75rem" }}>Internal Review Note</span>
+                    {/* Review Note (always shown) */}
+                    <div style={{ marginTop: 10, borderTop: "1px solid #f1f5f9", paddingTop: 10 }}>
                       <textarea
-                        rows="3"
+                        rows={2}
                         value={draft.reviewNote || ""}
-                        placeholder="Review notes, feedback, or logs..."
-                        onChange={(event) => patchDraft(row.id, { reviewNote: event.target.value })}
-                        disabled={row.status === "APPROVED"}
-                        style={{ width: "100%", fontSize: "0.85rem", padding: 8, borderRadius: 8 }}
+                        placeholder="Internal notes..."
+                        onChange={(e) => patchDraft(row.id, { reviewNote: e.target.value })}
+                        style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 12, resize: "none" }}
                       />
-                      {row.reviewedByName && (
-                        <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: 4 }}>
-                          &bull; Reviewed by {row.reviewedByName} on {new Date(row.reviewedAt).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
-                      {row.status === "PENDING" && (
-                        <>
-                          <button type="button" className="btn-compact secondary-button" onClick={() => markContacted(row.id)} disabled={isBusy}>
-                            Mark Contacted
-                          </button>
-                          <button type="button" className="btn-compact" onClick={() => scheduleMeeting(row.id)} disabled={isBusy || !draft.meetingScheduledAt}>
-                            {isBusy ? "Scheduling..." : "Schedule Meeting"}
-                          </button>
-                          <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                            Create Workspace
-                          </button>
-                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
-                            Reject Lead
-                          </button>
-                        </>
-                      )}
-
-                      {row.status === "CONTACTED" && (
-                        <>
-                          <button type="button" className="btn-compact" onClick={() => scheduleMeeting(row.id)} disabled={isBusy || !draft.meetingScheduledAt}>
-                            {isBusy ? "Scheduling..." : "Schedule Meeting"}
-                          </button>
-                          <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                            Create Workspace
-                          </button>
-                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
-                            Reject Lead
-                          </button>
-                        </>
-                      )}
-
-                      {row.status === "MEETING_SCHEDULED" && (
-                        <>
-                          <button type="button" className="btn-compact" onClick={() => sendPurchaseLink(row.id)} disabled={isBusy}>
-                            {isBusy ? "Sending link..." : "📧 Send Purchase Link"}
-                          </button>
-                          {row.paymentCompleted ? (
-                            <button
-                              type="button"
-                              className="btn-compact"
-                              style={{ background: "linear-gradient(135deg, #4f46e5, #4338ca)", color: "#ffffff", fontWeight: "bold", border: "none" }}
-                              onClick={() => approveLead(row.id)}
-                              disabled={isBusy}
-                            >
-                              Create Paid Account
-                            </button>
-                          ) : (
-                            <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                              Create Workspace (Override)
-                            </button>
-                          )}
-                          <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
-                            Reject Lead
-                          </button>
-                        </>
-                      )}
-
-                      {row.status === "APPROVED" && (
-                        <button type="button" className="btn-compact secondary-button" onClick={() => resendInvite(row.id)} disabled={isBusy}>
-                          {isBusy ? "Sending..." : "Resend Invite Link"}
-                        </button>
-                      )}
-
-                      {row.inviteSentAt && (
-                        <div style={{ fontSize: "0.75rem", color: "#64748b", textAlign: "center", marginTop: 4 }}>
-                          Invite sent: {new Date(row.inviteSentAt).toLocaleString()}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            title="No demo leads yet"
-            message="New demo requests from the public website will show up here for approval and invite actions."
-          />
-        )}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          title="No demo leads yet"
+          message="New demo requests from the website will appear here."
+        />
+      )}
     </div>
   );
 }
-
