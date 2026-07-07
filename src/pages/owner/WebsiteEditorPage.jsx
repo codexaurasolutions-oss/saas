@@ -14,7 +14,7 @@ export default function WebsiteEditorPage() {
   const [iframeKey, setIframeKey] = useState(Date.now());
   const [status, setStatus] = useState({ error: "", success: "" });
 
-  const slug = auth?.membership?.salon?.slug || "demo-salon";
+  const slug = auth?.membership?.salonSlug || auth?.membership?.salon?.slug || "";
 
   useEffect(() => {
     let active = true;
