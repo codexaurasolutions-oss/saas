@@ -84,6 +84,7 @@ const CartPage = lazyWithRetry(() => import("./pages/storefront/CartPage.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/storefront/CheckoutPage.jsx"));
 const LegalContentPage = lazyWithRetry(() => import("./pages/shared/LegalContentPage.jsx"));
 const WebsiteEditorPage = lazyWithRetry(() => import("./pages/owner/WebsiteEditorPage.jsx"));
+const WebsiteAnalyticsPage = lazyWithRetry(() => import("./pages/owner/WebsiteAnalyticsPage.jsx"));
 const ManagePage = lazyWithRetry(() => import("./pages/owner/ManagePage.jsx"));
 const MarketingHomePage = lazyWithRetry(() => import("./pages/public/MarketingHomePage.jsx"));
 const PublicDemoLeadPage = lazyWithRetry(() => import("./pages/public/DemoLeadPage.jsx"));
@@ -175,6 +176,7 @@ const Protected = () => {
           hint: "Storefront & Portal",
           items: [
             can("settings", "edit") && { label: "Website Editor", to: "/admin/website-editor" },
+            can("settings", "edit") && { label: "Website Analytics", to: "/admin/website-analytics" },
             can("orders") && enabled("onlineOrders") && { label: "Online Orders", to: "/admin/orders", hint: "Storefront" },
             can("customerPortalSettings", "view") && { label: "Portal Settings", to: "/admin/customer-portal-settings" },
             (auth?.membership?.salonSlug || auth?.membership?.salon?.slug) && { label: "View Live Site", to: `/site/${auth?.membership?.salonSlug || auth?.membership?.salon?.slug}`, target: "_blank" }
@@ -558,6 +560,7 @@ export default function App() {
           <Route path="/admin/settings" element={<OwnerRoute moduleKey="settings" action="edit" element={<Navigate to="/admin/settings/generic" replace />} />} />
           <Route path="/admin/settings/:section" element={<OwnerRoute moduleKey="settings" action="edit" element={<SettingsPage />} />} />
           <Route path="/admin/website-editor" element={<OwnerRoute moduleKey="settings" action="edit" element={<WebsiteEditorPage />} />} />
+          <Route path="/admin/website-analytics" element={<OwnerRoute moduleKey="settings" action="edit" element={<WebsiteAnalyticsPage />} />} />
           <Route path="/admin/manage" element={<OwnerRoute moduleKey="settings" action="edit" element={<ManagePage />} />} />
           <Route path="/admin/my-dashboard" element={<OwnerRoute moduleKey="myDashboard" element={<MyDashboardPage />} />} />
           <Route path="/admin/my-appointments" element={<OwnerRoute moduleKey="myAppointments" featureKey="appointments" element={<MyAppointmentsPage />} />} />

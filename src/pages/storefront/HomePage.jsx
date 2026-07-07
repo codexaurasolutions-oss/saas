@@ -2,34 +2,47 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { api } from "../../api/client";
 
+const FALLBACK_CAT_IMAGES = [
+  "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=400&fit=crop",
+  "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&fit=crop",
+  "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&fit=crop",
+  "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&fit=crop",
+  "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&fit=crop",
+  "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=400&fit=crop"
+];
+const FALLBACK_PROD_IMG = "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop";
+
 export default function HomePage() {
   const { salon } = useOutletContext();
   const [services, setServices] = useState([]);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const categoryRollerRef = useRef(null);
 
   const scrollRoller = (dir) => {
     if (categoryRollerRef.current) {
       const scrollAmount = 300;
-      categoryRollerRef.current.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+      categoryRollerRef.current.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
   };
 
-  // In a real app, config comes from the website editor payload
   const config = salon?.websiteConfig || {
     heroTitle: "Elevate Your Beauty Experience",
     heroSubtitle: "Discover premium salon services and exclusive products curated just for you.",
-    heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600&auto=format&fit=crop"
+    heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600&fit=crop"
   };
 
   useEffect(() => {
-    // Fetch some dynamic data for the storefront
-    api.get(`/public/salon/${salon.slug}`).then(res => {
-      setServices(res.data.services || []);
-      // Extract unique categories from services for the collections view
-      const cats = [...new Set(res.data.services?.map(s => s.categoryId).filter(Boolean))];
-      setCategories(cats);
-    }).catch(console.error);
+    if (!salon?.slug) return;
+    Promise.all([
+      api.get(`/public/salon/${salon.slug}`).catch(() => ({ data: {} })),
+      api.get(`/public/salon/${salon.slug}/categories`).catch(() => ({ data: [] })),
+      api.get(`/public/salon/${salon.slug}/products`).catch(() => ({ data: [] }))
+    ]).then(([salonRes, catRes, prodRes]) => {
+      setServices(salonRes.data?.services || []);
+      setCategories(catRes.data || []);
+      setProducts(prodRes.data || []);
+    }).catch(() => {});
   }, [salon.slug]);
 
   return (
@@ -65,20 +78,20 @@ export default function HomePage() {
           <button className="sf-roller-btn left" onClick={() => scrollRoller('left')}>&larr;</button>
           
           <div className="sf-category-roller" ref={categoryRollerRef}>
-            {[
-              { id: 1, name: "Hair Care", img: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=800&auto=format&fit=crop" },
-              { id: 2, name: "Skin Therapy", img: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=800&auto=format&fit=crop" },
-              { id: 3, name: "Nail Artistry", img: "https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=800&auto=format&fit=crop" },
-              { id: 4, name: "Spa Retreat", img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=800&auto=format&fit=crop" },
-              { id: 5, name: "Bridal Makeup", img: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=80&w=800&auto=format&fit=crop" },
-              { id: 6, name: "Massage Therapy", img: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=800&auto=format&fit=crop" }
-            ].map(cat => (
+            {categories.length > 0 ? categories.map((cat, idx) => (
               <Link to={`/site/${salon.slug}/category/${cat.id}`} key={cat.id} className="sf-category-circle-card">
                 <div className="sf-category-circle">
-                  <img src={cat.img} alt={cat.name} />
+                  <img src={cat.imageUrl || FALLBACK_CAT_IMAGES[idx % FALLBACK_CAT_IMAGES.length]} alt={cat.name} />
                 </div>
                 <h3 className="sf-category-circle-title">{cat.name}</h3>
               </Link>
+            )) : FALLBACK_CAT_IMAGES.map((img, idx) => (
+              <div key={idx} className="sf-category-circle-card">
+                <div className="sf-category-circle">
+                  <img src={img} alt="Category" />
+                </div>
+                <h3 className="sf-category-circle-title">Collection {idx + 1}</h3>
+              </div>
             ))}
           </div>
 
@@ -99,34 +112,56 @@ export default function HomePage() {
         </div>
         
         <div className="sf-grid">
-          {services.slice(0, 4).map((service, idx) => (
-            <Link to={`/site/${salon.slug}/product/${service.id}`} key={service.id || idx} className="sf-product-card">
+          {products.slice(0, 8).map(product => (
+            <Link to={`/site/${salon.slug}/product/${product.id}`} key={product.id} className="sf-product-card">
               <div className="sf-product-media">
-                <div className="sf-product-badge">Top Rated</div>
-                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop&sig=${idx}`} alt={service.name} />
+                {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
+                  <div className="sf-product-badge" style={{ background: "#ef4444" }}>Sale</div>
+                )}
+                <img src={product.imageUrl || FALLBACK_PROD_IMG} alt={product.name} />
               </div>
               <div className="sf-product-info">
-                <span className="sf-product-category">Signature Service</span>
-                <h3 className="sf-product-title">{service.name}</h3>
-                <p className="sf-product-price">{salon.currency} {service.price}</p>
-                <div style={{ marginTop: 'auto', paddingTop: '20px', paddingBottom: '24px' }}>
-                  <span className="sf-btn-outline">Purchase Now</span>
+                {product.category && <span className="sf-product-category">{product.category.name}</span>}
+                <h3 className="sf-product-title">{product.name}</h3>
+                <p className="sf-product-price">
+                  <span style={{ fontWeight: 700 }}>{salon.currency || "INR"} {Number(product.salePrice || product.sellingPrice).toFixed(2)}</span>
+                  {product.salePrice && Number(product.salePrice) < Number(product.sellingPrice) && (
+                    <span style={{ textDecoration: "line-through", opacity: 0.5, marginLeft: 6, fontSize: "0.85em" }}>{salon.currency || "INR"} {Number(product.sellingPrice).toFixed(2)}</span>
+                  )}
+                </p>
+                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
+                  <span className="sf-btn-outline">View Details</span>
                 </div>
               </div>
             </Link>
           ))}
-          {/* Fallback if no dynamic services exist */}
-          {services.length === 0 && [1, 2, 3, 4].map(i => (
+          {products.length === 0 && services.slice(0, 4).map((service, idx) => (
+            <Link to={`/site/${salon.slug}/product/${service.id}`} key={service.id || idx} className="sf-product-card">
+              <div className="sf-product-media">
+                <div className="sf-product-badge">Top Rated</div>
+                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop&sig=${idx}`} alt={service.name} />
+              </div>
+              <div className="sf-product-info">
+                <span className="sf-product-category">Signature Service</span>
+                <h3 className="sf-product-title">{service.name}</h3>
+                <p className="sf-product-price">{salon.currency || "INR"} {service.price}</p>
+                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
+                  <span className="sf-btn-outline">Book Now</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+          {products.length === 0 && services.length === 0 && [1, 2, 3, 4].map(i => (
             <Link to={`/site/${salon.slug}/product/${i}`} key={i} className="sf-product-card">
               <div className="sf-product-media">
-                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop&sig=${i}`} alt="Sample Service" />
+                <img src={`https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&fit=crop&sig=${i}`} alt="Sample Product" />
               </div>
               <div className="sf-product-info">
                 <span className="sf-product-category">Sample Category</span>
                 <h3 className="sf-product-title">Luxury Treatment {i}</h3>
                 <p className="sf-product-price">{salon.currency || "INR"} 99.00</p>
-                <div style={{ marginTop: 'auto', paddingTop: '20px', paddingBottom: '24px' }}>
-                  <span className="sf-btn-outline">Purchase Now</span>
+                <div style={{ marginTop: "auto", paddingTop: "20px", paddingBottom: "24px" }}>
+                  <span className="sf-btn-outline">View Details</span>
                 </div>
               </div>
             </Link>

@@ -43,7 +43,7 @@ export default function ProductCategoriesPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState({ ...defaultProductForm });
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [categoryForm, setCategoryForm] = useState({ name: "", sortOrder: 1, isPublicVisible: true });
+  const [categoryForm, setCategoryForm] = useState({ name: "", sortOrder: 1, isPublicVisible: true, imageUrl: "", description: "" });
   const [status, setStatus] = useState({ error: "", success: "" });
   const [saving, setSaving] = useState(false);
   const [nameSuggestions, setNameSuggestions] = useState([]);
@@ -80,7 +80,7 @@ export default function ProductCategoriesPage() {
       await api.post("/owner/inventory/categories", categoryForm);
       setStatus({ success: "Category saved", error: "" });
       setShowCategoryModal(false);
-      setCategoryForm({ name: "", sortOrder: categories.length + 1, isPublicVisible: true });
+      setCategoryForm({ name: "", sortOrder: categories.length + 1, isPublicVisible: true, imageUrl: "", description: "" });
       loadData();
     } catch (err) {
       setStatus({ error: formatApiError(err, "Failed to save category"), success: "" });
@@ -216,9 +216,17 @@ export default function ProductCategoriesPage() {
                 color: selectedCategory?.id === cat.id ? "#1d4ed8" : "#334155",
                 fontWeight: selectedCategory?.id === cat.id ? 600 : 400,
                 fontSize: 14,
-                borderBottom: "1px solid #f1f5f9"
+                borderBottom: "1px solid #f1f5f9",
+                display: "flex",
+                alignItems: "center",
+                gap: 10
               }}
             >
+              {cat.imageUrl ? (
+                <img src={cat.imageUrl} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>📁</div>
+              )}
               {cat.name}
             </div>
           ))}
@@ -302,6 +310,19 @@ export default function ProductCategoriesPage() {
                     Active
                   </label>
                 </div>
+              </div>
+              <div className="hub-form-group" style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Description</label>
+                <textarea className="hub-input" value={categoryForm.description} onChange={e => setCategoryForm({...categoryForm, description: e.target.value})} placeholder="Short description for this category" rows={2} style={{ width: "100%", resize: "vertical" }} />
+              </div>
+              <div className="hub-form-group" style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Category Image URL</label>
+                <input type="text" className="hub-input" value={categoryForm.imageUrl} onChange={e => setCategoryForm({...categoryForm, imageUrl: e.target.value})} placeholder="https://example.com/image.jpg or paste a URL" style={{ width: "100%" }} />
+                {categoryForm.imageUrl && (
+                  <div style={{ marginTop: 8, width: 120, height: 80, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                    <img src={categoryForm.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid #e2e8f0", paddingTop: 16 }}>
                 <button type="button" className="btn-cancel" onClick={() => setShowCategoryModal(false)}>Cancel</button>
