@@ -43,7 +43,8 @@ const initialData = {
   giftCards: null,
   feedback: null,
   enquiries: null,
-  expenses: null
+  expenses: null,
+  orders: null
 };
 
 const cardCurrency = (value) => Number(value || 0).toFixed(2);
@@ -166,7 +167,8 @@ export default function ReportsPage() {
         giftCards: api.get("/owner/gift-cards/reports", { params: sharedParams }),
         feedback: api.get("/owner/feedback/reports", { params: sharedParams }),
         enquiries: api.get("/owner/enquiries/reports", { params: sharedParams }),
-        expenses: api.get("/owner/expenses/reports", { params: sharedParams })
+        expenses: api.get("/owner/expenses/reports", { params: sharedParams }),
+        orders: api.get("/owner/orders/reports/summary")
       };
 
       const entries = Object.entries(requests);
@@ -179,7 +181,7 @@ export default function ReportsPage() {
         const result = results[index];
         if (result.status === "fulfilled") {
           nextData[key] = result.value.data;
-        } else if (!["advanced", "profitLoss", "campaignRoi", "payroll", "tax", "loyalty", "coupons", "giftCards", "feedback", "enquiries", "expenses"].includes(key)) {
+        } else if (!["advanced", "profitLoss", "campaignRoi", "payroll", "tax", "loyalty", "coupons", "giftCards", "feedback", "enquiries", "expenses", "orders"].includes(key)) {
           softErrors.push(key);
         }
       });
@@ -369,6 +371,16 @@ export default function ReportsPage() {
                 emptyText="No service sales captured yet."
                 renderMeta={(item) => `Qty ${item.qty || 0} | Sales ${cardCurrency(item.sales)}`}
               />
+            </div>
+          )}
+
+          {(reportView === "overview" || reportView === "sales") && data.orders && (
+            <div className="stats-grid" style={{ marginBottom: 18 }}>
+              <MetricCard label="Total Orders" value={data.orders.totalOrders || 0} tone="default" caption="All storefront orders" />
+              <MetricCard label="New Orders" value={data.orders.newOrders || 0} caption="Awaiting acceptance" />
+              <MetricCard label="Completed" value={data.orders.completedOrders || 0} tone="success" caption="Successfully fulfilled" />
+              <MetricCard label="Cancelled" value={data.orders.cancelledOrders || 0} tone="warning" caption="Reversed orders" />
+              <MetricCard label="Order Revenue" value={cardCurrency(data.orders.totalSales)} tone="success" caption="Revenue from online orders" />
             </div>
           )}
 

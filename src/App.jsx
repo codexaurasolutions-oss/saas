@@ -175,6 +175,7 @@ const Protected = () => {
           hint: "Storefront & Portal",
           items: [
             can("settings", "edit") && { label: "Website Editor", to: "/admin/website-editor" },
+            can("orders") && enabled("onlineOrders") && { label: "Online Orders", to: "/admin/orders", hint: "Storefront" },
             can("customerPortalSettings", "view") && { label: "Portal Settings", to: "/admin/customer-portal-settings" },
             (auth?.membership?.salonSlug || auth?.membership?.salon?.slug) && { label: "View Live Site", to: `/site/${auth?.membership?.salonSlug || auth?.membership?.salon?.slug}`, target: "_blank" }
           ].filter(Boolean)
