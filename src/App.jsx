@@ -188,6 +188,10 @@ const Protected = () => {
             can("settings", "edit") && {
               label: "Settings",
               to: "/admin/settings/generic"
+            },
+            can("support") && {
+              label: "Support Tickets",
+              to: "/admin/support-tickets"
             }
           ].filter(Boolean)
         }
@@ -197,7 +201,6 @@ const Protected = () => {
     {
       label: "Workspace",
       hint: "Back to main pages",
-      defaultOpen: true,
       items: [
         can("dashboard") && { label: "Home / Dashboard", to: "/admin/dashboard" },
         can("pos") && { label: "POS", to: "/admin/pos" },
@@ -212,7 +215,6 @@ const Protected = () => {
     {
       label: "Settings",
       hint: "Business configuration",
-      defaultOpen: true,
       items: can("settings", "edit")
         ? SETTINGS_WORKSPACE_SECTIONS.map((item) => ({ label: item.label, to: item.to }))
         : []
@@ -260,18 +262,16 @@ const Protected = () => {
     {
       label: "Platform Command",
       hint: "SaaS control deck",
-      defaultOpen: true,
       items: [
         { label: "Dashboard", to: "/super-admin/dashboard" },
         { label: "Salons Control", to: "/super-admin/salons" },
         { label: "Plans Catalog", to: "/super-admin/plans" },
-        { label: "Subscriptions", to: "/super-admin/subscriptions" }
+        { label: "Customer Management", to: "/super-admin/subscriptions" }
       ]
     },
     {
       label: "Operations",
       hint: "Leads and tickets",
-      defaultOpen: true,
       items: [
         { label: "Demo Pipeline", to: "/super-admin/demo-leads" },
         { label: "Support Queue", to: "/super-admin/support-tickets" }
@@ -280,7 +280,6 @@ const Protected = () => {
     {
       label: "System",
       hint: "Configuration & logs",
-      defaultOpen: true,
       items: [
         { label: "Global Settings", to: "/super-admin/settings" },
         { label: "Platform Logs", to: "/super-admin/audit-logs" }
@@ -295,7 +294,6 @@ const Protected = () => {
           ? [{
               label: "My Workspace",
               hint: "Personal pages",
-              defaultOpen: true,
               items: myWorkspaceItems
             }]
           : []),

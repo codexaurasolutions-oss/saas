@@ -33,7 +33,7 @@ const emptyForm = {
   name: "",
   monthlyPrice: 0,
   yearlyPrice: 0,
-  trialDays: 14,
+  trialDays: 0,
   branchLimit: 1,
   userLimit: 5,
   customerLimit: 500,
@@ -249,10 +249,6 @@ export default function PlansPage() {
               <label>
                 <span>Yearly Price (INR)</span>
                 <input type="number" min="0" placeholder="Yearly price" value={form.yearlyPrice} onChange={(event) => setForm({ ...form, yearlyPrice: event.target.value })} />
-              </label>
-              <label>
-                <span>Trial Duration (Days)</span>
-                <input type="number" min="0" placeholder="Trial days" value={form.trialDays} onChange={(event) => setForm({ ...form, trialDays: event.target.value })} />
               </label>
               <label>
                 <span>Branch Limit</span>

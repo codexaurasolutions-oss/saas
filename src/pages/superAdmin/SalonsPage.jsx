@@ -254,8 +254,6 @@ export default function SalonsPage() {
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="">All statuses</option>
             <option value="ACTIVE">Active</option>
-            <option value="TRIAL">Trial</option>
-            <option value="EXPIRED">Expired</option>
             <option value="SUSPENDED">Suspended</option>
           </select>
           <button type="button" className="secondary-button" onClick={() => load(query, statusFilter)}>Apply Filters</button>
@@ -533,18 +531,7 @@ export default function SalonsPage() {
                   <span className="info-label">Currency / Tax</span>
                   <span className="info-value">{selectedSalon.currency || "PKR"} / {String(selectedSalon.taxRate || 0)}%</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Trial Begins</span>
-                  <span className="info-value">
-                    {selectedSalon.trialStartsAt ? new Date(selectedSalon.trialStartsAt).toLocaleDateString() : "-"}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Trial Ends</span>
-                  <span className="info-value">
-                    {selectedSalon.trialEndsAt ? new Date(selectedSalon.trialEndsAt).toLocaleDateString() : "-"}
-                  </span>
-                </div>
+
                 <div style={{ marginTop: 16 }}>
                   <span className="info-label" style={{ display: "block", marginBottom: 6, fontSize: "0.85rem" }}>Internal Note</span>
                   <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: 12, borderRadius: 8, fontSize: "0.85rem", color: "#475569", minHeight: 60 }}>

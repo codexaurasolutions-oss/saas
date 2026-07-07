@@ -9,7 +9,7 @@ const emptyDraft = {
   planId: "",
   salonName: "",
   businessType: "Salon",
-  trialDays: 7,
+  trialDays: 30,
   reviewNote: "",
   meetingScheduledAt: "",
   meetingLink: "https://meet.google.com/abc-defg-hij"
@@ -225,7 +225,7 @@ export default function DemoLeadsPage() {
         <div className="item-head">
           <div>
             <h1 style={{ marginTop: 0 }}>Demo Leads</h1>
-            <p style={{ marginBottom: 0 }}>Review inbound interest, approve trial salons, and keep invite workflows moving smoothly.</p>
+            <p style={{ marginBottom: 0 }}>Review inbound interest, provision workspace setups, and keep invite workflows moving smoothly.</p>
           </div>
           <div className="badge-row">
             <span className="badge">Leads {rows.length}</span>
@@ -429,16 +429,6 @@ export default function DemoLeadsPage() {
                               onChange={(event) => patchDraft(row.id, { businessType: event.target.value })}
                             />
                           </label>
-                          <label>
-                            <span className="info-label" style={{ fontSize: "0.75rem" }}>Trial Days</span>
-                            <input
-                              type="number"
-                              min="1"
-                              max="30"
-                              value={draft.trialDays || 7}
-                              onChange={(event) => patchDraft(row.id, { trialDays: Number(event.target.value || 7) })}
-                            />
-                          </label>
                         </div>
 
                         <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px dashed #e2e8f0", display: "grid", gap: 10 }}>
@@ -534,7 +524,7 @@ export default function DemoLeadsPage() {
                             {isBusy ? "Scheduling..." : "Schedule Meeting"}
                           </button>
                           <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                            Approve (Trial)
+                            Create Workspace
                           </button>
                           <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
                             Reject Lead
@@ -548,7 +538,7 @@ export default function DemoLeadsPage() {
                             {isBusy ? "Scheduling..." : "Schedule Meeting"}
                           </button>
                           <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                            Approve (Trial)
+                            Create Workspace
                           </button>
                           <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
                             Reject Lead
@@ -573,7 +563,7 @@ export default function DemoLeadsPage() {
                             </button>
                           ) : (
                             <button type="button" className="btn-compact" onClick={() => approveLead(row.id)} disabled={isBusy} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", border: "none" }}>
-                              Approve (Trial Override)
+                              Create Workspace (Override)
                             </button>
                           )}
                           <button type="button" className="btn-compact danger-button" onClick={() => rejectLead(row.id)} disabled={isBusy}>
