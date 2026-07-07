@@ -83,36 +83,49 @@ export default function PublicDemoLeadPage() {
             />
           </div>
         </div>
+
         <section className="demo-hero">
           <div className="demo-copy">
-            <div className="eyebrow-pill">Request Demo</div>
-            <h1>Let&apos;s map your salon workflow into the platform.</h1>
-            <p>
-              Share your salon details and we will guide you through branches, users, roles, services,
-              customer management, billing, reports, and support controls in one focused session.
+            <div className="eyebrow-pill" style={{ background: "#e2f0d9", color: "#385723" }}>Demo Session</div>
+            <h1 style={{ background: "linear-gradient(135deg, #0f172a 0%, #0d9488 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Let&apos;s map your salon workflow.</h1>
+            <p className="muted" style={{ fontSize: "1.05rem", lineHeight: "1.6", marginBottom: "24px" }}>
+              Share your details, and our deployment specialists will configure a sandboxed multi-branch demo environment for your salon.
             </p>
-            <div className="demo-visual-shell">
-              <img src={demoIllustration} alt="3D demo request illustration" className="demo-visual" />
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", background: "rgba(255, 255, 255, 0.6)", border: "1px solid #e4e4e7", borderRadius: "20px", padding: "24px", marginBottom: "24px" }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Demo Agenda Highlights:</h3>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ccfbf1", color: "#0d9488", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", flexShrink: 0 }}>1</span>
+                <div>
+                  <strong style={{ display: "block", fontSize: "0.9rem", color: "#1e293b" }}>Unified Workspace Access</strong>
+                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Check out owner, manager, receptionist, and stylist portals in action.</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ccfbf1", color: "#0d9488", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", flexShrink: 0 }}>2</span>
+                <div>
+                  <strong style={{ display: "block", fontSize: "0.9rem", color: "#1e293b" }}>Multi-Branch & Service Control</strong>
+                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Configure staff assignments, categories, and branch-wide catalogs.</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ccfbf1", color: "#0d9488", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", flexShrink: 0 }}>3</span>
+                <div>
+                  <strong style={{ display: "block", fontSize: "0.9rem", color: "#1e293b" }}>POS Billing & Invoicing</strong>
+                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Issue receipts, track payments, download reports, and export CSVs.</span>
+                </div>
+              </div>
             </div>
+
             <div className="public-badges">
               <span>Owner/Admin panel</span>
               <span>POS + invoices</span>
               <span>Reports + CRM</span>
               <span>Super Admin controls</span>
             </div>
-            <div className="demo-proof-grid">
-              <div className="trust-card">
-                <small>Best for</small>
-                <strong>Growing salon teams</strong>
-              </div>
-              <div className="trust-card">
-                <small>Format</small>
-                <strong>Guided live walkthrough</strong>
-              </div>
-            </div>
           </div>
 
-          <div className="demo-form-card">
+          <div className="demo-form-card" style={{ padding: "32px", borderRadius: "24px" }}>
             {loading ? (
               <PageLoader
                 compact
@@ -120,58 +133,81 @@ export default function PublicDemoLeadPage() {
                 message="Preparing public settings and request context for your walkthrough."
               />
             ) : (
-            <form onSubmit={submit} className="demo-form">
-              <div className="section-chip">Tell us about your salon</div>
-              <label>
-              <span className="muted">Your full name</span>
-              <input
-                value={form.name}
-                placeholder="Your full name"
-                onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            </label>
-              <label>
-              <span className="muted">Work email</span>
-              <input
-                value={form.email}
-                placeholder="Work email"
-                onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            </label>
-              <label>
-              <span className="muted">Phone / WhatsApp number</span>
-              <input
-                value={form.phone}
-                placeholder="Phone / WhatsApp number"
-                onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-            </label>
-              <label>
-              <span className="muted">Salon / company name</span>
-              <input
-                value={form.company}
-                placeholder="Salon / company name"
-                onChange={(event) => setForm({ ...form, company: event.target.value })} />
-            </label>
-              <textarea
-                rows="6"
-                value={form.message}
-                placeholder="Tell us your branch count, team size, or what you want to see in the demo."
-                onChange={(event) => setForm({ ...form, message: event.target.value })}
-              />
-              <button type="submit" disabled={submitting} className={`demo-submit-button ${submitting ? "is-loading" : ""}`}>
+            <form onSubmit={submit} className="demo-form" style={{ display: "grid", gap: "16px" }}>
+              <div className="section-chip" style={{ justifySelf: "start" }}>Request Guided Walkthrough</div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569" }}>Your Name</span>
+                  <input
+                    value={form.name}
+                    placeholder="Full name"
+                    required
+                    style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+                    onChange={(event) => setForm({ ...form, name: event.target.value })} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569" }}>Work Email</span>
+                  <input
+                    value={form.email}
+                    type="email"
+                    placeholder="name@company.com"
+                    required
+                    style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+                    onChange={(event) => setForm({ ...form, email: event.target.value })} />
+                </label>
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569" }}>Phone Number</span>
+                  <input
+                    value={form.phone}
+                    placeholder="e.g. +91 99999 99999"
+                    required
+                    style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+                    onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569" }}>Salon Name</span>
+                  <input
+                    value={form.company}
+                    placeholder="Salon / Studio name"
+                    required
+                    style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+                    onChange={(event) => setForm({ ...form, company: event.target.value })} />
+                </label>
+              </div>
+
+              <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#475569" }}>How can we help? (Optional)</span>
+                <textarea
+                  rows="4"
+                  value={form.message}
+                  placeholder="Tell us about your branch count, team size, or what you want to see."
+                  style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem", resize: "none" }}
+                  onChange={(event) => setForm({ ...form, message: event.target.value })}
+                />
+              </label>
+
+              <button type="submit" disabled={submitting} className={`demo-submit-button ${submitting ? "is-loading" : ""}`} style={{ background: "linear-gradient(135deg, #0f766e, #0d9488)", color: "white", padding: "12px", borderRadius: "10px", fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s" }}>
                 {submitting ? (
                   <span className="button-progress">
                     <span className="button-spinner" aria-hidden="true" />
-                    Sending request...
+                    Submitting...
                   </span>
                 ) : (
                   "Submit Demo Request"
                 )}
               </button>
-              {state.error && <p className="error-text">{state.error}</p>}
+              
+              {state.error && <p className="error-text" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{state.error}</p>}
+              
               {state.success && (
-                <div className="demo-success-card" role="status" aria-live="polite">
-                  <div className="demo-success-badge">Request sent</div>
-                  <strong>Your demo request is in.</strong>
-                  <p>{state.success}</p>
+                <div className="demo-success-card" role="status" aria-live="polite" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div className="demo-success-badge" style={{ alignSelf: "start", background: "#dcfce7", color: "#166534", fontSize: "0.72rem", padding: "2px 8px", borderRadius: "99px", fontWeight: 750 }}>Request Sent</div>
+                  <strong style={{ color: "#14532d", fontSize: "0.9rem" }}>We have received your request!</strong>
+                  <p style={{ margin: 0, fontSize: "0.8rem", color: "#166534" }}>{state.success}</p>
                 </div>
               )}
             </form>

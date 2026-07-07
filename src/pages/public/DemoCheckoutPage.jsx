@@ -171,76 +171,86 @@ export default function DemoCheckoutPage() {
           <section className="demo-hero">
             <div className="demo-copy">
               <div className="eyebrow-pill" style={{ background: "#e0f2fe", color: "#0369a1" }}>Subscription Checkout</div>
-              <h1>Subscribe to {info?.planName} Plan</h1>
-              <p>
-                Complete your checkout to spin up your active, paid business workspace.
-                All plan limits and permissions will be applied to your custom salon slug.
+              <h1 style={{ background: "linear-gradient(135deg, #0f172a 0%, #0d9488 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Activate your subscription</h1>
+              <p className="muted" style={{ fontSize: "1.05rem", lineHeight: "1.6", marginBottom: "24px" }}>
+                Complete your checkout to spin up your active, paid business workspace. All plan limits and permissions will be applied to your custom salon slug.
               </p>
 
-              <div className="trust-card" style={{ background: "#fafaf9", border: "1px solid #e7e5e4", padding: 20, borderRadius: 16, marginTop: 20 }}>
-                <h3 style={{ margin: "0 0 12px", color: "#0f766e" }}>Plan Summary: {info?.planName}</h3>
-                <ul className="public-list compact" style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
-                  <li style={{ display: "flex", justifyContent: "between", padding: "6px 0", borderBottom: "1px solid #f5f5f4" }}>
-                    <span className="muted">Branches Limit:</span>
-                    <strong>{info?.limits?.branches || "Unlimited"}</strong>
-                  </li>
-                  <li style={{ display: "flex", justifyContent: "between", padding: "6px 0", borderBottom: "1px solid #f5f5f4" }}>
-                    <span className="muted">Staff Users:</span>
-                    <strong>{info?.limits?.users}</strong>
-                  </li>
-                  <li style={{ display: "flex", justifyContent: "between", padding: "6px 0", borderBottom: "1px solid #f5f5f4" }}>
-                    <span className="muted">CRM Customers:</span>
-                    <strong>{info?.limits?.customers}</strong>
-                  </li>
-                  <li style={{ display: "flex", justifyContent: "between", padding: "6px 0" }}>
-                    <span className="muted">Monthly Invoices:</span>
-                    <strong>{info?.limits?.invoices}</strong>
-                  </li>
-                </ul>
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: "2px solid #e7e5e4", display: "flex", justifyContent: "between", alignItems: "center" }}>
-                  <span style={{ fontSize: 16 }}>Amount Due:</span>
-                  <span style={{ fontSize: 24, fontWeight: "bold", color: "#c2410c" }}>INR {info?.price} / mo</span>
+              <div className="ledger-card">
+                <h3 style={{ margin: "0 0 16px", color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>Plan Ledger: {info?.planName}</h3>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div className="ledger-item">
+                    <span className="muted">Branches Allowed</span>
+                    <strong>Unlimited</strong>
+                  </div>
+                  <div className="ledger-item">
+                    <span className="muted">Stylist & Admin Accounts</span>
+                    <strong>{info?.limits?.users} Users</strong>
+                  </div>
+                  <div className="ledger-item">
+                    <span className="muted">CRM Client Limit</span>
+                    <strong>{info?.limits?.customers} Contacts</strong>
+                  </div>
+                  <div className="ledger-item">
+                    <span className="muted">POS Invoices / month</span>
+                    <strong>{info?.limits?.invoices} Receipts</strong>
+                  </div>
+                  <div className="ledger-item">
+                    <span className="muted">Base Platform Fee</span>
+                    <span>INR {info?.price}</span>
+                  </div>
+                  <div className="ledger-item" style={{ color: "#16a34a" }}>
+                    <span className="muted">Setup Cost</span>
+                    <span>₹0 (Waived)</span>
+                  </div>
+                </div>
+
+                <div className="ledger-total">
+                  <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "#1e293b" }}>Total Recurring:</span>
+                  <span style={{ fontSize: "1.5rem", fontWeight: 900, color: "#0f766e" }}>INR {info?.price} <small style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "normal" }}>/ mo</small></span>
                 </div>
               </div>
             </div>
 
-            <div className="demo-form-card">
-              <form onSubmit={handleCheckoutSubmit} className="demo-form">
-                <div className="section-chip">Razorpay Secure Checkout</div>
+            <div className="demo-form-card" style={{ padding: "32px", borderRadius: "24px" }}>
+              <form onSubmit={handleCheckoutSubmit} className="demo-form" style={{ display: "grid", gap: "18px" }}>
+                <div className="section-chip" style={{ justifySelf: "start" }}>Secure Gateway Checkout</div>
                 
-                {error && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
+                {error && <p className="error-text" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
                 
-                <div style={{ background: "#fafaf9", padding: "16px", borderRadius: "12px", border: "1px solid #e7e5e4", display: "grid", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ background: "rgba(244, 244, 245, 0.6)", padding: "20px", borderRadius: "16px", border: "1px solid #e4e4e7", display: "grid", gap: "14px" }}>
                   <div>
-                    <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Contact Person</span>
-                    <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.leadName}</strong>
+                    <span className="muted" style={{ fontSize: "0.72rem", display: "block", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", color: "#71717a" }}>Billing Contact</span>
+                    <strong style={{ color: "#18181b", fontSize: "1rem", fontWeight: 750 }}>{info?.leadName}</strong>
                   </div>
                   <div>
-                    <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Email Address</span>
-                    <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.leadEmail}</strong>
+                    <span className="muted" style={{ fontSize: "0.72rem", display: "block", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", color: "#71717a" }}>Billing Email</span>
+                    <strong style={{ color: "#18181b", fontSize: "0.95rem", fontWeight: 600 }}>{info?.leadEmail}</strong>
                   </div>
                   {info?.company && (
                     <div>
-                      <span className="muted" style={{ fontSize: "0.8rem", display: "block" }}>Company / Salon Name</span>
-                      <strong style={{ color: "#1c1917", fontSize: "0.95rem" }}>{info?.company}</strong>
+                      <span className="muted" style={{ fontSize: "0.72rem", display: "block", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", color: "#71717a" }}>Salon Organization</span>
+                      <strong style={{ color: "#18181b", fontSize: "0.95rem", fontWeight: 600 }}>{info?.company}</strong>
                     </div>
                   )}
                 </div>
 
-                <div className="trust-card" style={{ fontSize: 13, background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: 12, marginBottom: 20 }}>
-                  🛡️ Payments are secured via Razorpay. All cards, UPI (GPay, PhonePe, Paytm), Wallets, and Netbanking are supported.
+                <div style={{ fontSize: "0.8rem", background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: 12, display: "flex", gap: "8px", alignItems: "center" }}>
+                  <span>🛡️</span>
+                  <span>Payments are secured via Razorpay. All cards, UPI, Wallets, and Netbanking are supported.</span>
                 </div>
 
                 <button 
                   type="submit" 
                   disabled={submitting} 
                   className={`demo-submit-button ${submitting ? "is-loading" : ""}`}
-                  style={{ background: "linear-gradient(135deg,#c2410c,#0f766e)" }}
+                  style={{ background: "linear-gradient(135deg, #0f766e, #0d9488)", color: "white", padding: "14px", borderRadius: "10px", fontWeight: 700, border: "none", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.25s" }}
                 >
                   {submitting ? (
                     <span className="button-progress">
                       <span className="button-spinner" aria-hidden="true" />
-                      Loading Razorpay Secure Gateway...
+                      Launching Secure Gateway...
                     </span>
                   ) : (
                     `Pay INR ${info?.price} via Razorpay`

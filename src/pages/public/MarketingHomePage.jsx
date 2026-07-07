@@ -4,10 +4,118 @@ import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import PublicMobileMenu from "../../components/PublicMobileMenu";
-import homeIllustration from "../../assets/public-home-illustration.svg";
-import featuresIllustration from "../../assets/public-features-illustration.svg";
-import pricingIllustration from "../../assets/public-pricing-illustration.svg";
-import platformIllustration from "../../assets/public-platform-illustration.svg";
+
+// Premium Interactive Visual Mocks instead of missing SVGs
+function DashboardPreview() {
+  return (
+    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "16px", borderRadius: "16px" }}>
+          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.05em" }}>Enterprise Live Revenue</div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6", marginTop: "4px" }}>₹3,84,240</div>
+          <div style={{ display: "flex", gap: "8px", fontSize: "0.75rem", color: "#14b8a6", marginTop: "6px", alignItems: "center", fontWeight: 600 }}>
+            <span>↑ 24% this month</span>
+            <span style={{ color: "#94a3b8" }}>• 12 Branches Active</span>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "12px", borderRadius: "12px" }}>
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Active Invoices</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: "2px", color: "#38bdf8" }}>4,924</div>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "12px", borderRadius: "12px" }}>
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>Staff Scheduled</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, marginTop: "2px", color: "#fb7185" }}>184</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturesPreview() {
+  return (
+    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Workspace RBAC Access Control</h4>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Salon Owner</span>
+            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Full Administrative Access</span>
+          </div>
+          <span style={{ padding: "4px 10px", background: "rgba(20, 184, 166, 0.1)", color: "#14b8a6", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 700 }}>Owner</span>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Receptionist</span>
+            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>POS, Catalog & Bookings Only</span>
+          </div>
+          <span style={{ padding: "4px 10px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 700 }}>Reception</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PricingPreview() {
+  return (
+    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Choose Standard or Custom Tiers</h4>
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Starter Plan</span>
+          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>₹4,999 / mo</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Growth Plan</span>
+          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>₹9,999 / mo</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Enterprise Scale</span>
+          <strong style={{ fontSize: "0.85rem", color: "#14b8a6" }}>Custom Quote</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlatformPreview() {
+  return (
+    <div style={{ width: "100%", borderRadius: 24, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "24px", color: "#f8fafc", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Database Sandbox Tenancy</h4>
+        <div style={{ borderLeft: "3px solid #0d9488", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Multi-Tenant Isolation</span>
+          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Each salon is logically isolated at the query level using secure client references.</span>
+        </div>
+        <div style={{ borderLeft: "3px solid #38bdf8", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Secure JWT Authentication</span>
+          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Cryptographic access tokens ensure backend routers confirm actor role and permissions.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -180,13 +288,6 @@ export default function MarketingHomePage() {
   }, []);
 
   const page = pageContent[location.pathname] || pageContent["/"];
-  const pageIllustration = location.pathname === "/features"
-    ? featuresIllustration
-    : location.pathname === "/pricing"
-      ? pricingIllustration
-      : location.pathname === "/platform"
-        ? platformIllustration
-        : homeIllustration;
   const whatsappHref = settings?.whatsappNumber
     ? `https://wa.me/${String(settings.whatsappNumber).replace(/[^\d]/g, "")}`
     : null;
@@ -275,7 +376,7 @@ export default function MarketingHomePage() {
             <h1>{page.title}</h1>
             <p>{page.subtitle}</p>
             <div className="public-hero-actions">
-              <Link to={location.pathname === "/pricing" ? "/book-demo" : "/book-demo"} className="cta-primary">
+              <Link to="/book-demo" className="cta-primary">
                 {page.primaryCta || "Request Demo"}
               </Link>
               <Link to={location.pathname === "/pricing" ? "/features" : "/pricing"} className="cta-secondary">
@@ -289,12 +390,19 @@ export default function MarketingHomePage() {
               <span>Role-based access</span>
             </div>
           </div>
-          <div className="public-hero-card">
-            <img src={pageIllustration} alt="Premium 3D platform illustration" className="public-hero-image" />
+          <div className="public-hero-card" style={{ width: "100%" }}>
+            <div className="premium-illustration-container">
+              <div className="svg-glow-backdrop" />
+              {location.pathname === "/" && <DashboardPreview />}
+              {location.pathname === "/features" && <FeaturesPreview />}
+              {location.pathname === "/pricing" && <PricingPreview />}
+              {location.pathname === "/platform" && <PlatformPreview />}
+            </div>
           </div>
         </section>
 
         <section className="public-trust">
+
           <div className="trust-card">
             <small>Best fit for</small>
             <strong>Growing salon teams</strong>
@@ -433,29 +541,38 @@ export default function MarketingHomePage() {
                 <h2>Pricing that shows both limits and real usage capacity.</h2>
               </div>
               {!plans.length ? <EmptyState title="Pricing plans unavailable right now" message="Default pricing cards will appear here once public plan rows are available for this environment." /> : null}
-              <div className="pricing-grid">
+              <div className="pricing-grid-custom">
                 {plans.map((plan, index) => (
-                  <article key={plan.id} className={`pricing-card ${index === 1 ? "featured-plan" : ""}`}>
-                    <div className="plan-topline">
-                      <span>{plan.isCustom ? "Custom plan" : "Standard plan"}</span>
-                      {index === 1 && <strong>Popular</strong>}
+                  <article key={plan.id} className={`price-card-premium ${index === 1 ? "featured" : ""}`}>
+                    <div className="price-header">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <span style={{ fontSize: "0.72rem", textTransform: "uppercase", color: "#0d9488", fontWeight: 700, letterSpacing: "0.05em" }}>{plan.isCustom ? "Custom tier" : "Standard tier"}</span>
+                        {index === 1 && <span style={{ padding: "2px 8px", background: "#ccfbf1", color: "#0f766e", borderRadius: 99, fontSize: "0.65rem", fontWeight: 800 }}>POPULAR</span>}
+                      </div>
+                      <h3>{plan.name}</h3>
+                      <div className="price-amt">
+                        <span className="currency">{pricingCurrency === "PKR" ? "Rs" : pricingCurrency === "AED" ? "AED" : "₹"}</span>
+                        <span className="val">{formatPrice(plan.monthlyPrice, pricingCurrency)}</span>
+                        <span className="period">/mo</span>
+                      </div>
+                      <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>Yearly billing: {pricingCurrency === "PKR" ? "Rs" : pricingCurrency === "AED" ? "AED" : "₹"}{formatPrice(plan.yearlyPrice, pricingCurrency)} / yr</p>
                     </div>
-                    <h3>{plan.name}</h3>
-                    <div className="plan-price">{pricingCurrency} {formatPrice(plan.monthlyPrice, pricingCurrency)}<small>/month</small></div>
-                    <p className="muted">Yearly {pricingCurrency} {formatPrice(plan.yearlyPrice, pricingCurrency)} | Trial {plan.trialDays} days</p>
-                    <ul className="public-list compact">
-                      <li>Unlimited branches</li>
-                      <li>{plan.userLimit} users</li>
-                      <li>{plan.customerLimit} customers</li>
-                      <li>{plan.invoiceLimit} invoices</li>
-                      <li>{plan.storageLimit || 0} GB storage</li>
+                    
+                    <ul className="price-limits-list">
+                      <li><span>Branches</span><strong>Unlimited</strong></li>
+                      <li><span>Staff Users</span><strong>{plan.userLimit} Users</strong></li>
+                      <li><span>CRM Customers</span><strong>{plan.customerLimit} Customers</strong></li>
+                      <li><span>Monthly Invoices</span><strong>{plan.invoiceLimit} Invoices</strong></li>
+                      <li><span>Cloud Storage</span><strong>{plan.storageLimit || 0} GB</strong></li>
                     </ul>
-                    <div className="public-badges">
-                      {Object.entries(plan.featureFlags || {}).filter(([, enabled]) => enabled).slice(0, 6).map(([key]) => (
-                        <span key={`${plan.id}-${key}`}>{key}</span>
+
+                    <div className="public-badges" style={{ marginBottom: 24, minHeight: 48 }}>
+                      {Object.entries(plan.featureFlags || {}).filter(([, enabled]) => enabled).slice(0, 5).map(([key]) => (
+                        <span key={`${plan.id}-${key}`} style={{ fontSize: "0.72rem", padding: "4px 8px", borderRadius: 6 }}>{key}</span>
                       ))}
                     </div>
-                    <Link to="/book-demo" className="plan-link">Request this plan</Link>
+                    
+                    <Link to="/book-demo" className="plan-link" style={{ width: "100%", textAlign: "center", display: "block" }}>Request Plan Walkthrough</Link>
                   </article>
                 ))}
               </div>
