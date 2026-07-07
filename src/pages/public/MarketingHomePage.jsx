@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../../api/client";
 import PublicMobileMenu from "../../components/PublicMobileMenu";
+import {
+  LayoutDashboard, Calendar, Users, CreditCard, BarChart3, Package, Settings, Shield,
+  Store, ShoppingCart, FileText, UserCheck, Gift, MessageSquare, Megaphone, Star,
+  Clock, MapPin, Bell, HeadphonesIcon, Globe, Repeat, Wallet, TrendingUp,
+  ClipboardList, Tags, PieChart, Truck, ChevronRight, Check, ArrowRight
+} from "lucide-react";
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -22,12 +28,118 @@ const salonImages = {
 };
 
 const features = [
-  { icon: "🏪", title: "Multi-Branch Control", desc: "Manage unlimited branches from one dashboard. Branch-wise reporting, staff, and inventory." },
-  { icon: "💳", title: "POS & Invoicing", desc: "Lightning-fast POS with backend-calculated totals, PDF receipts, and payment tracking." },
-  { icon: "👥", title: "Customer CRM", desc: "Complete customer profiles with notes, tags, birthdays, anniversaries, and billing history." },
-  { icon: "📊", title: "Smart Reports", desc: "Sales, revenue, staff performance, branch comparison, and exportable CSV reports." },
-  { icon: "🔐", title: "Role-Based Access", desc: "Owner, manager, receptionist, staff - each role gets exactly the access they need." },
-  { icon: "🎫", title: "Support System", desc: "Built-in ticketing with thread trails, internal notes, and support event history." }
+  { icon: LayoutDashboard, title: "Multi-Branch Control", desc: "Manage unlimited branches from one dashboard. Branch-wise reporting, staff, and inventory." },
+  { icon: CreditCard, title: "POS & Invoicing", desc: "Lightning-fast POS with backend-calculated totals, PDF receipts, and payment tracking." },
+  { icon: Users, title: "Customer CRM", desc: "Complete customer profiles with notes, tags, birthdays, anniversaries, and billing history." },
+  { icon: BarChart3, title: "Smart Reports", desc: "Sales, revenue, staff performance, branch comparison, and exportable CSV reports." },
+  { icon: Shield, title: "Role-Based Access", desc: "Owner, manager, receptionist, staff - each role gets exactly the access they need." },
+  { icon: HeadphonesIcon, title: "Support System", desc: "Built-in ticketing with thread trails, internal notes, and support event history." }
+];
+
+const featureCategories = [
+  {
+    title: "SaaS Control",
+    icon: Shield,
+    color: "#6366f1",
+    bg: "#eef2ff",
+    features: [
+      "Super Admin controls salons, plans, subscriptions, feature flags, and maintenance mode.",
+      "Multi-tenant isolation keeps salon data separated at API and database level.",
+      "Plan limits govern branches, users, customers, invoices, and feature access.",
+      "Demo lead pipeline with automated approval and workspace provisioning."
+    ]
+  },
+  {
+    title: "Unified Owner/Admin Panel",
+    icon: LayoutDashboard,
+    color: "#0d9488",
+    bg: "#f0fdfa",
+    features: [
+      "One shared panel for owner, receptionist, manager, staff, and accountant users.",
+      "Role-based sidebar and backend permission checks keep every user inside assigned scope.",
+      "Branch-aware operations, custom roles, archived users, and staff-service assignment.",
+      "My Workspace for staff: dashboard, appointments, schedule, commission, profile."
+    ]
+  },
+  {
+    title: "Billing & POS",
+    icon: CreditCard,
+    color: "#f59e0b",
+    bg: "#fffbeb",
+    features: [
+      "POS creates invoices with backend-calculated totals, payment updates, receipt HTML, and PDF output.",
+      "Customers carry notes, tags, source, birthdays, anniversaries, and billing history.",
+      "Reports cover sales, payments, branches, staff-service output, customer totals, and CSV export.",
+      "Payment tracking with multiple methods: cash, card, UPI, wallet, split payments."
+    ]
+  },
+  {
+    title: "E-Commerce & Online Orders",
+    icon: Store,
+    color: "#10b981",
+    bg: "#ecfdf5",
+    features: [
+      "Professional website editor with sections, color picker, card shapes, banner editor.",
+      "Dynamic storefront with real products, categories, cart, and checkout.",
+      "Online orders management with status flow: New → Accepted → Ready → Completed.",
+      "Website analytics dashboard with revenue, orders, and product performance."
+    ]
+  },
+  {
+    title: "Staff & Workforce",
+    icon: Users,
+    color: "#8b5cf6",
+    bg: "#f5f3ff",
+    features: [
+      "Staff assignment to services, branches, and schedules with availability tracking.",
+      "Custom roles with granular permissions for every module and action.",
+      "Commission tracking, attendance, payroll runs, and salary management.",
+      "Staff notifications, announcements, and internal messaging."
+    ]
+  },
+  {
+    title: "Marketing & Growth",
+    icon: Megaphone,
+    color: "#ec4899",
+    bg: "#fdf2f8",
+    features: [
+      "WhatsApp integration with settings, logs, and automation flows.",
+      "Campaign management with templates, scheduling, and conversion tracking.",
+      "SMS and email campaigns with audience targeting and delivery reports.",
+      "Loyalty points, coupons, gift cards, and referral programs."
+    ]
+  }
+];
+
+const allFeatures = [
+  { icon: LayoutDashboard, title: "Dashboard", desc: "Real-time overview of revenue, appointments, orders, and staff performance." },
+  { icon: Calendar, title: "Appointments", desc: "Book, reschedule, and manage appointments with calendar views and reminders." },
+  { icon: CreditCard, title: "POS & Invoicing", desc: "Lightning-fast POS with backend-calculated totals, PDF receipts, and payment tracking." },
+  { icon: Users, title: "Customer CRM", desc: "Complete customer profiles with notes, tags, birthdays, anniversaries, and billing history." },
+  { icon: BarChart3, title: "Reports & Analytics", desc: "Sales, revenue, staff performance, branch comparison, and exportable CSV reports." },
+  { icon: Package, title: "Inventory Management", desc: "Products, stock movements, purchase orders, suppliers, and low-stock alerts." },
+  { icon: Store, title: "E-Commerce Store", desc: "Professional storefront with products, categories, cart, checkout, and online orders." },
+  { icon: Globe, title: "Website Editor", desc: "Customize hero, sections, colors, card shapes, banners, and testimonials." },
+  { icon: ShoppingCart, title: "Online Orders", desc: "Accept, process, and fulfill online orders with status tracking and invoice conversion." },
+  { icon: MapPin, title: "Multi-Branch", desc: "Manage unlimited branches with branch-wise reporting, staff, and inventory." },
+  { icon: UserCheck, title: "Staff Management", desc: "Assign services, track availability, manage schedules, and calculate commissions." },
+  { icon: Shield, title: "Role-Based Access", desc: "Owner, manager, receptionist, staff - each role gets exactly the access they need." },
+  { icon: Gift, title: "Memberships & Packages", desc: "Recurring membership plans and prepaid packages with usage tracking." },
+  { icon: Star, title: "Loyalty Program", desc: "Points, tiers, rewards, and redemption rules to boost customer retention." },
+  { icon: Tags, title: "Coupons & Gift Cards", desc: "Discount coupons, percentage-off deals, and digital gift cards." },
+  { icon: MessageSquare, title: "WhatsApp Integration", desc: "Automated messages, notifications, and conversation logs." },
+  { icon: Megaphone, title: "Campaigns", desc: "SMS, email, and WhatsApp campaigns with templates and conversion tracking." },
+  { icon: FileText, title: "Enquiries", desc: "Capture, assign, follow up, and convert enquiries from multiple sources." },
+  { icon: HeadphonesIcon, title: "Support Tickets", desc: "Ticketing system with thread trails, internal notes, and priority management." },
+  { icon: PieChart, title: "Expense Tracking", desc: "Track expenses by type, category, account, and generate financial reports." },
+  { icon: Wallet, title: "Payroll", desc: "Salary calculations, deductions, advances, and payroll run management." },
+  { icon: Repeat, title: "Feedback & Reviews", desc: "Collect customer feedback, ratings, and generate satisfaction reports." },
+  { icon: Bell, title: "Notifications", desc: "In-app, email, and push notifications with configurable toggles." },
+  { icon: Clock, title: "Audit Logs", desc: "Complete activity trail for compliance, debugging, and accountability." },
+  { icon: Truck, title: "Stock Transfers", desc: "Move inventory between branches with approval workflows." },
+  { icon: ClipboardList, title: "Attendance", desc: "Clock in/out, attendance reports, and shift management." },
+  { icon: TrendingUp, title: "Trends & Insights", desc: "AI-powered trends, peak hours analysis, and growth predictions." },
+  { icon: Settings, title: "Settings", desc: "Business hours, tax rates, notifications, legal content, and UI customization." }
 ];
 
 const stats = [
@@ -225,15 +337,20 @@ export default function MarketingHomePage() {
                 <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 600, margin: "0 auto" }}>One platform to manage branches, staff, customers, billing, and growth.</p>
               </div>
               <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-                {features.map((f, i) => (
-                  <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0", transition: "all 0.2s", cursor: "default" }}
-                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}>
-                    <div style={{ fontSize: 36, marginBottom: 16 }}>{f.icon}</div>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{f.title}</h3>
-                    <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
-                  </div>
-                ))}
+                {features.map((f, i) => {
+                  const Icon = f.icon;
+                  return (
+                    <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0", transition: "all 0.2s", cursor: "default" }}
+                      onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: "#f0fdfa", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                        <Icon size={24} color="#0d9488" />
+                      </div>
+                      <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{f.title}</h3>
+                      <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -300,24 +417,65 @@ export default function MarketingHomePage() {
 
         {/* ============ FEATURES PAGE ============ */}
         {isFeatures && (
-          <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 60 }}>
-              <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURE STACK</div>
-              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Every essential feature, mapped into one connected workflow.</h1>
-              <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>From tenant isolation to invoice PDFs, from staff roles to branch-wise reporting.</p>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
-              {features.map((f, i) => (
-                <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0", display: "flex", gap: 20, alignItems: "flex-start" }}>
-                  <div style={{ fontSize: 36, flexShrink: 0 }}>{f.icon}</div>
-                  <div>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>{f.title}</h3>
-                    <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
-                  </div>
+          <>
+            {/* Feature Categories */}
+            <section style={{ padding: "60px 24px", maxWidth: 1200, margin: "0 auto" }}>
+              <div style={{ textAlign: "center", marginBottom: 48 }}>
+                <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURE CATEGORIES</div>
+                <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Deep dive into each module</h2>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+                {featureCategories.map((cat, i) => {
+                  const CatIcon = cat.icon;
+                  return (
+                    <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 12, background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <CatIcon size={22} color={cat.color} />
+                        </div>
+                        <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#0f172a", margin: 0 }}>{cat.title}</h3>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {cat.features.map((feat, j) => (
+                          <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                            <Check size={16} color={cat.color} style={{ marginTop: 3, flexShrink: 0 }} />
+                            <span style={{ fontSize: 14, color: "#475569", lineHeight: 1.5 }}>{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* All 28 Features Grid */}
+            <section style={{ padding: "60px 24px", background: "#f8fafc" }}>
+              <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+                <div style={{ textAlign: "center", marginBottom: 48 }}>
+                  <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>ALL FEATURES</div>
+                  <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>{allFeatures.length} features built for real salon operations</h2>
+                  <p style={{ fontSize: "1rem", color: "#64748b" }}>Every module is designed around how salons actually work.</p>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                  {allFeatures.map((f, i) => {
+                    const FeatIcon = f.icon;
+                    return (
+                      <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 24, border: "1px solid #e2e8f0", transition: "all 0.2s" }}
+                        onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f0fdfa", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                          <FeatIcon size={20} color="#0d9488" />
+                        </div>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>{f.title}</h4>
+                        <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5, margin: 0 }}>{f.desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          </>
         )}
 
         {/* ============ PRICING PAGE ============ */}
