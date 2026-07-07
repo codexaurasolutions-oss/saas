@@ -160,6 +160,7 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
                       <div key={item.to} className="sidebar-item-block">
                         <NavLink
                           to={item.to}
+                          target={item.target}
                           end={!item.children?.length}
                           onClick={closeMobile}
                           className={({ isActive }) =>

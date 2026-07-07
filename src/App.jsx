@@ -170,17 +170,15 @@ const Protected = () => {
             { label: "Enquiries", to: "/admin/enquiries" }
           ]
         },
-        /*
         {
           label: "Website",
           hint: "Storefront & Portal",
           items: [
             can("settings", "edit") && { label: "Website Editor", to: "/admin/website-editor" },
             can("customerPortalSettings", "view") && { label: "Portal Settings", to: "/admin/customer-portal-settings" },
-            { label: "View Live Site", to: `/site/${auth?.membership?.salon?.slug || "demo-salon"}` }
+            { label: "View Live Site", to: `/site/${auth?.membership?.salon?.slug || "demo-salon"}`, target: "_blank" }
           ].filter(Boolean)
         },
-        */
         {
           label: "System",
           hint: "Help and config",
