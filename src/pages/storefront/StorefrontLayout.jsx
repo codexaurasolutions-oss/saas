@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link, useParams } from "react-router-dom";
+import { Outlet, Link, useParams, useLocation } from "react-router-dom";
 import { api } from "../../api/client";
 import "../../storefront.css";
 
 export default function StorefrontLayout() {
   const { slug } = useParams();
+  const location = useLocation();
   const [salon, setSalon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
@@ -41,6 +42,11 @@ export default function StorefrontLayout() {
         setLoading(false);
       });
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    api.post(`/public/salon/${slug}/track`, { path: location.pathname }).catch(() => {});
+  }, [slug, location.pathname]);
 
   if (loading) return <div className="storefront-wrapper"><div className="sf-placeholder-img">Loading...</div></div>;
   if (!salon) return <div className="storefront-wrapper"><div className="sf-placeholder-img">Store Not Found</div></div>;
