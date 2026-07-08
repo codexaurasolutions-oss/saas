@@ -100,6 +100,7 @@ const SuperAdminSubscriptionsPage = lazyWithRetry(() => import("./pages/superAdm
 const SuperAdminSupportTicketsPage = lazyWithRetry(() => import("./pages/superAdmin/SupportTicketsPage.jsx"));
 const SuperAdminSettingsPage = lazyWithRetry(() => import("./pages/superAdmin/SettingsPage.jsx"));
 const SuperAdminAuditLogsPage = lazyWithRetry(() => import("./pages/superAdmin/AuditLogsPage.jsx"));
+const SuperAdminTrafficAnalyticsPage = lazyWithRetry(() => import("./pages/superAdmin/TrafficAnalyticsPage.jsx"));
 
 const RouteFallback = () => (
   <div className="page-shell">
@@ -274,10 +275,11 @@ const Protected = () => {
     },
     {
       label: "Operations",
-      hint: "Leads and tickets",
+      hint: "Leads, tickets, and traffic",
       items: [
         { label: "Demo Pipeline", to: "/super-admin/demo-leads" },
-        { label: "Support Queue", to: "/super-admin/support-tickets" }
+        { label: "Support Queue", to: "/super-admin/support-tickets" },
+        { label: "Traffic Analytics", to: "/super-admin/traffic" }
       ]
     },
     {
@@ -581,6 +583,7 @@ export default function App() {
           <Route path="/super-admin/support-tickets" element={<SuperAdminRoute element={<SuperAdminSupportTicketsPage />} />} />
           <Route path="/super-admin/settings" element={<SuperAdminRoute element={<SuperAdminSettingsPage />} />} />
           <Route path="/super-admin/audit-logs" element={<SuperAdminRoute element={<SuperAdminAuditLogsPage />} />} />
+          <Route path="/super-admin/traffic" element={<SuperAdminRoute element={<SuperAdminTrafficAnalyticsPage />} />} />
 
           <Route path="/branches" element={<Navigate to="/admin/branches" replace />} />
           <Route path="/services" element={<Navigate to="/admin/services" replace />} />
