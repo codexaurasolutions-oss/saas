@@ -23,9 +23,10 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
   const enabled = (key) => featureFlags[key] !== false;
   const canPos = can("pos") && enabled("pos");
   const canNotifications = can("notifications");
-  const canGlobalSearch = can("customers") || can("appointments") || can("services");
+  const isSuperAdmin = auth?.user?.systemRole === "SUPER_ADMIN";
+  const canGlobalSearch = can("customers") || can("appointments") || can("services") || isSuperAdmin;
   const canSettings = can("settings", "edit");
-  const canProfile = auth?.user?.systemRole === "SUPER_ADMIN" || can("myProfile");
+  const canProfile = isSuperAdmin || can("myProfile");
 
   useEffect(() => {
     let active = true;
@@ -74,7 +75,8 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
     setSearchLoading(true);
     const timeoutId = setTimeout(async () => {
       try {
-        const response = await api.get("/owner/global-search", { params: { q: term } });
+        const endpoint = isSuperAdmin ? "/super-admin/global-search" : "/owner/global-search";
+        const response = await api.get(endpoint, { params: { q: term } });
         if (!active) return;
         setSearchResults(response.data?.results || []);
         setSearchOpen(true);
@@ -89,7 +91,7 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [canGlobalSearch, quickSearch]);
+  }, [canGlobalSearch, quickSearch, isSuperAdmin]);
 
   const handleMarkAllRead = async (e) => {
     e.stopPropagation();
@@ -325,6 +327,11 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
         .respark-search-module-badge.memberships { background: #ec4899; }
         .respark-search-module-badge.packages { background: #f97316; }
         .respark-search-module-badge.pos { background: #14b8a6; }
+        .respark-search-module-badge.salons { background: #3b82f6; }
+        .respark-search-module-badge.demo-leads { background: #10b981; }
+        .respark-search-module-badge.subscription-plans { background: #8b5cf6; }
+        .respark-search-module-badge.platform-users { background: #f59e0b; }
+        .respark-search-module-badge.subscription-contracts { background: #ec4899; }
         .respark-search-result-text {
           flex: 1;
           min-width: 0;
@@ -552,36 +559,25 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
               <Search size={16} color="#64748b" />
               <input
                 type="text"
-                placeholder={auth?.user?.systemRole === "SUPER_ADMIN" ? "Search salons, tenants, leads..." : "Search guests, services, products, staff, invoices..."}
+                placeholder={isSuperAdmin ? "Search salons, plans, leads, users..." : "Search guests, services, products, staff, invoices..."}
                 value={quickSearch}
-                onFocus={() => auth?.user?.systemRole !== "SUPER_ADMIN" && setSearchOpen(true)}
-                onChange={(event) => {
-                  const val = event.target.value;
-                  setQuickSearch(val);
-                  if (auth?.user?.systemRole === "SUPER_ADMIN") {
-                    const isLeads = window.location.pathname.includes("demo-leads");
-                    const targetPage = isLeads ? "/super-admin/demo-leads" : "/super-admin/salons";
-                    navigate(`${targetPage}?q=${encodeURIComponent(val)}`, { replace: true });
-                  }
-                }}
+                onFocus={() => setSearchOpen(true)}
+                onChange={(event) => setQuickSearch(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") setSearchOpen(false);
                   if (event.key === "Enter") {
                     const term = quickSearch.trim();
-                    if (auth?.user?.systemRole === "SUPER_ADMIN") {
-                      if (term) {
-                        navigate(`/super-admin/salons?q=${encodeURIComponent(term)}`);
-                        setQuickSearch("");
-                      }
-                      return;
-                    }
                     const first = searchResults[0];
                     if (first?.to) {
                       navigate(first.to);
                       setSearchOpen(false);
                       setQuickSearch("");
                     } else if (term) {
-                      navigate(`/admin/customers?q=${encodeURIComponent(term)}`);
+                      if (isSuperAdmin) {
+                        navigate(`/super-admin/salons?q=${encodeURIComponent(term)}`);
+                      } else {
+                        navigate(`/admin/customers?q=${encodeURIComponent(term)}`);
+                      }
                       setSearchOpen(false);
                     }
                   }
@@ -603,7 +599,7 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
                       setQuickSearch("");
                     }}
                   >
-                    <span className={`respark-search-module-badge ${(item.module || "").toLowerCase()}`}>{item.module}</span>
+                    <span className={`respark-search-module-badge ${(item.module || "").toLowerCase().replace(/\s+/g, "-")}`}>{item.module}</span>
                     <span className="respark-search-result-text">
                       <strong>{item.title}</strong>
                       <small>{item.subtitle || "Open record"}</small>
