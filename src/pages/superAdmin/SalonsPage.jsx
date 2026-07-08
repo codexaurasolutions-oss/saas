@@ -187,7 +187,6 @@ export default function SalonsPage() {
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All statuses</option>
             <option value="ACTIVE">Active</option>
-            <option value="TRIAL">Trial</option>
             <option value="SUSPENDED">Suspended</option>
           </select>
           <button type="button" className="secondary-button" onClick={() => load(query, statusFilter)}>Apply</button>
@@ -272,7 +271,6 @@ export default function SalonsPage() {
               const firstLetter = (salon.name || "S").charAt(0).toUpperCase();
               let statusBg = "#f1f5f9", statusColor = "#64748b";
               if (salon.status === "ACTIVE") { statusBg = "#ecfdf5"; statusColor = "#10b981"; }
-              else if (salon.status === "TRIAL") { statusBg = "#eff6ff"; statusColor = "#3b82f6"; }
               else if (salon.status === "SUSPENDED") { statusBg = "#fef2f2"; statusColor = "#ef4444"; }
               const isBusy = busyId === salon.id;
               return (
@@ -323,7 +321,7 @@ export default function SalonsPage() {
                 <h2 style={{ margin: "0 0 4px", fontSize: "1.5rem", color: "#0f172a", fontWeight: 800 }}>{selectedSalon.name}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span className="badge" style={{ background: "#e2e8f0", color: "#475569", fontWeight: 700 }}>{selectedSalon.businessType || "Salon"}</span>
-                  <span className="badge" style={{ background: selectedSalon.status === "ACTIVE" ? "#ecfdf5" : selectedSalon.status === "TRIAL" ? "#eff6ff" : "#fef2f2", color: selectedSalon.status === "ACTIVE" ? "#10b981" : selectedSalon.status === "TRIAL" ? "#3b82f6" : "#ef4444", fontWeight: 700 }}>{selectedSalon.status}</span>
+                  <span className="badge" style={{ background: selectedSalon.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: selectedSalon.status === "ACTIVE" ? "#10b981" : "#ef4444", fontWeight: 700 }}>{selectedSalon.status}</span>
                   <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Slug: <strong>{selectedSalon.slug}</strong></span>
                 </div>
               </div>

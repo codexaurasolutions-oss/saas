@@ -29,13 +29,15 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
 
   useEffect(() => {
     let active = true;
-    if (canPos) {
+    const isSuperAdmin = auth?.user?.systemRole === "SUPER_ADMIN";
+
+    if (canPos && !isSuperAdmin) {
       api.get("/owner/pos/context").then(res => {
         if (active && res.data?.salon?.name) setSalonName(res.data.salon.name);
       }).catch(()=> {});
     }
 
-    if (canNotifications) {
+    if (canNotifications && !isSuperAdmin) {
       api.get("/owner/notifications", { params: { limit: 5 } }).then((res) => {
         if (active && res.data) {
           setNotifications(res.data);
@@ -44,7 +46,7 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
     }
 
     return () => { active = false; };
-  }, [canNotifications, canPos]);
+  }, [canNotifications, canPos, auth?.user?.systemRole]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

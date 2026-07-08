@@ -194,10 +194,6 @@ export default function PlansPage() {
                 <input {...numInput("yearlyPrice")} placeholder="0" />
               </label>
               <label>
-                <span>Trial Days</span>
-                <input {...numInput("trialDays", { min: 0 })} placeholder="14" />
-              </label>
-              <label>
                 <span>Branch Limit</span>
                 <input {...numInput("branchLimit", { min: 1 })} placeholder="1" />
               </label>
@@ -260,7 +256,7 @@ export default function PlansPage() {
                         <strong>Monthly:</strong> {Number(row.monthlyPrice || 0).toLocaleString("en-IN")} INR &bull; <strong>Yearly:</strong> {Number(row.yearlyPrice || 0).toLocaleString("en-IN")} INR
                       </div>
                       <div className="tenant-subtext" style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                        Trial: {row.trialDays}d &bull; Users: {row.userLimit} &bull; Branches: {row.branchLimit} &bull; Storage: {row.storageLimit || 0}GB
+                        Users: {row.userLimit} &bull; Branches: {row.branchLimit} &bull; Storage: {row.storageLimit || 0}GB
                       </div>
                     </div>
                   </div>

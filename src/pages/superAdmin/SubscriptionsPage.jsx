@@ -184,7 +184,6 @@ export default function SubscriptionsPage() {
             <select value={filters.status} onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}>
               <option value="">All Statuses</option>
               <option value="ACTIVE">Active</option>
-              <option value="TRIAL">Trial</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="EXPIRED">Expired</option>
             </select>
@@ -298,7 +297,6 @@ export default function SubscriptionsPage() {
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
-                  <option value="TRIAL">Trial</option>
                   <option value="SUSPENDED">Suspended</option>
                 </select>
               </label>
@@ -346,7 +344,6 @@ export default function SubscriptionsPage() {
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
-                  <option value="TRIAL">Trial</option>
                   <option value="SUSPENDED">Suspended</option>
                   <option value="EXPIRED">Expired</option>
                 </select>

@@ -35,7 +35,7 @@ export const BranchProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!auth?.accessToken) return;
+    if (!auth?.accessToken || auth?.user?.systemRole === "SUPER_ADMIN") return;
     let active = true;
     setLoading(true);
     api.get("/owner/branches")

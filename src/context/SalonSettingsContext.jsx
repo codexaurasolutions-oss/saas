@@ -40,7 +40,7 @@ export const SalonSettingsProvider = ({ children }) => {
     const hasSettingsPermission = Array.isArray(permissions.settings) && permissions.settings.includes("view");
     const isSuperAdmin = auth.user?.systemRole === "SUPER_ADMIN";
 
-    if (!hasSettingsPermission && !isSuperAdmin) {
+    if (isSuperAdmin || !hasSettingsPermission) {
       return undefined;
     }
 
