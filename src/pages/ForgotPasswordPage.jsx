@@ -9,16 +9,19 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resetLink, setResetLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
     setMessage("");
     setError("");
+    setResetLink("");
     setIsSubmitting(true);
     try {
       const response = await api.post("/auth/forgot-password", { email });
       setMessage(response.data.message);
+      setResetLink(response.data.resetLink || "");
     } catch (requestError) {
       setError(formatApiError(requestError, "Could not process your request right now."));
     } finally {
@@ -64,6 +67,13 @@ export default function ForgotPasswordPage() {
           </form>
           {message && <p className="success-text">{message}</p>}
           {error && <p className="error-text">{error}</p>}
+          {resetLink && (
+            <div style={{ marginTop: 20, padding: 16, background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 12 }}>
+              <span style={{ fontSize: 13, color: "#065f46", fontWeight: 700, display: "block", marginBottom: 8 }}>🧪 Sandbox Testing Mode:</span>
+              <p style={{ fontSize: 13, color: "#047857", margin: "0 0 12px" }}>SMTP is not configured in this sandbox workspace, so the recovery email cannot be dispatched. Use the link below to bypass email delivery and reset your password immediately:</p>
+              <a href={resetLink} className="interactive-link" style={{ fontWeight: 700, wordBreak: "break-all" }}>Reset Password Link &rarr;</a>
+            </div>
+          )}
           <div className="inline-actions" style={{ marginTop: 14 }}>
             <Link className="interactive-link" to="/login">Back to login</Link>
           </div>
