@@ -40,6 +40,7 @@ const emptyForm = {
   invoiceLimit: 1000,
   storageLimit: 5,
   isCustom: false,
+  isPopular: false,
   featureFlags: defaultFeatureFlags
 };
 
@@ -102,6 +103,7 @@ export default function PlansPage() {
         invoiceLimit: Number(form.invoiceLimit || 0),
         storageLimit: Number(form.storageLimit || 0),
         isCustom: Boolean(form.isCustom),
+        isPopular: Boolean(form.isPopular),
         featureFlags: form.featureFlags || defaultFeatureFlags
       };
       if (editingId) {
@@ -133,6 +135,7 @@ export default function PlansPage() {
       invoiceLimit: Number(row.invoiceLimit || 1000),
       storageLimit: Number(row.storageLimit || 5),
       isCustom: Boolean(row.isCustom),
+      isPopular: Boolean(row.isPopular),
       featureFlags: row.featureFlags || defaultFeatureFlags
     });
     setIsModalOpen(true);
@@ -216,6 +219,10 @@ export default function PlansPage() {
               <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
                 <input type="checkbox" checked={Boolean(form.isCustom)} onChange={(e) => setForm({ ...form, isCustom: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
                 <span>Mark this as a custom plan</span>
+              </label>
+              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <input type="checkbox" checked={Boolean(form.isPopular)} onChange={(e) => setForm({ ...form, isPopular: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                <span>Mark this as most popular</span>
               </label>
               <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
                 <button type="submit" style={{ width: "100%" }} disabled={saving}>

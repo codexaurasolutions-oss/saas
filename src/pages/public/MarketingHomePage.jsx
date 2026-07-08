@@ -487,9 +487,9 @@ export default function MarketingHomePage() {
               <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>Transparent limits, clear feature access, and room for custom plans.</p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-              {plans.map((plan, i) => (
-                <div key={plan.id} style={{ background: "#fff", borderRadius: 20, padding: 32, border: i === 1 ? "2px solid #0d9488" : "1px solid #e2e8f0", position: "relative", boxShadow: i === 1 ? "0 8px 30px rgba(13,148,136,0.15)" : "none" }}>
-                  {i === 1 && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#0d9488", color: "#fff", padding: "4px 16px", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>MOST POPULAR</div>}
+              {plans.map((plan) => (
+                <div key={plan.id} style={{ background: "#fff", borderRadius: 20, padding: 32, border: plan.isPopular ? "2px solid #0d9488" : "1px solid #e2e8f0", position: "relative", boxShadow: plan.isPopular ? "0 8px 30px rgba(13,148,136,0.15)" : "none" }}>
+                  {plan.isPopular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#0d9488", color: "#fff", padding: "4px 16px", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>MOST POPULAR</div>}
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#0d9488", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Standard tier</div>
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 16px" }}>{plan.name}</h3>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
@@ -505,7 +505,7 @@ export default function MarketingHomePage() {
                       </div>
                     ))}
                   </div>
-                  <Link to="/book-demo" style={{ display: "block", textAlign: "center", padding: "14px", background: i === 1 ? "linear-gradient(135deg, #0d9488, #14b8a6)" : "#f8fafc", color: i === 1 ? "#fff" : "#0d9488", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", border: i === 1 ? "none" : "1px solid #e2e8f0" }}>Request Walkthrough</Link>
+                  <Link to="/book-demo" style={{ display: "block", textAlign: "center", padding: "14px", background: plan.isPopular ? "linear-gradient(135deg, #0d9488, #14b8a6)" : "#f8fafc", color: plan.isPopular ? "#fff" : "#0d9488", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", border: plan.isPopular ? "none" : "1px solid #e2e8f0" }}>Request Walkthrough</Link>
                 </div>
               ))}
             </div>
