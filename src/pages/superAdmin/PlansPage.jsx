@@ -93,14 +93,14 @@ export default function PlansPage() {
     try {
       const payload = {
         name: form.name.trim(),
-        monthlyPrice: Number(form.monthlyPrice),
-        yearlyPrice: Number(form.yearlyPrice),
-        trialDays: Number(form.trialDays),
-        branchLimit: Number(form.branchLimit),
-        userLimit: Number(form.userLimit),
-        customerLimit: Number(form.customerLimit),
-        invoiceLimit: Number(form.invoiceLimit),
-        storageLimit: Number(form.storageLimit),
+        monthlyPrice: Number(form.monthlyPrice || 0),
+        yearlyPrice: Number(form.yearlyPrice || 0),
+        trialDays: Number(form.trialDays || 0),
+        branchLimit: Number(form.branchLimit || 1),
+        userLimit: Number(form.userLimit || 0),
+        customerLimit: Number(form.customerLimit || 0),
+        invoiceLimit: Number(form.invoiceLimit || 0),
+        storageLimit: Number(form.storageLimit || 0),
         isCustom: Boolean(form.isCustom),
         featureFlags: form.featureFlags || defaultFeatureFlags
       };
@@ -153,8 +153,8 @@ export default function PlansPage() {
   const numInput = (key, opts = {}) => ({
     type: "number",
     min: opts.min ?? 0,
-    value: form[key],
-    onChange: (e) => setForm({ ...form, [key]: Number(e.target.value) })
+    value: form[key] === "" ? "" : form[key],
+    onChange: (e) => setForm({ ...form, [key]: e.target.value === "" ? "" : Number(e.target.value) })
   });
 
   return (
