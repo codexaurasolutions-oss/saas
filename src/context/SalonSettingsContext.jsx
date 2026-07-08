@@ -77,14 +77,26 @@ export const SalonSettingsProvider = ({ children }) => {
   }, [auth, salonId]);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const isSuperAdmin = auth?.user?.systemRole === "SUPER_ADMIN";
+
+    if (isSuperAdmin) {
+      root.style.removeProperty("--sidebar-bg");
+      root.style.removeProperty("--button-bg");
+      root.style.removeProperty("--button-bg-solid");
+      root.style.removeProperty("--accent");
+      root.style.removeProperty("--button-bg-hover");
+      root.style.removeProperty("--navbar-bg");
+      root.style.removeProperty("--font-color");
+      return;
+    }
+
     const ui = settings?.advancedSettings?.uiSettings || {};
     const sidebar = ui.sidebarColor || "";
     const button = ui.buttonColor || "";
     const buttonHover = ui.buttonHoverColor || "";
     const navbar = ui.navbarColor || "";
     const font = ui.fontColor || "";
-
-    const root = document.documentElement;
 
     if (sidebar) root.style.setProperty("--sidebar-bg", sidebar);
     else root.style.removeProperty("--sidebar-bg");
@@ -110,7 +122,7 @@ export const SalonSettingsProvider = ({ children }) => {
 
     if (font) root.style.setProperty("--font-color", font);
     else root.style.removeProperty("--font-color");
-  }, [settings]);
+  }, [settings, auth]);
 
   const value = useMemo(() => {
     const safeCode = normalizeCurrencyCode(currencyCode);
