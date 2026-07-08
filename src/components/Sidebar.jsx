@@ -87,7 +87,11 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
           <span /><span /><span />
         </button>
         <div className="sidebar-mobile-brand">
-          {/* <img src="/skillify-logo.png" alt="Skillify" height={26} /> */}
+          {auth?.membership?.salonLogo ? (
+            <img src={auth.membership.salonLogo} alt={auth.membership?.salonName || "Salon"} style={{ height: 26, width: 26, borderRadius: 4, objectFit: "cover" }} />
+          ) : (
+            <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{auth?.membership?.salonName || "ReSpark"}</span>
+          )}
         </div>
       </div>
 
@@ -104,7 +108,16 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
         {/* Brand Row */}
         <div className="sidebar-brand-row">
           <div className="sidebar-brand-inner">
-            {/* <img src="/skillify-logo.png" alt="Skillify" className="sidebar-logo" /> */}
+            {auth?.membership?.salonLogo ? (
+              <img src={auth.membership.salonLogo} alt={auth.membership?.salonName || "Salon"} className="sidebar-logo" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14 }}>
+                {(auth?.membership?.salonName || "R")[0]}
+              </div>
+            )}
+            {sidebarExpanded && (
+              <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", marginLeft: 8 }}>{auth?.membership?.salonName || "ReSpark"}</span>
+            )}
           </div>
           <button
             type="button"

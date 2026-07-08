@@ -1,4 +1,5 @@
 export const SETTINGS_WORKSPACE_SECTIONS = [
+  { key: "branding", label: "Salon Branding", to: "/admin/settings/branding", hint: "Logo & identity" },
   { key: "generic", label: "Generic Settings", to: "/admin/settings/generic", hint: "Salon defaults" },
   { key: "shift-management", label: "Shift Management", to: "/admin/settings/shift-management", hint: "Shift templates" },
   { key: "roster-management", label: "Roster Management", to: "/admin/settings/roster-management", hint: "Team roster" },

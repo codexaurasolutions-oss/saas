@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Edit2, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "../../api/client";
 import EmptyState from "../../components/EmptyState";
+import ImageUploader from "../../components/ImageUploader";
 import PageLoader from "../../components/PageLoader";
 import { useAuth } from "../../context/AuthContext";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
@@ -488,6 +489,7 @@ export default function SettingsPage() {
     const cached = readSalonSettingsCache(salonId);
     return cached?.advancedSettings?.uiSettings?.fontColor || "#1e293b";
   });
+  const [salonLogo, setSalonLogo] = useState(auth?.membership?.salonLogo || "");
   const [activeThemePreset, setActiveThemePreset] = useState("classic");
   const [isPreviewHovered, setIsPreviewHovered] = useState(false);
   const [isSaveHovered, setIsSaveHovered] = useState(false);
@@ -983,6 +985,69 @@ export default function SettingsPage() {
       setIssuingGiftCard(false);
     }
   };
+
+  const handleLogoUpload = (url) => {
+    setSalonLogo(url);
+    if (auth?.membership) {
+      const updatedAuth = { ...auth, membership: { ...auth.membership, salonLogo: url } };
+      localStorage.setItem("respark_auth", JSON.stringify(updatedAuth));
+    }
+  };
+
+  const renderBrandingSection = () => (
+    <>
+      <SectionHeader
+        title="Salon Branding"
+        description="Upload your salon logo to display across your admin panel, public storefront, receipts, and customer-facing pages."
+        badges={[salonLogo ? "Logo Set" : "No Logo"]}
+        action={<a className="secondary-button" href={`/site/${auth?.membership?.salonSlug}`} target="_blank" rel="noreferrer">View Storefront</a>}
+      />
+      <div className="settings-panel-card">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "start" }}>
+          <div>
+            <h3 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: 700 }}>Salon Logo</h3>
+            <p style={{ margin: "0 0 16px", fontSize: "0.8rem", color: "#64748b" }}>
+              This logo will appear in your admin sidebar, public storefront header, receipts, and all customer-facing pages.
+            </p>
+            <ImageUploader
+              value={salonLogo}
+              onChange={handleLogoUpload}
+              uploadEndpoint="/owner/branding/logo"
+              deleteEndpoint="/owner/branding/logo"
+              hint="Recommended: 200x200px, square format, PNG or JPG"
+            />
+          </div>
+          <div>
+            <h3 style={{ margin: "0 0 12px", fontSize: "1rem", fontWeight: 700 }}>Preview</h3>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginBottom: 8, fontWeight: 600 }}>STOREFRONT HEADER</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                {salonLogo ? (
+                  <img src={salonLogo} alt="Logo" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "#111", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14 }}>
+                    {(auth?.membership?.salonName || "S")[0]}
+                  </div>
+                )}
+                <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>{auth?.membership?.salonName || "Your Salon"}</span>
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: 16, marginBottom: 8, fontWeight: 600 }}>ADMIN SIDEBAR</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#0f172a", borderRadius: 10 }}>
+                {salonLogo ? (
+                  <img src={salonLogo} alt="Logo" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13 }}>
+                    {(auth?.membership?.salonName || "S")[0]}
+                  </div>
+                )}
+                <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.8rem" }}>{auth?.membership?.salonName || "Your Salon"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   const renderGenericSection = () => {
     const generic = form.advancedSettings.genericSettings;
@@ -4725,6 +4790,8 @@ export default function SettingsPage() {
 
   const renderSection = () => {
     switch (activeSection.key) {
+      case "branding":
+        return renderBrandingSection();
       case "generic":
         return renderGenericSection();
       case "shift-management":
