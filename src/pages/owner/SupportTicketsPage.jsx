@@ -95,6 +95,7 @@ export default function SupportTicketsPage() {
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
             </select>
             </label>
             <textarea rows="5" value={form.description} placeholder="Describe the issue clearly" onChange={(event) => setForm({ ...form, description: event.target.value })} />
