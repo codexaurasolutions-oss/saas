@@ -3718,12 +3718,12 @@ pre {
   font-weight: 600 !important;
 }
 
-/* Badge colors for demo status */
-.super-admin-page .status-pending { background: #dbeafe !important; color: #1e40af !important; border: none !important; }
-.super-admin-page .status-contacted { background: #f3e8ff !important; color: #6b21a8 !important; border: none !important; }
-.super-admin-page .status-meeting_scheduled { background: #fef3c7 !important; color: #92400e !important; border: none !important; }
-.super-admin-page .status-approved { background: #dcfce7 !important; color: #166534 !important; border: none !important; }
-.super-admin-page .status-rejected { background: #fee2e2 !important; color: #991b1b !important; border: none !important; }
+/* Badge colors for demo pipeline status */
+.super-admin-page .status-new { background: #eff6ff !important; color: #1e40af !important; border: none !important; }
+.super-admin-page .status-connected { background: #f5f3ff !important; color: #6b21a8 !important; border: none !important; }
+.super-admin-page .status-in_progress { background: #fffbeb !important; color: #92400e !important; border: none !important; }
+.super-admin-page .status-converted { background: #dcfce7 !important; color: #166534 !important; border: none !important; }
+.super-admin-page .status-canceled { background: #fee2e2 !important; color: #991b1b !important; border: none !important; }
 
 .super-admin-page button {
   background: #6366f1 !important;

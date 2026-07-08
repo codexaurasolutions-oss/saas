@@ -16,7 +16,9 @@ export default function SuperAdminSettingsPage() {
     defaultCountry: "",
     defaultCity: "",
     defaultTimezone: "",
-    notificationDefaultsText: JSON.stringify({ email: true, sms: false, whatsapp: true }, null, 2),
+    notificationEmailEnabled: true,
+    notificationSmsEnabled: false,
+    notificationWhatsappEnabled: true,
     whatsappNumber: "",
     smsProviderName: "",
     emailProviderName: "",
@@ -34,41 +36,48 @@ export default function SuperAdminSettingsPage() {
   });
 
   useEffect(() => {
-    api.get("/super-admin/settings").then((response) => {
+    api.get("/super-admin/settings").then((res) => {
+      const d = res.data || {};
+      const notif = d.notificationDefaults || {};
       setForm({
-        systemName: response.data?.systemName || "",
-        maintenanceMode: Boolean(response.data?.maintenanceMode),
-        taxLabel: response.data?.taxLabel || "Tax",
-        defaultCurrency: response.data?.defaultCurrency || "INR",
-        currencyOptions: Array.isArray(response.data?.currencyOptions) ? response.data.currencyOptions.join(", ") : response.data?.currencyOptions || "INR, USD, AED",
-        defaultCountry: response.data?.defaultCountry || "",
-        defaultCity: response.data?.defaultCity || "",
-        defaultTimezone: response.data?.defaultTimezone || "",
-        notificationDefaultsText: JSON.stringify(response.data?.notificationDefaults || { email: true, sms: false, whatsapp: true }, null, 2),
-        whatsappNumber: response.data?.whatsappNumber || "",
-        smsProviderName: response.data?.smsProviderName || "",
-        emailProviderName: response.data?.emailProviderName || "",
-        whatsappProviderName: response.data?.whatsappProviderName || "",
-        contactEmail: response.data?.contactEmail || "",
-        supportEmail: response.data?.supportEmail || "",
-        notificationEmail: response.data?.notificationEmail || "",
-        termsUrl: response.data?.termsUrl || "/terms",
-        privacyUrl: response.data?.privacyUrl || "/privacy",
-        demoBookingUrl: response.data?.demoBookingUrl || "/book-demo",
-        blogTitle: response.data?.blogTitle || "",
-        blogIntro: response.data?.blogIntro || "",
-        backupPolicyNote: response.data?.backupPolicyNote || "",
-        invoicePrefix: response.data?.invoicePrefix || "INV"
+        systemName: d.systemName || "",
+        maintenanceMode: Boolean(d.maintenanceMode),
+        taxLabel: d.taxLabel || "Tax",
+        defaultCurrency: d.defaultCurrency || "INR",
+        currencyOptions: Array.isArray(d.currencyOptions) ? d.currencyOptions.join(", ") : d.currencyOptions || "INR, USD, AED",
+        defaultCountry: d.defaultCountry || "",
+        defaultCity: d.defaultCity || "",
+        defaultTimezone: d.defaultTimezone || "",
+        notificationEmailEnabled: notif.email !== false,
+        notificationSmsEnabled: Boolean(notif.sms),
+        notificationWhatsappEnabled: notif.whatsapp !== false,
+        whatsappNumber: d.whatsappNumber || "",
+        smsProviderName: d.smsProviderName || "",
+        emailProviderName: d.emailProviderName || "",
+        whatsappProviderName: d.whatsappProviderName || "",
+        contactEmail: d.contactEmail || "",
+        supportEmail: d.supportEmail || "",
+        notificationEmail: d.notificationEmail || "",
+        termsUrl: d.termsUrl || "/terms",
+        privacyUrl: d.privacyUrl || "/privacy",
+        demoBookingUrl: d.demoBookingUrl || "/book-demo",
+        blogTitle: d.blogTitle || "",
+        blogIntro: d.blogIntro || "",
+        backupPolicyNote: d.backupPolicyNote || "",
+        invoicePrefix: d.invoicePrefix || "INV"
       });
       setLoading(false);
     }).catch((err) => {
-      setStatus({ error: formatApiError(err, "Could not load global settings."), success: "" });
+      setStatus({ error: formatApiError(err, "Could not load settings."), success: "" });
       setLoading(false);
     });
   }, []);
 
-  const submit = async (event) => {
-    event.preventDefault();
+  const submit = async (e) => {
+    e.preventDefault();
+    if (form.maintenanceMode && !window.confirm("Enable maintenance mode? All salon owners will be locked out until you disable it.")) {
+      return;
+    }
     setStatus({ error: "", success: "" });
     setSaving(true);
     try {
@@ -77,11 +86,15 @@ export default function SuperAdminSettingsPage() {
         maintenanceMode: form.maintenanceMode,
         taxLabel: form.taxLabel,
         defaultCurrency: form.defaultCurrency,
-        currencyOptions: form.currencyOptions.split(",").map((item) => item.trim()).filter(Boolean),
+        currencyOptions: form.currencyOptions.split(",").map((s) => s.trim()).filter(Boolean),
         defaultCountry: form.defaultCountry,
         defaultCity: form.defaultCity,
         defaultTimezone: form.defaultTimezone,
-        notificationDefaults: { email: true, sms: true, whatsapp: true },
+        notificationDefaults: {
+          email: form.notificationEmailEnabled,
+          sms: form.notificationSmsEnabled,
+          whatsapp: form.notificationWhatsappEnabled
+        },
         whatsappNumber: form.whatsappNumber,
         smsProviderName: form.smsProviderName,
         emailProviderName: form.emailProviderName,
@@ -97,13 +110,20 @@ export default function SuperAdminSettingsPage() {
         backupPolicyNote: form.backupPolicyNote,
         invoicePrefix: form.invoicePrefix
       });
-      setStatus({ error: "", success: "Global settings saved." });
-    } catch (error) {
-      setStatus({ error: formatApiError(error, "Could not save global settings"), success: "" });
+      setStatus({ error: "", success: "Settings saved." });
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Could not save settings"), success: "" });
     } finally {
       setSaving(false);
     }
   };
+
+  const input = (key, opts = {}) => ({
+    value: form[key],
+    placeholder: opts.placeholder || "",
+    onChange: (e) => setForm({ ...form, [key]: e.target.value }),
+    ...(opts.type ? { type: opts.type } : {})
+  });
 
   return (
     <div className="page-shell super-admin-page">
@@ -111,119 +131,102 @@ export default function SuperAdminSettingsPage() {
         <div className="item-head">
           <div>
             <h1 style={{ marginTop: 0 }}>Global Settings</h1>
-            <p style={{ marginBottom: 0 }}>Control public defaults, provider references, maintenance mode, and system-wide communication settings.</p>
+            <p style={{ marginBottom: 0 }}>System defaults, provider config, maintenance mode, and communication settings.</p>
           </div>
           <div className="badge-row">
-            <span className="badge">Currency {form.defaultCurrency || "INR"}</span>
-            <span className="badge">{form.maintenanceMode ? "Maintenance On" : "Live Platform"}</span>
+            <span className="badge">{form.defaultCurrency}</span>
+            <span className="badge">{form.maintenanceMode ? "Maintenance On" : "Live"}</span>
           </div>
         </div>
       </div>
+
       {loading ? (
-        <PageLoader
-          title="Loading platform settings"
-          message="Collecting communication defaults, public links, and system controls."
-        />
+        <PageLoader title="Loading settings" message="Fetching global config..." />
       ) : (
-      <div>
         <div className="panel-card" style={{ maxWidth: "100%" }}>
-          {status.error && <p className="error-text">{status.error}</p>}
-          {status.success && <p className="success-text">{status.success}</p>}
-          <form onSubmit={submit} className="form-grid">
-            <label>
-              <span>System Name</span>
-              <input value={form.systemName} placeholder="System name" onChange={(event) => setForm({ ...form, systemName: event.target.value })} />
-            </label>
-            <label>
-              <span>Tax Label</span>
-              <input value={form.taxLabel} placeholder="Tax label" onChange={(event) => setForm({ ...form, taxLabel: event.target.value })} />
-            </label>
-            <label>
-              <span>Default Currency</span>
-              <input value={form.defaultCurrency} placeholder="Default currency" onChange={(event) => setForm({ ...form, defaultCurrency: event.target.value })} />
-            </label>
-            <label>
-              <span>Currency List (comma separated)</span>
-              <input value={form.currencyOptions} placeholder="Currency list" onChange={(event) => setForm({ ...form, currencyOptions: event.target.value })} />
-            </label>
-            <label>
-              <span>Default Country</span>
-              <input value={form.defaultCountry} placeholder="Default country" onChange={(event) => setForm({ ...form, defaultCountry: event.target.value })} />
-            </label>
-            <label>
-              <span>Default City</span>
-              <input value={form.defaultCity} placeholder="Default city" onChange={(event) => setForm({ ...form, defaultCity: event.target.value })} />
-            </label>
-            <label>
-              <span>Default Timezone</span>
-              <input value={form.defaultTimezone} placeholder="Default timezone" onChange={(event) => setForm({ ...form, defaultTimezone: event.target.value })} />
-            </label>
-            <label>
-              <span>WhatsApp Number</span>
-              <input value={form.whatsappNumber} placeholder="WhatsApp number" onChange={(event) => setForm({ ...form, whatsappNumber: event.target.value })} />
-            </label>
-            <label>
-              <span>SMS Provider Name</span>
-              <input value={form.smsProviderName} placeholder="SMS provider" onChange={(event) => setForm({ ...form, smsProviderName: event.target.value })} />
-            </label>
-            <label>
-              <span>Email Provider Name</span>
-              <input value={form.emailProviderName} placeholder="Email provider" onChange={(event) => setForm({ ...form, emailProviderName: event.target.value })} />
-            </label>
-            <label>
-              <span>WhatsApp Provider Name</span>
-              <input value={form.whatsappProviderName} placeholder="WhatsApp provider" onChange={(event) => setForm({ ...form, whatsappProviderName: event.target.value })} />
-            </label>
-            <label>
-              <span>Contact Email</span>
-              <input value={form.contactEmail} placeholder="Contact email" onChange={(event) => setForm({ ...form, contactEmail: event.target.value })} />
-            </label>
-            <label>
-              <span>Support Email</span>
-              <input value={form.supportEmail} placeholder="Support email" onChange={(event) => setForm({ ...form, supportEmail: event.target.value })} />
-            </label>
-            <label>
-              <span>Notification Email</span>
-              <input value={form.notificationEmail} placeholder="Notification email" onChange={(event) => setForm({ ...form, notificationEmail: event.target.value })} />
-            </label>
-            <label>
-              <span>Terms URL</span>
-              <input value={form.termsUrl} placeholder="Terms URL" onChange={(event) => setForm({ ...form, termsUrl: event.target.value })} />
-            </label>
-            <label>
-              <span>Privacy URL</span>
-              <input value={form.privacyUrl} placeholder="Privacy URL" onChange={(event) => setForm({ ...form, privacyUrl: event.target.value })} />
-            </label>
-            <label>
-              <span>Demo Booking URL</span>
-              <input value={form.demoBookingUrl} placeholder="Demo booking URL" onChange={(event) => setForm({ ...form, demoBookingUrl: event.target.value })} />
-            </label>
-            <label>
-              <span>Invoice Prefix</span>
-              <input value={form.invoicePrefix} placeholder="Invoice Prefix" onChange={(event) => setForm({ ...form, invoicePrefix: event.target.value })} />
-            </label>
-            <label>
-              <span>Blog Title</span>
-              <input value={form.blogTitle} placeholder="Blog title" onChange={(event) => setForm({ ...form, blogTitle: event.target.value })} />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              <span>Blog Introduction Text</span>
-              <textarea rows="3" value={form.blogIntro} placeholder="Blog intro" onChange={(event) => setForm({ ...form, blogIntro: event.target.value })} />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              <span>Backup & Retention Policy Note</span>
-              <textarea rows="3" value={form.backupPolicyNote} placeholder="Backup / retention note" onChange={(event) => setForm({ ...form, backupPolicyNote: event.target.value })} />
-            </label>
-            <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={form.maintenanceMode} onChange={(event) => setForm({ ...form, maintenanceMode: event.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-              <span>Enable Maintenance Mode</span>
-            </label>
-            <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
-              <button disabled={saving}>{saving ? "Saving Global Settings..." : "Save Global Settings"}</button>
+          {status.error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{status.error}</p>}
+          {status.success && <p style={{ color: "#10b981", fontSize: 13, marginBottom: 12 }}>{status.success}</p>}
+
+          <form onSubmit={submit}>
+            {/* Section: General */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>General</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label><span>System Name</span><input {...input("systemName", { placeholder: "ReSpark" })} /></label>
+              <label><span>Tax Label</span><input {...input("taxLabel", { placeholder: "Tax" })} /></label>
+              <label><span>Invoice Prefix</span><input {...input("invoicePrefix", { placeholder: "INV" })} /></label>
+              <label><span>Default Currency</span><input {...input("defaultCurrency", { placeholder: "INR" })} /></label>
+              <label><span>Currency List (comma separated)</span><input {...input("currencyOptions", { placeholder: "INR, USD, AED" })} /></label>
+              <label><span>Default Country</span><input {...input("defaultCountry")} /></label>
+              <label><span>Default City</span><input {...input("defaultCity")} /></label>
+              <label><span>Default Timezone</span><input {...input("defaultTimezone")} /></label>
             </div>
+
+            {/* Section: Notifications */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Notifications</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" checked={form.notificationEmailEnabled} onChange={(e) => setForm({ ...form, notificationEmailEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                <span>Email Notifications</span>
+              </label>
+              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" checked={form.notificationSmsEnabled} onChange={(e) => setForm({ ...form, notificationSmsEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                <span>SMS Notifications</span>
+              </label>
+              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" checked={form.notificationWhatsappEnabled} onChange={(e) => setForm({ ...form, notificationWhatsappEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                <span>WhatsApp Notifications</span>
+              </label>
+            </div>
+
+            {/* Section: Providers */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Providers</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label><span>WhatsApp Number</span><input {...input("whatsappNumber")} /></label>
+              <label><span>SMS Provider</span><input {...input("smsProviderName")} /></label>
+              <label><span>Email Provider</span><input {...input("emailProviderName")} /></label>
+              <label><span>WhatsApp Provider</span><input {...input("whatsappProviderName")} /></label>
+            </div>
+
+            {/* Section: Contact Emails */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Contact Emails</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label><span>Contact Email</span><input type="email" {...input("contactEmail")} /></label>
+              <label><span>Support Email</span><input type="email" {...input("supportEmail")} /></label>
+              <label><span>Notification Email</span><input type="email" {...input("notificationEmail")} /></label>
+            </div>
+
+            {/* Section: Public Links */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Public Links</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label><span>Terms URL</span><input {...input("termsUrl")} /></label>
+              <label><span>Privacy URL</span><input {...input("privacyUrl")} /></label>
+              <label><span>Demo Booking URL</span><input {...input("demoBookingUrl")} /></label>
+            </div>
+
+            {/* Section: Blog */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Blog</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label><span>Blog Title</span><input {...input("blogTitle")} /></label>
+              <label style={{ gridColumn: "1 / -1" }}><span>Blog Introduction</span><textarea rows="3" value={form.blogIntro} onChange={(e) => setForm({ ...form, blogIntro: e.target.value })} /></label>
+            </div>
+
+            {/* Section: Policy */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Policy</h3>
+            <div className="form-grid" style={{ marginBottom: 24 }}>
+              <label style={{ gridColumn: "1 / -1" }}><span>Backup & Retention Note</span><textarea rows="3" value={form.backupPolicyNote} onChange={(e) => setForm({ ...form, backupPolicyNote: e.target.value })} /></label>
+            </div>
+
+            {/* Section: Maintenance */}
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>System</h3>
+            <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <input type="checkbox" checked={form.maintenanceMode} onChange={(e) => setForm({ ...form, maintenanceMode: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+              <span style={{ fontWeight: 600, color: form.maintenanceMode ? "#dc2626" : "#334155" }}>Enable Maintenance Mode</span>
+              {form.maintenanceMode && <span style={{ fontSize: "0.8rem", color: "#dc2626", fontWeight: 600 }}>(All salon owners will be locked out)</span>}
+            </label>
+
+            <button disabled={saving} style={{ width: "100%" }}>{saving ? "Saving..." : "Save Settings"}</button>
           </form>
         </div>
-      </div>
       )}
     </div>
   );
