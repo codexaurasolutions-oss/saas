@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
@@ -48,6 +48,7 @@ export default function SalonsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState("");
+  const detailRef = useRef(null);
 
   const load = async (nextQuery = query, nextStatus = statusFilter) => {
     setLoading(true);
@@ -107,6 +108,9 @@ export default function SalonsPage() {
     try {
       const res = await api.get(`/super-admin/salons/${salonId}`);
       setSelectedSalon(res.data);
+      setTimeout(() => {
+        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } catch (err) {
       setStatus({ error: formatApiError(err, "Could not load salon detail."), success: "" });
     } finally {
@@ -364,7 +368,7 @@ export default function SalonsPage() {
         )}
       </div>
 
-      <div className="panel-card" style={{ marginTop: 24, padding: 28, maxWidth: "100%" }}>
+      <div ref={detailRef} className="panel-card" style={{ marginTop: 24, padding: 28, maxWidth: "100%" }}>
         <h3 style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 700 }}>Salon Detail</h3>
         {!selectedSalon && !detailLoading && <EmptyState title="Pick a salon to inspect" message="Click 'View' on any salon above." />}
         {detailLoading && <PageLoader compact title="Loading detail" message="Fetching salon data..." />}
@@ -374,71 +378,96 @@ export default function SalonsPage() {
               <div>
                 <h2 style={{ margin: "0 0 4px", fontSize: "1.5rem", color: "#0f172a", fontWeight: 800 }}>{selectedSalon.name}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span className="badge" style={{ background: "#e2e8f0", color: "#475569", fontWeight: 700 }}>{selectedSalon.businessType || "Salon"}</span>
+                  <span className="badge" style={{ background: "#f5f3ff", color: "#6366f1", fontWeight: 700 }}>{selectedSalon.businessType || "Salon"}</span>
                   <span className="badge" style={{ background: selectedSalon.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: selectedSalon.status === "ACTIVE" ? "#10b981" : "#ef4444", fontWeight: 700 }}>{selectedSalon.status}</span>
                   <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Slug: <strong>{selectedSalon.slug}</strong></span>
                 </div>
               </div>
-              <button type="button" onClick={() => impersonate(selectedSalon.id)} disabled={busyId === selectedSalon.id} style={{ background: "#4f46e5", color: "white", border: "none", minHeight: 40, padding: "0 18px", fontWeight: 700, borderRadius: 10, cursor: busyId === selectedSalon.id ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+              <button type="button" onClick={() => impersonate(selectedSalon.id)} disabled={busyId === selectedSalon.id} style={{ background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", border: "none", minHeight: 40, padding: "0 18px", fontWeight: 700, borderRadius: 10, cursor: busyId === selectedSalon.id ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(79, 70, 229, 0.2)" }}>
                 {busyId === selectedSalon.id ? "Entering..." : "Impersonate Workspace"}
               </button>
             </div>
 
             <div className="metrics-dashboard">
-              <div className="metric-dashboard-card"><div className="metric-val">{selectedSalon.branches?.length || 0}</div><div className="metric-lbl">Branches</div></div>
-              <div className="metric-dashboard-card"><div className="metric-val">{selectedSalon.services?.length || 0}</div><div className="metric-lbl">Services</div></div>
-              <div className="metric-dashboard-card"><div className="metric-val">{selectedSalon.customers?.length || 0}</div><div className="metric-lbl">Guests</div></div>
-              <div className="metric-dashboard-card"><div className="metric-val">{selectedSalon.users?.length || 0}</div><div className="metric-lbl">Accounts</div></div>
+              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
+                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.branches?.length || 0}</div>
+                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Branches</div>
+              </div>
+              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
+                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.services?.length || 0}</div>
+                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Services</div>
+              </div>
+              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
+                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.customers?.length || 0}</div>
+                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Guests</div>
+              </div>
+              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
+                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.users?.length || 0}</div>
+                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Accounts</div>
+              </div>
             </div>
 
             <div className="detail-grid">
-              <div className="detail-card">
-                <h4>Contact & Settings</h4>
-                <div className="info-item"><span className="info-label">Email</span><span className="info-value">{selectedSalon.email || "-"}</span></div>
-                <div className="info-item"><span className="info-label">Phone</span><span className="info-value">{selectedSalon.phone || "-"}</span></div>
-                <div className="info-item"><span className="info-label">Address</span><span className="info-value">{selectedSalon.address || "-"}</span></div>
-                <div className="info-item"><span className="info-label">Location</span><span className="info-value">{selectedSalon.city || "-"}, {selectedSalon.country || "-"}</span></div>
-                <div className="info-item"><span className="info-label">Timezone</span><span className="info-value">{selectedSalon.timezone || "-"}</span></div>
-                <div className="info-item"><span className="info-label">Currency / Tax</span><span className="info-value">{selectedSalon.currency || "INR"} / {String(selectedSalon.taxRate || 0)}%</span></div>
+              <div className="detail-card" style={{ padding: 24, background: "white", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <h4 style={{ margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f1f5f9", fontSize: "1.05rem", color: "#0f172a", fontWeight: 700 }}>Contact & Settings</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {[
+                    { label: "Email", value: selectedSalon.email || "-" },
+                    { label: "Phone", value: selectedSalon.phone || "-" },
+                    { label: "Address", value: selectedSalon.address || "-" },
+                    { label: "Location", value: `${selectedSalon.city || "-"}, ${selectedSalon.country || "-"}` },
+                    { label: "Timezone", value: selectedSalon.timezone || "-" },
+                    { label: "Currency / Tax", value: `${selectedSalon.currency || "INR"} / ${String(selectedSalon.taxRate || 0)}%` }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 10 }}>
+                      <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>{item.label}</span>
+                      <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 700 }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
                 <div style={{ marginTop: 16 }}>
-                  <span className="info-label" style={{ display: "block", marginBottom: 6, fontSize: "0.85rem" }}>Internal Note</span>
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: 12, borderRadius: 8, fontSize: "0.85rem", color: "#475569", minHeight: 60 }}>{selectedSalon.internalNote || "No notes."}</div>
+                  <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>Internal Note</span>
+                  <div style={{ background: "#f8fafc", border: "1px solid #f1f5f9", padding: 12, borderRadius: 8, fontSize: "0.85rem", color: "#475569", minHeight: 60 }}>{selectedSalon.internalNote || "No notes."}</div>
                 </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div className="detail-card" style={{ flex: 1 }}>
-                  <h4>Active Accounts</h4>
+                <div className="detail-card" style={{ padding: 24, background: "white", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                  <h4 style={{ margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f1f5f9", fontSize: "1.05rem", color: "#0f172a", fontWeight: 700 }}>Active Accounts</h4>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {selectedSalon.users?.length ? selectedSalon.users.map((item) => (
-                      <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10 }}>
+                      <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12 }}>
                         <div>
-                          <strong style={{ fontSize: "0.9rem", color: "#1e293b", display: "block" }}>{item.user?.name}</strong>
+                          <strong style={{ fontSize: "0.9rem", color: "#0f172a", display: "block" }}>{item.user?.name}</strong>
                           <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.user?.email}</span>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                          <span className="badge" style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "0.7rem", fontWeight: 700 }}>{item.salonRole}</span>
-                          <span style={{ fontSize: "0.75rem", color: item.user?.isActive ? "#10b981" : "#ef4444", fontWeight: 600 }}>&bull; {item.user?.isActive ? "Active" : "Inactive"}</span>
+                          <span className="badge" style={{ background: "#f5f3ff", color: "#6b21a8", fontSize: "0.7rem", fontWeight: 700, padding: "2px 6px", borderRadius: 100 }}>{item.salonRole}</span>
+                          <span style={{ fontSize: "0.75rem", color: item.user?.isActive ? "#10b981" : "#ef4444", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.user?.isActive ? "#10b981" : "#ef4444" }} />
+                            {item.user?.isActive ? "Active" : "Inactive"}
+                          </span>
                         </div>
                       </div>
                     )) : <EmptyState title="No linked users" message="Accounts appear here once assigned." />}
                   </div>
                 </div>
-                <div className="detail-card" style={{ flex: 1 }}>
-                  <h4>Subscriptions</h4>
+
+                <div className="detail-card" style={{ padding: 24, background: "white", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                  <h4 style={{ margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f1f5f9", fontSize: "1.05rem", color: "#0f172a", fontWeight: 700 }}>Subscriptions</h4>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {selectedSalon.subscriptions?.length ? selectedSalon.subscriptions.map((sub) => {
                       const isActive = sub.status === "ACTIVE";
                       return (
-                        <div key={sub.id} style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10 }}>
+                        <div key={sub.id} style={{ padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                            <strong style={{ fontSize: "0.95rem", color: "#1e293b" }}>{sub.plan?.name}</strong>
+                            <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>{sub.plan?.name}</strong>
                             <div style={{ display: "flex", gap: 4 }}>
-                              <span className="badge" style={{ background: isActive ? "#dcfce7" : "#fee2e2", color: isActive ? "#15803d" : "#b91c1c", fontSize: "0.7rem", fontWeight: 700 }}>{sub.status}</span>
-                              <span className="badge" style={{ background: "#f1f5f9", color: "#475569", fontSize: "0.7rem" }}>{sub.paymentStatus || "PENDING"}</span>
+                              <span className="badge" style={{ background: isActive ? "#ecfdf5" : "#fee2e2", color: isActive ? "#10b981" : "#ef4444", fontSize: "0.7rem", fontWeight: 750, padding: "2px 6px", borderRadius: 100 }}>{sub.status}</span>
+                              <span className="badge" style={{ background: "#f1f5f9", color: "#475569", fontSize: "0.7rem", padding: "2px 6px", borderRadius: 100 }}>{sub.paymentStatus || "PENDING"}</span>
                             </div>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b", marginTop: 6 }}>
                             <span>Discount: {Number(sub.manualDiscount || 0).toLocaleString("en-IN")} {selectedSalon.currency || "INR"}</span>
                             <span>Ends: {new Date(sub.endsAt).toLocaleDateString()}</span>
                           </div>
@@ -449,21 +478,21 @@ export default function SalonsPage() {
                 </div>
               </div>
 
-              <div className="detail-card" style={{ display: "flex", flexDirection: "column" }}>
-                <h4>Feature Access</h4>
+              <div className="detail-card" style={{ padding: 24, background: "white", borderRadius: 16, border: "1px solid #e2e8f0", display: "flex", flexDirection: "column" }}>
+                <h4 style={{ margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f1f5f9", fontSize: "1.05rem", color: "#0f172a", fontWeight: 700 }}>Feature Access</h4>
                 <div className="feature-switch-grid" style={{ maxHeight: "420px", overflowY: "auto", paddingRight: "6px" }}>
                   {featureFlagKeys.map((key) => {
                     const isEnabled = selectedSalon.featureFlags?.[key] === true;
                     return (
-                      <div key={key} className="feature-switch-card">
+                      <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, marginBottom: 8 }}>
                         <div>
-                          <span className="feature-name">{key.replace(/([A-Z])/g, " $1")}</span>
-                          <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-                            <span className="feature-status-dot" style={{ background: isEnabled ? "#10b981" : "#cbd5e1" }} />
-                            <span style={{ fontSize: "0.75rem", color: isEnabled ? "#10b981" : "#64748b", fontWeight: 600 }}>{isEnabled ? "On" : "Off"}</span>
+                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", textTransform: "capitalize" }}>{key.replace(/([A-Z])/g, " $1")}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: isEnabled ? "#10b981" : "#cbd5e1" }} />
+                            <span style={{ fontSize: "0.75rem", color: isEnabled ? "#10b981" : "#64748b", fontWeight: 700 }}>{isEnabled ? "Enabled" : "Disabled"}</span>
                           </div>
                         </div>
-                        <button type="button" className="btn-compact" onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)} style={{ background: isEnabled ? "#fee2e2" : "#dcfce7", color: isEnabled ? "#ef4444" : "#15803d", border: "none", padding: "6px 12px", fontWeight: 700, borderRadius: 8, cursor: "pointer", fontSize: "0.75rem" }}>
+                        <button type="button" onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)} style={{ background: isEnabled ? "#fef2f2" : "#ecfdf5", color: isEnabled ? "#ef4444" : "#10b981", border: "none", padding: "6px 12px", fontWeight: 700, borderRadius: 8, cursor: "pointer", fontSize: "0.75rem", minHeight: "auto", transition: "all 0.15s" }}>
                           {isEnabled ? "Disable" : "Enable"}
                         </button>
                       </div>
