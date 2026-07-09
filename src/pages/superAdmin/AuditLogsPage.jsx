@@ -63,54 +63,52 @@ export default function AuditLogsPage() {
       </div>
 
       <div className="panel-card" style={{ marginBottom: 24, padding: "20px 24px", background: "white", border: "1px solid #e2e8f0", borderRadius: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 16, alignItems: "end" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Search Logs</span>
-            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-              <Search size={16} color="#94a3b8" style={{ position: "absolute", left: 14 }} />
-              <input 
-                className="search-input-field"
-                value={query} 
-                placeholder="Search action, type, or metadata..." 
-                onChange={(e) => setQuery(e.target.value)} 
-                style={{ width: "100%", fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }} 
-              />
-            </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ flex: 1, minWidth: 260, position: "relative", display: "flex", alignItems: "center" }}>
+            <Search size={16} color="#94a3b8" style={{ position: "absolute", left: 14 }} />
+            <input 
+              className="search-input-field"
+              value={query} 
+              placeholder="Search action, type, or metadata..." 
+              onChange={(e) => setQuery(e.target.value)} 
+              style={{ width: "100%", fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }} 
+            />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Event Type</span>
+          <div style={{ width: 220 }}>
             <select 
               value={typeFilter} 
               onChange={(e) => setTypeFilter(e.target.value)} 
               style={{ width: "100%", fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
             >
-              <option value="">All types</option>
+              <option value="">All Event Types</option>
               {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <button 
-            type="button" 
-            onClick={() => { setQuery(""); setTypeFilter(""); }}
-            style={{ 
-              height: 48,
-              minHeight: 48,
-              padding: "0 24px", 
-              borderRadius: 14, 
-              background: "#f1f5f9", 
-              color: "#475569", 
-              fontWeight: 700, 
-              fontSize: 13, 
-              border: "none", 
-              cursor: "pointer", 
-              display: "flex", 
-              alignItems: "center", 
-              gap: 8,
-              transition: "all 0.15s"
-            }}
-          >
-            <RotateCcw size={14} />
-            Reset
-          </button>
+          <div>
+            <button 
+              type="button" 
+              onClick={() => { setQuery(""); setTypeFilter(""); }}
+              style={{ 
+                height: 48,
+                minHeight: 48,
+                padding: "0 22px", 
+                borderRadius: 14, 
+                background: "#f1f5f9", 
+                color: "#475569", 
+                fontWeight: 700, 
+                fontSize: 13, 
+                border: "none", 
+                cursor: "pointer", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: 8,
+                transition: "all 0.15s"
+              }}
+            >
+              <RotateCcw size={14} />
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 
