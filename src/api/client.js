@@ -1,5 +1,4 @@
 import axios from "axios";
-import { normalizePhoneFields, validatePhoneFields } from "../utils/phone";
 
 const getApiBase = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
@@ -41,10 +40,6 @@ api.interceptors.request.use((config) => {
     if (accessToken && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
-  }
-  if (config.data && typeof config.data === "object" && !(config.data instanceof FormData)) {
-    validatePhoneFields(config.data);
-    config.data = normalizePhoneFields(config.data);
   }
   return config;
 });
