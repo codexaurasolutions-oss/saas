@@ -222,68 +222,75 @@ export default function SubscriptionsPage() {
       {loading ? (
         <PageLoader compact title="Loading subscriptions" message="Fetching subscription data..." />
       ) : rows.length ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {rows.map((row) => {
-            const isBusy = busyId === row.id || busyId === `reminder-${row.id}`;
-            const alertText = getAlertText(row);
-            return (
-              <div key={row.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: 20, display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 20 }}>
-                {/* Salon Info */}
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: row.status === "ACTIVE" ? "#059669" : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14 }}>{(row.salon?.name || "S").charAt(0)}</div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: "1rem" }}>{row.salon?.name || "Unknown"}</h3>
-                      <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Slug: {row.salon?.slug}</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: "0.85rem", color: "#475569", display: "flex", flexDirection: "column", gap: 4 }}>
-                    <a href={`mailto:${row.salon?.email}`} style={{ color: "#4f46e5", textDecoration: "none" }}>{row.salon?.email}</a>
-                    <a href={`tel:${row.salon?.phone}`} style={{ color: "#4f46e5", textDecoration: "none" }}>{row.salon?.phone}</a>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                    <span className="badge" style={{ background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: row.status === "ACTIVE" ? "#047857" : "#b91c1c" }}>{row.status}</span>
-                    <span className="badge" style={{ background: row.paymentStatus === "PAID" ? "#f0fdf4" : "#fff7ed", color: row.paymentStatus === "PAID" ? "#16a34a" : "#ea580c" }}>{row.paymentStatus || "PENDING"}</span>
-                  </div>
-                </div>
-
-                {/* Plan Info */}
-                <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <strong style={{ fontSize: "0.9rem" }}>Plan: {row.plan?.name}</strong>
-                    {row.plan?.isCustom && <span className="badge" style={{ fontSize: "0.7rem" }}>Custom</span>}
-                  </div>
-                  <div style={{ fontSize: "0.8rem", display: "grid", gap: 3, color: "#475569" }}>
-                    <div>Branches: {row.plan?.branchLimit} &bull; Users: {row.plan?.userLimit}</div>
-                    <div>Customers: {row.plan?.customerLimit} &bull; Invoices: {row.plan?.invoiceLimit}</div>
-                    <div>Storage: {row.plan?.storageLimit || 0}GB</div>
-                    {row.manualDiscount > 0 && <div style={{ color: "#2563eb", fontWeight: 600 }}>Discount: {Number(row.manualDiscount).toLocaleString("en-IN")}</div>}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: "0.8rem", color: "#475569" }}>
-                    <div>Start: {new Date(row.startsAt).toLocaleDateString()}</div>
-                    <div>End: {new Date(row.endsAt).toLocaleDateString()}</div>
-                    {alertText && <div style={{ color: "#dc2626", fontWeight: 600, marginTop: 4 }}>{alertText}</div>}
-                  </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <select style={{ flex: 1, padding: "4px 8px", fontSize: "0.8rem", height: 32 }} value={selectedPlanChange[row.id] || ""} onChange={(e) => setSelectedPlanChange({ ...selectedPlanChange, [row.id]: e.target.value })}>
-                      <option value="">Change plan...</option>
-                      {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                    <button type="button" className="secondary-button" style={{ padding: "0 10px", fontSize: "0.8rem", height: 32 }} disabled={!selectedPlanChange[row.id] || isBusy} onClick={() => updateSubscriptionDirect(row.id, { planId: selectedPlanChange[row.id] })}>Apply</button>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, marginTop: "auto" }}>
-                    <button type="button" className="secondary-button" style={{ flex: 1, padding: "6px 8px", fontSize: "0.8rem" }} onClick={() => openEditModal(row)} disabled={isBusy}>Edit</button>
-                    <button type="button" style={{ flex: 1, padding: "6px 8px", fontSize: "0.8rem", background: "#f0fdfa", color: "#0d9488", border: "1px solid #99f6e4", borderRadius: 6, cursor: isBusy ? "not-allowed" : "pointer" }} onClick={() => sendExpiryReminder(row.id)} disabled={isBusy}>{busyId === `reminder-${row.id}` ? "Sending..." : "Remind"}</button>
-                    <button type="button" style={{ padding: "6px 10px", fontSize: "0.8rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, cursor: isBusy ? "not-allowed" : "pointer" }} onClick={() => deleteSubscription(row.id)} disabled={isBusy}>Delete</button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #f1f5f9", color: "#64748b", fontWeight: 700 }}>
+                <th style={{ padding: "12px 16px" }}>Salon Info</th>
+                <th style={{ padding: "12px 16px" }}>Plan Details</th>
+                <th style={{ padding: "12px 16px" }}>Validity Period</th>
+                <th style={{ padding: "12px 16px" }}>Quick Plan Actions</th>
+                <th style={{ padding: "12px 16px", textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const isBusy = busyId === row.id || busyId === `reminder-${row.id}`;
+                const alertText = getAlertText(row);
+                return (
+                  <tr key={row.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} className="table-row-hover">
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: row.status === "ACTIVE" ? "#059669" : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12 }}>{(row.salon?.name || "S").charAt(0).toUpperCase()}</div>
+                        <span style={{ fontWeight: 700, color: "#0f172a" }}>{row.salon?.name || "Unknown"}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#94a3b8" }}>{row.salon?.email}</div>
+                      <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: row.status === "ACTIVE" ? "#10b981" : "#ef4444", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", padding: "2px 6px", borderRadius: 100 }}>{row.status}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: row.paymentStatus === "PAID" ? "#16a34a" : "#ea580c", background: row.paymentStatus === "PAID" ? "#f0fdf4" : "#fff7ed", padding: "2px 6px", borderRadius: 100 }}>{row.paymentStatus || "PENDING"}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ fontWeight: 700, color: "#0f172a" }}>{row.plan?.name}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
+                        Branches: {row.plan?.branchLimit} &bull; Users: {row.plan?.userLimit}
+                      </div>
+                      {row.manualDiscount > 0 && <div style={{ color: "#2563eb", fontWeight: 700, fontSize: 11, marginTop: 2 }}>Discount: ₹{Number(row.manualDiscount).toLocaleString("en-IN")}</div>}
+                    </td>
+                    <td style={{ padding: "14px 16px", color: "#475569" }}>
+                      <div>Start: {new Date(row.startsAt).toLocaleDateString()}</div>
+                      <div style={{ marginTop: 2 }}>End: {new Date(row.endsAt).toLocaleDateString()}</div>
+                      {alertText && <div style={{ color: "#dc2626", fontWeight: 700, fontSize: 11, marginTop: 4 }}>⚠️ {alertText}</div>}
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <select style={{ padding: "6px 8px", fontSize: 12, height: 32, borderRadius: 6, border: "1px solid #cbd5e1", background: "white", minWidth: 120 }} value={selectedPlanChange[row.id] || ""} onChange={(e) => setSelectedPlanChange({ ...selectedPlanChange, [row.id]: e.target.value })}>
+                          <option value="">Change plan...</option>
+                          {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                        <button type="button" onClick={() => updateSubscriptionDirect(row.id, { planId: selectedPlanChange[row.id] })} disabled={!selectedPlanChange[row.id] || isBusy} style={{ padding: "0 10px", fontSize: 12, height: 32, borderRadius: 6, background: "#f1f5f9", color: "#475569", border: "none", cursor: "pointer", fontWeight: 700 }}>
+                          Apply
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        <button type="button" onClick={() => openEditModal(row)} disabled={isBusy} style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => sendExpiryReminder(row.id)} disabled={isBusy} style={{ padding: "6px 12px", background: "#ecfdf5", color: "#0d9488", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                          {busyId === `reminder-${row.id}` ? "..." : "Remind"}
+                        </button>
+                        <button type="button" onClick={() => deleteSubscription(row.id)} disabled={isBusy} style={{ padding: "6px 12px", background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
         <EmptyState title="No subscriptions yet" message="Onboard a client or wait for checkout completions." />

@@ -292,45 +292,72 @@ export default function SalonsPage() {
         {loading ? (
           <PageLoader compact title="Loading salons" message="Fetching tenant directory..." />
         ) : salons.length ? (
-          <div className="list-stack">
-            {salons.map((salon) => {
-              const planName = salon.subscriptions?.[0]?.plan?.name || "No plan";
-              const firstLetter = (salon.name || "S").charAt(0).toUpperCase();
-              let statusBg = "#f1f5f9", statusColor = "#64748b";
-              if (salon.status === "ACTIVE") { statusBg = "#ecfdf5"; statusColor = "#10b981"; }
-              else if (salon.status === "SUSPENDED") { statusBg = "#fef2f2"; statusColor = "#ef4444"; }
-              const isBusy = busyId === salon.id;
-              return (
-                <div key={salon.id} className="tenant-row">
-                  <div className="tenant-info-block">
-                    <div className="tenant-avatar">{firstLetter}</div>
-                    <div className="tenant-meta-stack">
-                      <h4 className="tenant-title">{salon.name}</h4>
-                      <div className="tenant-subtext"><strong>Slug:</strong> {salon.slug} &bull; <strong>Type:</strong> {salon.businessType || "Salon"}</div>
-                      <div className="tenant-subtext" style={{ fontSize: "0.8rem", color: "#94a3b8" }}>{salon.email || "No email"} &bull; {salon.phone || "No phone"}</div>
-                    </div>
-                  </div>
-                  <div className="tenant-badges-block">
-                    <span className="badge" style={{ background: "#f5f3ff", color: "#8b5cf6", fontWeight: 700 }}>Plan: {planName}</span>
-                    <span className="badge" style={{ background: statusBg, color: statusColor, fontWeight: 700 }}>{salon.status}</span>
-                  </div>
-                  <div className="tenant-actions">
-                    <button type="button" className="btn-compact secondary-button" onClick={() => openDetail(salon.id)} disabled={isBusy}>View</button>
-                    <button type="button" className="btn-compact secondary-button" onClick={() => startEdit(salon)} disabled={isBusy}>Edit</button>
-                    {salon.status !== "ACTIVE" && (
-                      <button type="button" className="btn-compact" onClick={() => updateStatus(salon.id, "ACTIVE")} disabled={isBusy} style={{ background: "#dcfce7", color: "#15803d", border: "none" }}>
-                        {isBusy ? "..." : "Activate"}
-                      </button>
-                    )}
-                    {salon.status === "ACTIVE" && (
-                      <button type="button" className="btn-compact danger-button" onClick={() => updateStatus(salon.id, "SUSPENDED")} disabled={isBusy}>
-                        {isBusy ? "..." : "Suspend"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #f1f5f9", color: "#64748b", fontWeight: 700 }}>
+                  <th style={{ padding: "12px 16px" }}>Salon Name</th>
+                  <th style={{ padding: "12px 16px" }}>Slug / Business Type</th>
+                  <th style={{ padding: "12px 16px" }}>Contact Info</th>
+                  <th style={{ padding: "12px 16px" }}>Active Subscription</th>
+                  <th style={{ padding: "12px 16px" }}>Status</th>
+                  <th style={{ padding: "12px 16px", textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salons.map((salon) => {
+                  const planName = salon.subscriptions?.[0]?.plan?.name || "No active plan";
+                  const isBusy = busyId === salon.id;
+                  let statusBg = "#f1f5f9", statusColor = "#64748b";
+                  if (salon.status === "ACTIVE") { statusBg = "#ecfdf5"; statusColor = "#10b981"; }
+                  else if (salon.status === "SUSPENDED") { statusBg = "#fef2f2"; statusColor = "#ef4444"; }
+                  
+                  return (
+                    <tr key={salon.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} className="table-row-hover">
+                      <td style={{ padding: "14px 16px", fontWeight: 700, color: "#0f172a" }}>{salon.name}</td>
+                      <td style={{ padding: "14px 16px", color: "#475569" }}>
+                        <div>{salon.slug}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{salon.businessType || "Salon"}</div>
+                      </td>
+                      <td style={{ padding: "14px 16px", color: "#475569" }}>
+                        <div>{salon.email || "No email"}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{salon.phone || "No phone"}</div>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ background: "#f5f3ff", color: "#8b5cf6", fontWeight: 700, fontSize: 11, padding: "3px 8px", borderRadius: 100 }}>
+                          {planName}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ background: statusBg, color: statusColor, fontWeight: 700, fontSize: 11, padding: "3px 8px", borderRadius: 100 }}>
+                          {salon.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                          <button type="button" onClick={() => openDetail(salon.id)} disabled={isBusy} style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                            View
+                          </button>
+                          <button type="button" onClick={() => startEdit(salon)} disabled={isBusy} style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                            Edit
+                          </button>
+                          {salon.status !== "ACTIVE" && (
+                            <button type="button" onClick={() => updateStatus(salon.id, "ACTIVE")} disabled={isBusy} style={{ padding: "6px 12px", background: "#ecfdf5", color: "#10b981", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                              Activate
+                            </button>
+                          )}
+                          {salon.status === "ACTIVE" && (
+                            <button type="button" onClick={() => updateStatus(salon.id, "SUSPENDED")} disabled={isBusy} style={{ padding: "6px 12px", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                              Suspend
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <EmptyState title="No salons found" message="Try broadening your search or click '+ Add New Salon'." />
