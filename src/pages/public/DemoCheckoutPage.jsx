@@ -241,6 +241,13 @@ export default function DemoCheckoutPage() {
                   <span>Payments are secured via Razorpay. All cards, UPI, Wallets, and Netbanking are supported.</span>
                 </div>
 
+                {error && error.includes("Payment gateway is not configured") && (
+                  <div style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", padding: "16px", borderRadius: 12, fontSize: "0.85rem", lineHeight: "1.6" }}>
+                    <strong>Payment system is being set up.</strong><br/>
+                    Please contact our support team at <a href="mailto:support@respark.local" style={{ color: "#92400e", fontWeight: 700 }}>support@respark.local</a> to complete your subscription manually.
+                  </div>
+                )}
+
                 <button 
                   type="submit" 
                   disabled={submitting} 
