@@ -303,29 +303,29 @@ export default function SubscriptionsPage() {
               <h3>Onboard Client</h3>
               <button type="button" className="modal-close-btn" onClick={() => setIsCreateOpen(false)}>&times;</button>
             </div>
-            <form onSubmit={handleCreateSubmit} className="form-grid">
-              <label style={{ gridColumn: "1 / -1" }}>
+            <form onSubmit={handleCreateSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Salon *</span>
                 <select required value={form.salonId} onChange={(e) => setForm({ ...form, salonId: e.target.value })}>
                   <option value="">-- Select salon --</option>
                   {salons.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.slug})</option>)}
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Plan *</span>
                 <select required value={form.planId} onChange={(e) => setForm({ ...form, planId: e.target.value })}>
                   <option value="">-- Select plan --</option>
                   {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
                   <option value="SUSPENDED">Suspended</option>
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Payment</span>
                 <select value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}>
                   <option value="PAID">Paid</option>
@@ -333,24 +333,24 @@ export default function SubscriptionsPage() {
                   <option value="FAILED">Failed</option>
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Discount</span>
                 <input type="number" min="0" value={form.manualDiscount} onChange={(e) => setForm({ ...form, manualDiscount: e.target.value })} />
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Start Date *</span>
                 <input type="date" required value={form.startsAt} onChange={(e) => setForm({ ...form, startsAt: e.target.value })} />
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>End Date *</span>
                 <input type="date" required value={form.endsAt} onChange={(e) => setForm({ ...form, endsAt: e.target.value })} />
               </label>
-              <label style={{ gridColumn: "1 / -1" }}>
+              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Notes</span>
                 <textarea rows="3" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Internal notes..." />
               </label>
               <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%" }} disabled={busyId === "create"}>{busyId === "create" ? "Creating..." : "Onboard Client"}</button>
+                <button type="submit" style={{ width: "100%", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: "0.95rem", borderRadius: 12, padding: "14px 24px", minHeight: 48, cursor: "pointer", border: "none" }} disabled={busyId === "create"}>{busyId === "create" ? "Creating..." : "Onboard Client"}</button>
               </div>
             </form>
           </div>
@@ -364,8 +364,8 @@ export default function SubscriptionsPage() {
               <h3>Edit Subscription</h3>
               <button type="button" className="modal-close-btn" onClick={() => setIsEditOpen(false)}>&times;</button>
             </div>
-            <form onSubmit={handleEditSubmit} className="form-grid">
-              <label>
+            <form onSubmit={handleEditSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
@@ -373,7 +373,7 @@ export default function SubscriptionsPage() {
                   <option value="EXPIRED">Expired</option>
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Payment</span>
                 <select value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}>
                   <option value="PAID">Paid</option>
@@ -381,20 +381,20 @@ export default function SubscriptionsPage() {
                   <option value="FAILED">Failed</option>
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>End Date *</span>
                 <input type="date" required value={form.endsAt} onChange={(e) => setForm({ ...form, endsAt: e.target.value })} />
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Discount</span>
                 <input type="number" min="0" value={form.manualDiscount} onChange={(e) => setForm({ ...form, manualDiscount: e.target.value })} />
               </label>
-              <label style={{ gridColumn: "1 / -1" }}>
+              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Notes</span>
                 <textarea rows="3" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Internal notes..." />
               </label>
               <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%" }} disabled={busyId === "edit"}>{busyId === "edit" ? "Saving..." : "Save Changes"}</button>
+                <button type="submit" style={{ width: "100%", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: "0.95rem", borderRadius: 12, padding: "14px 24px", minHeight: 48, cursor: "pointer", border: "none" }} disabled={busyId === "edit"}>{busyId === "edit" ? "Saving..." : "Save Changes"}</button>
               </div>
             </form>
           </div>

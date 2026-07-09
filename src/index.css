@@ -3718,7 +3718,7 @@ pre {
 .super-admin-page .status-converted { background: #dcfce7 !important; color: #166534 !important; border: none !important; }
 .super-admin-page .status-canceled { background: #fee2e2 !important; color: #991b1b !important; border: none !important; }
 
-.super-admin-page button {
+.super-admin-page button:not([style]):not(.secondary-button):not(.modal-close-btn):not(.btn-compact):not(.cta-secondary) {
   background: #6366f1 !important;
   color: white !important;
   border: none !important;
@@ -3731,7 +3731,7 @@ pre {
   min-height: 48px !important;
 }
 
-.super-admin-page button:hover {
+.super-admin-page button:not([style]):not(.secondary-button):not(.modal-close-btn):not(.btn-compact):not(.cta-secondary):hover {
   background: #4f46e5 !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;

@@ -223,51 +223,51 @@ export default function SalonsPage() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={resetForm}>
-          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
             <div className="modal-header">
               <h3>{editingId ? "Edit Tenant Salon" : "Add New Tenant Salon"}</h3>
               <button type="button" className="modal-close-btn" onClick={resetForm}>&times;</button>
             </div>
-            <form onSubmit={createOrUpdateSalon} className="form-grid">
-              <label>
+            <form onSubmit={createOrUpdateSalon} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px 24px" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Salon Name *</span>
                 <input placeholder="Salon name" value={form.name} required onChange={(e) => {
                   const val = e.target.value;
                   setForm({ ...form, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") });
                 }} />
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Business Type</span>
                 <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}>
                   {businessTypes.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Business Email</span>
                 <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </label>
-              <label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span>Business Phone</span>
                 <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
               </label>
               {!editingId && (
                 <>
-                  <label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <span>Owner Full Name</span>
                     <input placeholder="Owner name" value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} />
                   </label>
-                  <label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <span>Owner Email</span>
                     <input type="email" placeholder="Owner email" value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} />
                   </label>
-                  <label>
+                  <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
                     <span>Owner Password</span>
                     <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(e) => setForm({ ...form, ownerPassword: e.target.value })} />
                   </label>
                 </>
               )}
               <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%" }} disabled={saving}>
+                <button type="submit" style={{ width: "100%", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: "0.95rem", borderRadius: 12, padding: "14px 24px", minHeight: 48, cursor: "pointer", border: "none" }} disabled={saving}>
                   {saving ? (editingId ? "Saving..." : "Creating...") : (editingId ? "Save Changes" : "Create Workspace")}
                 </button>
               </div>
