@@ -233,46 +233,51 @@ export default function SalonsPage() {
               <h3>{editingId ? "Edit Tenant Salon" : "Add New Tenant Salon"}</h3>
               <button type="button" className="modal-close-btn" onClick={resetForm}>&times;</button>
             </div>
-            <form onSubmit={createOrUpdateSalon} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px 24px" }}>
+            <form onSubmit={createOrUpdateSalon} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px" }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span>Salon Name *</span>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Salon Name *</span>
                 <input placeholder="Salon name" value={form.name} required onChange={(e) => {
                   const val = e.target.value;
                   setForm({ ...form, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") });
                 }} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span>Business Type</span>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Business Type</span>
                 <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}>
                   {businessTypes.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span>Business Email</span>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Business Email</span>
                 <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span>Business Phone</span>
-                <IndianPhoneInput value={form.phone} onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} />
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Business Phone</span>
+                <IndianPhoneInput 
+                  value={form.phone} 
+                  onChange={(phone) => setForm((prev) => ({ ...prev, phone }))} 
+                  className="indian-phone-field"
+                  style={{ minHeight: 48, borderRadius: 14 }}
+                />
               </label>
               {!editingId && (
                 <>
                   <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <span>Owner Full Name</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Owner Full Name</span>
                     <input placeholder="Owner name" value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} />
                   </label>
                   <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <span>Owner Email</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Owner Email</span>
                     <input type="email" placeholder="Owner email" value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} />
                   </label>
                   <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
-                    <span>Owner Password</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Owner Password</span>
                     <input type="password" placeholder="Owner password" value={form.ownerPassword} onChange={(e) => setForm({ ...form, ownerPassword: e.target.value })} />
                   </label>
                 </>
               )}
-              <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: "0.95rem", borderRadius: 12, padding: "14px 24px", minHeight: 48, cursor: "pointer", border: "none" }} disabled={saving}>
+              <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
+                <button type="submit" style={{ width: "100%", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: "0.95rem", borderRadius: 12, padding: "14px 24px", minHeight: 48, cursor: "pointer", border: "none", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.2)" }} disabled={saving}>
                   {saving ? (editingId ? "Saving..." : "Creating...") : (editingId ? "Save Changes" : "Create Workspace")}
                 </button>
               </div>
