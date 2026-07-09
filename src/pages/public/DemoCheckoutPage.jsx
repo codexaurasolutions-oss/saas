@@ -21,17 +21,11 @@ export default function DemoCheckoutPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const [cardName, setCardName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-
   useEffect(() => {
     document.title = "Checkout & Subscribe | ReSpark";
     api.get(`/public/demo-checkout-info/${leadId}/${planId}`)
       .then((res) => {
         setInfo(res.data);
-        setCardName(res.data.leadName || "");
         setLoading(false);
       })
       .catch((err) => {
@@ -55,17 +49,14 @@ export default function DemoCheckoutPage() {
     setError("");
     setSubmitting(true);
     try {
-      // 1. Dynamically load Razorpay SDK
       const loaded = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
       if (!loaded) {
         throw new Error("Failed to load Razorpay payment SDK. Please check your internet connection.");
       }
 
-      // 2. Call backend to create Razorpay Order
       const res = await api.post(`/public/demo-checkout/${leadId}/razorpay-order`, { planId });
       const order = res.data;
 
-      // 3. Configure Razorpay modal options
       const options = {
         key: order.keyId,
         amount: order.amount,
@@ -76,7 +67,6 @@ export default function DemoCheckoutPage() {
         handler: async function (response) {
           setSubmitting(true);
           try {
-            // 4. Verify Razorpay Payment Signature
             await api.post(`/public/demo-checkout/verify-razorpay`, {
               leadId,
               planId,
@@ -96,20 +86,44 @@ export default function DemoCheckoutPage() {
           email: order.leadEmail,
           contact: order.leadPhone
         },
-        theme: {
-          color: "#0f766e"
+        config: {
+          display: {
+            blocks: {
+              utib: {
+                name: "Pay using UPI",
+                instruments: [{ method: "upi" }]
+              }
+            },
+            sequence: ["block.utib", "other"],
+            preferences: { show_default_blocks: true }
+          }
         },
+        theme: { color: "#0f766e" },
         modal: {
           ondismiss: function () {
             setSubmitting(false);
-          }
+            setError("Payment was not completed. You can retry using UPI, Netbanking, or a different card.");
+          },
+          confirm_close: true,
+          escape: false
         }
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (response) {
+        setSubmitting(false);
+        const desc = response?.error?.description || "";
+        if (desc.includes("International")) {
+          setError("This card is not supported. Please use a UPI ID, Netbanking, or an Indian debit/credit card.");
+        } else if (desc) {
+          setError(`Payment failed: ${desc}. Please try another payment method.`);
+        } else {
+          setError("Payment could not be completed. Please try again with UPI, Netbanking, or a different card.");
+        }
+      });
       rzp.open();
     } catch (err) {
-      setError(formatApiError(err, "Could not initialize payment check. Please try again."));
+      setError(formatApiError(err, "Could not initialize payment. Please try again."));
       setSubmitting(false);
     }
   };
