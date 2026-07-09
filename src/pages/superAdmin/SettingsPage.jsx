@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import PageLoader from "../../components/PageLoader";
+import { Settings, MessageSquare, Globe, ShieldAlert, Save } from "lucide-react";
 
 export default function SuperAdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ error: "", success: "" });
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
   const [form, setForm] = useState({
     systemName: "",
     maintenanceMode: false,
@@ -110,7 +112,7 @@ export default function SuperAdminSettingsPage() {
         backupPolicyNote: form.backupPolicyNote,
         invoicePrefix: form.invoicePrefix
       });
-      setStatus({ error: "", success: "Settings saved." });
+      setStatus({ error: "", success: "Settings saved successfully." });
     } catch (err) {
       setStatus({ error: formatApiError(err, "Could not save settings"), success: "" });
     } finally {
@@ -134,8 +136,10 @@ export default function SuperAdminSettingsPage() {
             <p style={{ marginBottom: 0 }}>System defaults, provider config, maintenance mode, and communication settings.</p>
           </div>
           <div className="badge-row">
-            <span className="badge">{form.defaultCurrency}</span>
-            <span className="badge">{form.maintenanceMode ? "Maintenance On" : "Live"}</span>
+            <span className="badge" style={{ background: "#e0e7ff", color: "#4f46e5" }}>{form.defaultCurrency}</span>
+            <span className="badge" style={{ background: form.maintenanceMode ? "#fef2f2" : "#ecfdf5", color: form.maintenanceMode ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+              {form.maintenanceMode ? "Maintenance Active" : "System Live"}
+            </span>
           </div>
         </div>
       </div>
@@ -143,89 +147,186 @@ export default function SuperAdminSettingsPage() {
       {loading ? (
         <PageLoader title="Loading settings" message="Fetching global config..." />
       ) : (
-        <div className="panel-card" style={{ maxWidth: "100%" }}>
-          {status.error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{status.error}</p>}
-          {status.success && <p style={{ color: "#10b981", fontSize: 13, marginBottom: 12 }}>{status.success}</p>}
+        <div style={{ display: "flex", gap: 24, background: "white", borderRadius: 16, border: "1px solid #f1f5f9", boxShadow: "0 4px 24px rgba(15,23,42,0.02)", overflow: "hidden", minHeight: 480 }}>
+          {/* Tab Sidebar */}
+          <div style={{ width: 240, background: "#f8fafc", borderRight: "1px solid #e2e8f0", padding: "24px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { id: "general", label: "General Settings", icon: Settings },
+              { id: "comms", label: "Communications", icon: MessageSquare },
+              { id: "content", label: "Content & Links", icon: Globe },
+              { id: "system", label: "System & Safety", icon: ShieldAlert }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: 10,
+                    border: isActive ? "1px solid #e2e8f0" : "1px solid transparent",
+                    background: isActive ? "white" : "transparent",
+                    color: isActive ? "#4f46e5" : "#475569",
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: "0.88rem",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    boxShadow: isActive ? "0 4px 12px rgba(15,23,42,0.04)" : "none",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-          <form onSubmit={submit}>
-            {/* Section: General */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>General</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label><span>System Name</span><input {...input("systemName", { placeholder: "ReSpark" })} /></label>
-              <label><span>Tax Label</span><input {...input("taxLabel", { placeholder: "Tax" })} /></label>
-              <label><span>Invoice Prefix</span><input {...input("invoicePrefix", { placeholder: "INV" })} /></label>
-              <label><span>Default Currency</span><input {...input("defaultCurrency", { placeholder: "INR" })} /></label>
-              <label><span>Currency List (comma separated)</span><input {...input("currencyOptions", { placeholder: "INR, USD, AED" })} /></label>
-              <label><span>Default Country</span><input {...input("defaultCountry")} /></label>
-              <label><span>Default City</span><input {...input("defaultCity")} /></label>
-              <label><span>Default Timezone</span><input {...input("defaultTimezone")} /></label>
-            </div>
+          {/* Form Content Area */}
+          <div style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <form onSubmit={submit} style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                {status.error && <div style={{ padding: 12, borderRadius: 10, marginBottom: 20, background: "#fef2f2", color: "#991b1b", fontSize: 13, fontWeight: 500 }}>{status.error}</div>}
+                {status.success && <div style={{ padding: 12, borderRadius: 10, marginBottom: 20, background: "#ecfdf5", color: "#065f46", fontSize: 13, fontWeight: 500 }}>{status.success}</div>}
 
-            {/* Section: Notifications */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Notifications</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={form.notificationEmailEnabled} onChange={(e) => setForm({ ...form, notificationEmailEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                <span>Email Notifications</span>
-              </label>
-              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={form.notificationSmsEnabled} onChange={(e) => setForm({ ...form, notificationSmsEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                <span>SMS Notifications</span>
-              </label>
-              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={form.notificationWhatsappEnabled} onChange={(e) => setForm({ ...form, notificationWhatsappEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                <span>WhatsApp Notifications</span>
-              </label>
-            </div>
+                {/* Tab Content: General */}
+                {activeTab === "general" && (
+                  <div>
+                    <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>General Config</h3>
+                    <p style={{ margin: "0 0 24px", fontSize: "0.85rem", color: "#64748b" }}>Specify basic metadata, standard taxation labels, invoice prefixes, and currency defaults.</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>System Name</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("systemName", { placeholder: "ReSpark" })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Tax Label</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("taxLabel", { placeholder: "Tax" })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Invoice Prefix</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("invoicePrefix", { placeholder: "INV" })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Default Currency</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("defaultCurrency", { placeholder: "INR" })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: "1 / -1" }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Currency Options (comma separated)</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("currencyOptions", { placeholder: "INR, USD, AED" })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Default Country</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("defaultCountry")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Default City</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("defaultCity")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: "1 / -1" }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Default Timezone</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("defaultTimezone")} /></label>
+                    </div>
+                  </div>
+                )}
 
-            {/* Section: Providers */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Providers</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label><span>WhatsApp Number</span><input {...input("whatsappNumber")} /></label>
-              <label><span>SMS Provider</span><input {...input("smsProviderName")} /></label>
-              <label><span>Email Provider</span><input {...input("emailProviderName")} /></label>
-              <label><span>WhatsApp Provider</span><input {...input("whatsappProviderName")} /></label>
-            </div>
+                {/* Tab Content: Comms */}
+                {activeTab === "comms" && (
+                  <div>
+                    <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>Communications & Providers</h3>
+                    <p style={{ margin: "0 0 24px", fontSize: "0.85rem", color: "#64748b" }}>Manage active notification gateways, provider keys, and internal support routing mailboxes.</p>
+                    
+                    <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 20, display: "flex", gap: 24 }}>
+                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                        <input type="checkbox" checked={form.notificationEmailEnabled} onChange={(e) => setForm({ ...form, notificationEmailEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>Email Gateways</span>
+                      </label>
+                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                        <input type="checkbox" checked={form.notificationSmsEnabled} onChange={(e) => setForm({ ...form, notificationSmsEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>SMS Dispatchers</span>
+                      </label>
+                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                        <input type="checkbox" checked={form.notificationWhatsappEnabled} onChange={(e) => setForm({ ...form, notificationWhatsappEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>WhatsApp APIs</span>
+                      </label>
+                    </div>
 
-            {/* Section: Contact Emails */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Contact Emails</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label><span>Contact Email</span><input type="email" {...input("contactEmail")} /></label>
-              <label><span>Support Email</span><input type="email" {...input("supportEmail")} /></label>
-              <label><span>Notification Email</span><input type="email" {...input("notificationEmail")} /></label>
-            </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>WhatsApp Number</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("whatsappNumber")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>SMS Provider</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("smsProviderName")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Email Provider</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("emailProviderName")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>WhatsApp Provider</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("whatsappProviderName")} /></label>
+                      
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: "1 / -1" }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Contact Email</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} type="email" {...input("contactEmail")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Support Email</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} type="email" {...input("supportEmail")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Notification Email</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} type="email" {...input("notificationEmail")} /></label>
+                    </div>
+                  </div>
+                )}
 
-            {/* Section: Public Links */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Public Links</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label><span>Terms URL</span><input {...input("termsUrl")} /></label>
-              <label><span>Privacy URL</span><input {...input("privacyUrl")} /></label>
-              <label><span>Demo Booking URL</span><input {...input("demoBookingUrl")} /></label>
-            </div>
+                {/* Tab Content: Content */}
+                {activeTab === "content" && (
+                  <div>
+                    <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>Links & Content Settings</h3>
+                    <p style={{ margin: "0 0 24px", fontSize: "0.85rem", color: "#64748b" }}>Manage public website links, legal page references, custom landing titles, and retention policy notices.</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Terms URL</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("termsUrl")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Privacy URL</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("privacyUrl")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Demo Booking URL</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("demoBookingUrl")} /></label>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Blog Title</span><input style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14 }} {...input("blogTitle")} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Blog Introduction</span><textarea style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }} rows="2" value={form.blogIntro} onChange={(e) => setForm({ ...form, blogIntro: e.target.value })} /></label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Backup Policy Note</span><textarea style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }} rows="2" value={form.backupPolicyNote} onChange={(e) => setForm({ ...form, backupPolicyNote: e.target.value })} /></label>
+                    </div>
+                  </div>
+                )}
 
-            {/* Section: Blog */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Blog</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label><span>Blog Title</span><input {...input("blogTitle")} /></label>
-              <label style={{ gridColumn: "1 / -1" }}><span>Blog Introduction</span><textarea rows="3" value={form.blogIntro} onChange={(e) => setForm({ ...form, blogIntro: e.target.value })} /></label>
-            </div>
+                {/* Tab Content: System */}
+                {activeTab === "system" && (
+                  <div>
+                    <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>System & Safety</h3>
+                    <p style={{ margin: "0 0 24px", fontSize: "0.85rem", color: "#64748b" }}>Perform global lockouts, initiate database security rules, and toggle public maintenance screens.</p>
+                    
+                    <div style={{ padding: 24, border: "1px solid #fca5a5", background: "#fff5f5", borderRadius: 12, display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                        <ShieldAlert size={24} color="#dc2626" style={{ marginTop: 2 }} />
+                        <div>
+                          <h4 style={{ margin: "0 0 4px", fontSize: "0.95rem", fontWeight: 700, color: "#991b1b" }}>Emergency Maintenance Lockout</h4>
+                          <p style={{ margin: 0, fontSize: "0.85rem", color: "#b91c1c", lineHeight: 1.5 }}>
+                            Enabling maintenance mode suspends all routing actions. All salon owners, POS counters, and client storefront portals will immediately be blocked from operations until this flag is manually cleared.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div style={{ borderTop: "1px solid #fca5a5", paddingTop: 16, marginTop: 8 }}>
+                        <label style={{ display: "inline-flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={form.maintenanceMode} 
+                            onChange={(e) => setForm({ ...form, maintenanceMode: e.target.checked })} 
+                            style={{ minHeight: "auto", width: "auto", scale: "1.1" }} 
+                          />
+                          <span style={{ fontSize: "0.9rem", fontWeight: 700, color: form.maintenanceMode ? "#dc2626" : "#475569" }}>
+                            {form.maintenanceMode ? "🚨 Maintenance Lockout is ACTIVE" : "Toggle Maintenance Mode (Currently Off)"}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            {/* Section: Policy */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>Policy</h3>
-            <div className="form-grid" style={{ marginBottom: 24 }}>
-              <label style={{ gridColumn: "1 / -1" }}><span>Backup & Retention Note</span><textarea rows="3" value={form.backupPolicyNote} onChange={(e) => setForm({ ...form, backupPolicyNote: e.target.value })} /></label>
-            </div>
-
-            {/* Section: Maintenance */}
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12, marginTop: 0 }}>System</h3>
-            <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <input type="checkbox" checked={form.maintenanceMode} onChange={(e) => setForm({ ...form, maintenanceMode: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-              <span style={{ fontWeight: 600, color: form.maintenanceMode ? "#dc2626" : "#334155" }}>Enable Maintenance Mode</span>
-              {form.maintenanceMode && <span style={{ fontSize: "0.8rem", color: "#dc2626", fontWeight: 600 }}>(All salon owners will be locked out)</span>}
-            </label>
-
-            <button disabled={saving} style={{ width: "100%" }}>{saving ? "Saving..." : "Save Settings"}</button>
-          </form>
+              {/* Save Button Bar */}
+              <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 20, marginTop: 32, display: "flex", justifyContent: "flex-end" }}>
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: 8, 
+                    minHeight: 40, 
+                    padding: "0 24px", 
+                    background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", 
+                    color: "white", 
+                    borderRadius: 8, 
+                    border: "none", 
+                    fontWeight: 700, 
+                    fontSize: 13, 
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(79, 70, 229, 0.15)"
+                  }}
+                >
+                  <Save size={14} />
+                  {saving ? "Saving Changes..." : "Save Settings"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
