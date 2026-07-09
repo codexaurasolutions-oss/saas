@@ -1,4 +1,8 @@
 export const formatApiError = (error, fallback = "Something went wrong.") => {
+  if (error?.isAuthError) {
+    return error.message || "Session expired. Please login again.";
+  }
+
   if (error?.name === "SyntaxError") {
     return error.message || fallback;
   }

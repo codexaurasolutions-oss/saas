@@ -57,7 +57,9 @@ api.interceptors.response.use(
     const refreshToken = session?.refreshToken;
     if (!refreshToken) {
       clearSession?.();
-      return Promise.reject(error);
+      const authError = new Error("Session expired. Please login again.");
+      authError.isAuthError = true;
+      return Promise.reject(authError);
     }
 
     originalRequest._retry = true;
@@ -76,7 +78,9 @@ api.interceptors.response.use(
     } catch (refreshError) {
       refreshPromise = null;
       clearSession?.();
-      return Promise.reject(refreshError);
+      const authError = new Error("Session expired. Please login again.");
+      authError.isAuthError = true;
+      return Promise.reject(authError);
     }
   }
 );
