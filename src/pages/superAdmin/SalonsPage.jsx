@@ -5,6 +5,7 @@ import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import IndianPhoneInput from "../../components/IndianPhoneInput";
+import { MapPin, Scissors, Users, UserCheck, Mail, Phone, Globe, Clock, CreditCard, Shield, Activity, Landmark } from "lucide-react";
 
 const businessTypes = ["Salon", "Spa", "Beauty Clinic", "Nail Studio", "Tattoo Studio", "Pet Grooming", "Wellness Center"];
 const featureFlagKeys = [
@@ -388,23 +389,26 @@ export default function SalonsPage() {
               </button>
             </div>
 
-            <div className="metrics-dashboard">
-              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
-                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.branches?.length || 0}</div>
-                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Branches</div>
-              </div>
-              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
-                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.services?.length || 0}</div>
-                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Services</div>
-              </div>
-              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
-                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.customers?.length || 0}</div>
-                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Guests</div>
-              </div>
-              <div className="metric-dashboard-card" style={{ background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, padding: "16px 20px" }}>
-                <div className="metric-val" style={{ fontSize: "1.8rem", fontWeight: 850, color: "#4f46e5" }}>{selectedSalon.users?.length || 0}</div>
-                <div className="metric-lbl" style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>Accounts</div>
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+              {[
+                { label: "Branches", val: selectedSalon.branches?.length || 0, icon: Landmark, color: "#3b82f6", bg: "#eff6ff" },
+                { label: "Services", val: selectedSalon.services?.length || 0, icon: Scissors, color: "#8b5cf6", bg: "#f5f3ff" },
+                { label: "Guests", val: selectedSalon.customers?.length || 0, icon: Users, color: "#10b981", bg: "#ecfdf5" },
+                { label: "Accounts", val: selectedSalon.users?.length || 0, icon: UserCheck, color: "#f59e0b", bg: "#fffbeb" }
+              ].map((item, idx) => {
+                const IconComp = item.icon;
+                return (
+                  <div key={idx} style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <IconComp size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>{item.val}</div>
+                      <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: 600, marginTop: 2 }}>{item.label}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="detail-grid">
@@ -412,18 +416,24 @@ export default function SalonsPage() {
                 <h4 style={{ margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f1f5f9", fontSize: "1.05rem", color: "#0f172a", fontWeight: 700 }}>Contact & Settings</h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { label: "Email", value: selectedSalon.email || "-" },
-                    { label: "Phone", value: selectedSalon.phone || "-" },
-                    { label: "Address", value: selectedSalon.address || "-" },
-                    { label: "Location", value: `${selectedSalon.city || "-"}, ${selectedSalon.country || "-"}` },
-                    { label: "Timezone", value: selectedSalon.timezone || "-" },
-                    { label: "Currency / Tax", value: `${selectedSalon.currency || "INR"} / ${String(selectedSalon.taxRate || 0)}%` }
-                  ].map((item, idx) => (
-                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 10 }}>
-                      <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>{item.label}</span>
-                      <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 700 }}>{item.value}</span>
-                    </div>
-                  ))}
+                    { label: "Email", value: selectedSalon.email || "-", icon: Mail, color: "#3b82f6" },
+                    { label: "Phone", value: selectedSalon.phone || "-", icon: Phone, color: "#10b981" },
+                    { label: "Address", value: selectedSalon.address || "-", icon: MapPin, color: "#ef4444" },
+                    { label: "Location", value: `${selectedSalon.city || "-"}, ${selectedSalon.country || "-"}`, icon: Globe, color: "#0d9488" },
+                    { label: "Timezone", value: selectedSalon.timezone || "-", icon: Clock, color: "#f59e0b" },
+                    { label: "Currency / Tax", value: `${selectedSalon.currency || "INR"} / ${String(selectedSalon.taxRate || 0)}%`, icon: CreditCard, color: "#8b5cf6" }
+                  ].map((item, idx) => {
+                    const IconComp = item.icon;
+                    return (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <IconComp size={16} style={{ color: item.color }} />
+                          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>{item.label}</span>
+                        </div>
+                        <span style={{ fontSize: "0.85rem", color: "#0f172a", fontWeight: 700 }}>{item.value}</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div style={{ marginTop: 16 }}>
                   <span style={{ display: "block", marginBottom: 6, fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>Internal Note</span>
@@ -437,9 +447,14 @@ export default function SalonsPage() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {selectedSalon.users?.length ? selectedSalon.users.map((item) => (
                       <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12 }}>
-                        <div>
-                          <strong style={{ fontSize: "0.9rem", color: "#0f172a", display: "block" }}>{item.user?.name}</strong>
-                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.user?.email}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f5f3ff", color: "#6b21a8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Shield size={16} />
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: "0.9rem", color: "#0f172a", display: "block" }}>{item.user?.name}</strong>
+                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.user?.email}</span>
+                          </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                           <span className="badge" style={{ background: "#f5f3ff", color: "#6b21a8", fontSize: "0.7rem", fontWeight: 700, padding: "2px 6px", borderRadius: 100 }}>{item.salonRole}</span>
@@ -461,13 +476,16 @@ export default function SalonsPage() {
                       return (
                         <div key={sub.id} style={{ padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                            <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>{sub.plan?.name}</strong>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <Activity size={16} style={{ color: isActive ? "#10b981" : "#ef4444" }} />
+                              <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>{sub.plan?.name}</strong>
+                            </div>
                             <div style={{ display: "flex", gap: 4 }}>
                               <span className="badge" style={{ background: isActive ? "#ecfdf5" : "#fee2e2", color: isActive ? "#10b981" : "#ef4444", fontSize: "0.7rem", fontWeight: 750, padding: "2px 6px", borderRadius: 100 }}>{sub.status}</span>
                               <span className="badge" style={{ background: "#f1f5f9", color: "#475569", fontSize: "0.7rem", padding: "2px 6px", borderRadius: 100 }}>{sub.paymentStatus || "PENDING"}</span>
                             </div>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b", marginTop: 6 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b", marginTop: 8, borderTop: "1px dashed #e2e8f0", paddingTop: 8 }}>
                             <span>Discount: {Number(sub.manualDiscount || 0).toLocaleString("en-IN")} {selectedSalon.currency || "INR"}</span>
                             <span>Ends: {new Date(sub.endsAt).toLocaleDateString()}</span>
                           </div>
@@ -486,15 +504,36 @@ export default function SalonsPage() {
                     return (
                       <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, marginBottom: 8 }}>
                         <div>
-                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", textTransform: "capitalize" }}>{key.replace(/([A-Z])/g, " $1")}</span>
+                          <span style={{ fontSize: "0.85rem", fontWeight: 750, color: "#0f172a", textTransform: "capitalize" }}>{key.replace(/([A-Z])/g, " $1")}</span>
                           <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: isEnabled ? "#10b981" : "#cbd5e1" }} />
                             <span style={{ fontSize: "0.75rem", color: isEnabled ? "#10b981" : "#64748b", fontWeight: 700 }}>{isEnabled ? "Enabled" : "Disabled"}</span>
                           </div>
                         </div>
-                        <button type="button" onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)} style={{ background: isEnabled ? "#fef2f2" : "#ecfdf5", color: isEnabled ? "#ef4444" : "#10b981", border: "none", padding: "6px 12px", fontWeight: 700, borderRadius: 8, cursor: "pointer", fontSize: "0.75rem", minHeight: "auto", transition: "all 0.15s" }}>
-                          {isEnabled ? "Disable" : "Enable"}
-                        </button>
+                        <div 
+                          onClick={() => toggleFeature(selectedSalon.id, key, selectedSalon.featureFlags)}
+                          style={{
+                            width: 44,
+                            height: 24,
+                            borderRadius: 100,
+                            background: isEnabled ? "#10b981" : "#cbd5e1",
+                            position: "relative",
+                            cursor: "pointer",
+                            transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                          }}
+                        >
+                          <div style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: "50%",
+                            background: "white",
+                            position: "absolute",
+                            top: 3,
+                            left: isEnabled ? 23 : 3,
+                            transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                          }} />
+                        </div>
                       </div>
                     );
                   })}
