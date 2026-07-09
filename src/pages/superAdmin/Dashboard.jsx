@@ -56,15 +56,38 @@ export default function SuperAdminDashboard() {
             <h1 style={{ marginTop: 0 }}>Super Admin Dashboard</h1>
             <p style={{ marginBottom: 0 }}>Live SaaS overview for salons, subscriptions, leads, and support.</p>
           </div>
-          <div style={{ minWidth: 220 }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Period</span>
-              <select value={period} onChange={(e) => setPeriod(e.target.value)} style={{ minHeight: 38, padding: "6px 12px", borderRadius: 8 }}>
-                <option value="today">Today</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Period</span>
+            <div style={{ display: "inline-flex", background: "#f1f5f9", padding: 4, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+              {[
+                { value: "today", label: "Today" },
+                { value: "month", label: "This Month" },
+                { value: "year", label: "This Year" }
+              ].map((opt) => {
+                const isActive = period === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPeriod(opt.value)}
+                    style={{
+                      padding: "6px 16px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: isActive ? "white" : "transparent",
+                      color: isActive ? "#4f46e5" : "#64748b",
+                      fontWeight: isActive ? 700 : 600,
+                      fontSize: "0.82rem",
+                      cursor: "pointer",
+                      boxShadow: isActive ? "0 2px 6px rgba(0,0,0,0.05)" : "none",
+                      transition: "all 0.15s"
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
         <div className="inline-actions" style={{ marginTop: 16 }}>
