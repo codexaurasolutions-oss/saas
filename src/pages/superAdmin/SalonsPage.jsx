@@ -181,16 +181,43 @@ export default function SalonsPage() {
           </div>
         </div>
       </div>
-      <div className="panel-card" style={{ marginBottom: 18 }}>
-        <div className="form-grid">
-          <input value={query} placeholder="Search salon, slug, email, phone, city" onChange={(e) => setQuery(e.target.value)} />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
-          <button type="button" className="secondary-button" onClick={() => load(query, statusFilter)}>Apply</button>
-          <button type="button" className="secondary-button" onClick={() => { setQuery(""); setStatusFilter(""); }}>Reset</button>
+      <div className="panel-card" style={{ marginBottom: 18, padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <input 
+              value={query} 
+              placeholder="Search salon, slug, email, phone, city..." 
+              onChange={(e) => setQuery(e.target.value)} 
+              style={{ width: "100%", minHeight: 40, padding: "8px 14px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+            />
+          </div>
+          <div style={{ width: 180 }}>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+            >
+              <option value="">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button 
+              type="button" 
+              onClick={() => load(query, statusFilter)} 
+              style={{ minHeight: 40, padding: "0 18px", borderRadius: 8, background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", boxShadow: "0 2px 6px rgba(79, 70, 229, 0.15)" }}
+            >
+              Apply
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setQuery(""); setStatusFilter(""); }} 
+              style={{ minHeight: 40, padding: "0 18px", borderRadius: 8, background: "#f1f5f9", color: "#475569", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer" }}
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 

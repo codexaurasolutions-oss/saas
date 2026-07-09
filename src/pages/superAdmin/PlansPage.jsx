@@ -237,7 +237,7 @@ export default function PlansPage() {
       )}
 
       <div className="panel-card" style={{ maxWidth: "100%" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h3 style={{ margin: 0 }}>Plan Library</h3>
             <span className="badge" style={{ background: "#e0e7ff", color: "#4f46e5" }}>{summary.total} plans</span>
@@ -250,29 +250,98 @@ export default function PlansPage() {
         {loading ? (
           <PageLoader compact title="Loading plans" message="Fetching plan catalog..." />
         ) : rows.length ? (
-          <div className="list-stack">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
             {rows.map((row) => {
-              const firstLetter = (row.name || "P").charAt(0).toUpperCase();
               return (
-                <div key={row.id} className="tenant-row">
-                  <div className="tenant-info-block">
-                    <div className="tenant-avatar" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>{firstLetter}</div>
-                    <div className="tenant-meta-stack">
-                      <h4 className="tenant-title">{row.name}</h4>
-                      <div className="tenant-subtext">
-                        <strong>Monthly:</strong> {Number(row.monthlyPrice || 0).toLocaleString("en-IN")} INR &bull; <strong>Yearly:</strong> {Number(row.yearlyPrice || 0).toLocaleString("en-IN")} INR
-                      </div>
-                      <div className="tenant-subtext" style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                        Users: {row.userLimit} &bull; Branches: {row.branchLimit} &bull; Storage: {row.storageLimit || 0}GB
-                      </div>
+                <div 
+                  key={row.id} 
+                  style={{ 
+                    background: "#fff", 
+                    borderRadius: 20, 
+                    padding: 24, 
+                    border: row.isPopular ? "2px solid #0d9488" : "1px solid #e2e8f0", 
+                    position: "relative", 
+                    boxShadow: row.isPopular ? "0 8px 30px rgba(13,148,136,0.12)" : "0 4px 16px rgba(0,0,0,0.01)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    minHeight: 380
+                  }}
+                >
+                  {row.isPopular && (
+                    <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#0d9488", color: "#fff", padding: "4px 12px", borderRadius: 100, fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" }}>
+                      MOST POPULAR
+                    </div>
+                  )}
+                  
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: row.isCustom ? "#ef4444" : "#0d9488", textTransform: "uppercase", letterSpacing: "0.05em", background: row.isCustom ? "#fef2f2" : "#f0fdfa", padding: "4px 8px", borderRadius: 6 }}>
+                        {row.isCustom ? "Custom Tier" : "Standard Tier"}
+                      </span>
+                    </div>
+
+                    <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>{row.name}</h3>
+                    
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                      <span style={{ fontSize: 16, color: "#64748b", fontWeight: 600 }}>INR</span>
+                      <span style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a" }}>{Number(row.monthlyPrice || 0).toLocaleString("en-IN")}</span>
+                      <span style={{ fontSize: 12, color: "#64748b" }}>/mo</span>
+                    </div>
+                    <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 20px" }}>Yearly: INR {Number(row.yearlyPrice || 0).toLocaleString("en-IN")}/yr</p>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24, borderTop: "1px solid #f1f5f9", paddingTop: 16 }}>
+                      {[
+                        `Max ${row.branchLimit} Branches`,
+                        `Max ${row.userLimit} Staff Users`,
+                        `Max ${row.customerLimit} Customers`,
+                        `Max ${row.invoiceLimit} Invoices/mo`,
+                        `${row.storageLimit || 0} GB Storage`
+                      ].map(item => (
+                        <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
+                          <span style={{ color: "#14b8a6", fontWeight: 700 }}>✓</span> {item}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="tenant-badges-block">
-                    {row.isCustom && <span className="badge" style={{ background: "#fef2f2", color: "#ef4444", fontWeight: 700 }}>Custom</span>}
-                  </div>
-                  <div className="tenant-actions">
-                    <button type="button" className="btn-compact secondary-button" onClick={() => startEdit(row)}>Edit</button>
-                    <button type="button" className="btn-compact" onClick={() => deletePlan(row.id, row.name)} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Delete</button>
+
+                  <div style={{ display: "flex", gap: 10, borderTop: "1px solid #f1f5f9", paddingTop: 16, marginTop: "auto" }}>
+                    <button 
+                      type="button" 
+                      onClick={() => startEdit(row)} 
+                      style={{ 
+                        flex: 1, 
+                        background: "#f1f5f9", 
+                        color: "#475569", 
+                        border: "none", 
+                        padding: "10px", 
+                        borderRadius: 10, 
+                        fontWeight: 700, 
+                        fontSize: 13, 
+                        cursor: "pointer",
+                        textAlign: "center"
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => deletePlan(row.id, row.name)} 
+                      style={{ 
+                        flex: 1, 
+                        background: "#fef2f2", 
+                        color: "#dc2626", 
+                        border: "none", 
+                        padding: "10px", 
+                        borderRadius: 10, 
+                        fontWeight: 700, 
+                        fontSize: 13, 
+                        cursor: "pointer",
+                        textAlign: "center"
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               );

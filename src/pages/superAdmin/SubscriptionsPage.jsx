@@ -173,31 +173,49 @@ export default function SubscriptionsPage() {
       {status.success && <div style={{ padding: 12, borderRadius: 10, marginBottom: 16, background: "#ecfdf5", color: "#065f46", fontWeight: 500, fontSize: 14 }}>{status.success}</div>}
       {status.error && <div style={{ padding: 12, borderRadius: 10, marginBottom: 16, background: "#fef2f2", color: "#991b1b", fontWeight: 500, fontSize: 14 }}>{status.error}</div>}
 
-      <div className="panel-card" style={{ marginBottom: 20 }}>
-        <div className="form-grid">
-          <label>
-            <span className="muted">Search</span>
-            <input value={filters.q} placeholder="Search salon, plan name, or email..." onChange={(e) => setFilters((c) => ({ ...c, q: e.target.value }))} />
-          </label>
-          <label>
-            <span className="muted">Status</span>
-            <select value={filters.status} onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}>
+      <div className="panel-card" style={{ marginBottom: 20, padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <input 
+              value={filters.q} 
+              placeholder="Search salon, plan name, or email..." 
+              onChange={(e) => setFilters((c) => ({ ...c, q: e.target.value }))} 
+              style={{ width: "100%", minHeight: 40, padding: "8px 14px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+            />
+          </div>
+          <div style={{ width: 160 }}>
+            <select 
+              value={filters.status} 
+              onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}
+              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+            >
               <option value="">All Statuses</option>
               <option value="ACTIVE">Active</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="EXPIRED">Expired</option>
             </select>
-          </label>
-          <label>
-            <span className="muted">Payment</span>
-            <select value={filters.paymentStatus} onChange={(e) => setFilters((c) => ({ ...c, paymentStatus: e.target.value }))}>
-              <option value="">All</option>
+          </div>
+          <div style={{ width: 160 }}>
+            <select 
+              value={filters.paymentStatus} 
+              onChange={(e) => setFilters((c) => ({ ...c, paymentStatus: e.target.value }))}
+              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+            >
+              <option value="">All Payments</option>
               <option value="PAID">Paid</option>
               <option value="PENDING">Pending</option>
               <option value="FAILED">Failed</option>
             </select>
-          </label>
-          <button type="button" className="secondary-button" onClick={() => setFilters({ q: "", status: "", paymentStatus: "" })}>Reset</button>
+          </div>
+          <div>
+            <button 
+              type="button" 
+              onClick={() => setFilters({ q: "", status: "", paymentStatus: "" })} 
+              style={{ minHeight: 40, padding: "0 18px", borderRadius: 8, background: "#f1f5f9", color: "#475569", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer" }}
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 
