@@ -83,10 +83,23 @@ export default function SalonsPage() {
       setStatus({ error: "Salon name is required.", success: "" });
       return;
     }
+    if (!editingId) {
+      const hasAnyOwner = form.ownerName || form.ownerEmail || form.ownerPassword;
+      const hasAllOwner = form.ownerName && form.ownerEmail && form.ownerPassword;
+      if (hasAnyOwner && !hasAllOwner) {
+        setStatus({ error: "Owner name, email, and password are all required. Fill in all three or leave all empty.", success: "" });
+        return;
+      }
+    }
     setStatus({ error: "", success: "" });
     setSaving(true);
     try {
       const finalSlug = form.slug?.trim() || form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+      if (finalSlug.length < 2) {
+        setStatus({ error: "Salon name must be at least 2 characters to generate a valid URL slug.", success: "" });
+        setSaving(false);
+        return;
+      }
       const payload = { ...form, slug: finalSlug, taxRate: Number(form.taxRate || 0), featureFlags };
       if (editingId) {
         await api.patch(`/super-admin/salons/${editingId}`, payload);
