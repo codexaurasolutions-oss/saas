@@ -69,10 +69,11 @@ export default function AuditLogsPage() {
             <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
               <Search size={16} color="#94a3b8" style={{ position: "absolute", left: 14 }} />
               <input 
+                className="search-input-field"
                 value={query} 
                 placeholder="Search action, type, or metadata..." 
                 onChange={(e) => setQuery(e.target.value)} 
-                style={{ width: "100%", minHeight: 40, padding: "8px 14px 8px 40px", borderRadius: 10, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }} 
+                style={{ width: "100%", fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }} 
               />
             </div>
           </div>
@@ -81,7 +82,7 @@ export default function AuditLogsPage() {
             <select 
               value={typeFilter} 
               onChange={(e) => setTypeFilter(e.target.value)} 
-              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 10, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+              style={{ width: "100%", fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
             >
               <option value="">All types</option>
               {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -91,9 +92,10 @@ export default function AuditLogsPage() {
             type="button" 
             onClick={() => { setQuery(""); setTypeFilter(""); }}
             style={{ 
-              minHeight: 40, 
-              padding: "0 18px", 
-              borderRadius: 10, 
+              height: 48,
+              minHeight: 48,
+              padding: "0 24px", 
+              borderRadius: 14, 
               background: "#f1f5f9", 
               color: "#475569", 
               fontWeight: 700, 

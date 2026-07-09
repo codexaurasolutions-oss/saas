@@ -4447,5 +4447,10 @@ pre {
   }
 }
 
+/* Custom helper to prevent search icon overlapping text */
+.super-admin-page input.search-input-field {
+  padding-left: 42px !important;
+}
+
 
 
