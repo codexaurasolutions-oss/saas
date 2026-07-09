@@ -46,6 +46,15 @@ export const AuthProvider = ({ children }) => {
     persistState(null);
   };
 
+  const updateSession = (partial) => {
+    setAuth((current) => {
+      if (!current) return current;
+      const nextState = { ...current, ...partial };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      return nextState;
+    });
+  };
+
   const logout = async () => {
     try {
       if (auth?.refreshToken) {
@@ -66,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     onAuthFailure: clearSession
   });
 
-  const value = { auth, login, logout, clearSession };
+  const value = { auth, login, logout, clearSession, updateSession };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 };
 

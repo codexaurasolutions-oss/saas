@@ -435,7 +435,7 @@ const SectionHeader = ({ title, description, badges, action }) => (
 export default function SettingsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth } = useAuth();
+  const { auth, updateSession } = useAuth();
   const salonId = auth?.salonId || auth?.membership?.salonId || auth?.membership?.salon?.id || "global";
   const { formatMoney } = useSalonSettings();
   const [form, setForm] = useState(initialForm);
@@ -989,8 +989,7 @@ export default function SettingsPage() {
   const handleLogoUpload = (url) => {
     setSalonLogo(url);
     if (auth?.membership) {
-      const updatedAuth = { ...auth, membership: { ...auth.membership, salonLogo: url } };
-      localStorage.setItem("respark_auth", JSON.stringify(updatedAuth));
+      updateSession({ membership: { ...auth.membership, salonLogo: url } });
     }
   };
 

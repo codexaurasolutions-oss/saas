@@ -3166,11 +3166,14 @@ export default function CustomersPage() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <button
-                      onClick={() => {
-                        const authData = localStorage.getItem("respark_auth");
-                        const token = authData ? JSON.parse(authData).accessToken : "";
-                        const base = api.defaults.baseURL?.replace(/\/api\/v1$/, "") || "";
-                        window.open(`${base}/api/v1/owner/invoices/${invoiceSuccessData.invoice.id}/receipt?token=${token}`, "_blank", "noopener,noreferrer");
+                      onClick={async () => {
+                        try {
+                          const response = await api.get(`/owner/invoices/${invoiceSuccessData.invoice.id}/receipt`, { responseType: "blob" });
+                          const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: response.headers?.["content-type"] || "text/html" });
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          window.open(blobUrl, "_blank", "noopener,noreferrer");
+                          setTimeout(() => window.URL.revokeObjectURL(blobUrl), 5000);
+                        } catch { alert("Could not open invoice receipt"); }
                       }}
                       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", transition: "transform 0.15s, box-shadow 0.15s", boxShadow: "0 4px 12px rgba(14,165,233,0.2)" }}
                       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(14,165,233,0.3)"; }}
