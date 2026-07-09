@@ -3646,7 +3646,7 @@ pre {
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
 }
 
-.super-admin-page input,
+.super-admin-page input:not([type="checkbox"]),
 .super-admin-page select,
 .super-admin-page textarea {
   border: 1px solid #cbd5e1 !important;
@@ -3658,7 +3658,7 @@ pre {
   transition: all 0.2s ease !important;
 }
 
-.super-admin-page input:focus,
+.super-admin-page input:not([type="checkbox"]):focus,
 .super-admin-page select:focus,
 .super-admin-page textarea:focus {
   border-color: #6366f1 !important;

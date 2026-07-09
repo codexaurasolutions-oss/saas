@@ -219,19 +219,52 @@ export default function SuperAdminSettingsPage() {
                     <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>Communications & Providers</h3>
                     <p style={{ margin: "0 0 24px", fontSize: "0.85rem", color: "#64748b" }}>Manage active notification gateways, provider keys, and internal support routing mailboxes.</p>
                     
-                    <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 20, display: "flex", gap: 24 }}>
-                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                        <input type="checkbox" checked={form.notificationEmailEnabled} onChange={(e) => setForm({ ...form, notificationEmailEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>Email Gateways</span>
-                      </label>
-                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                        <input type="checkbox" checked={form.notificationSmsEnabled} onChange={(e) => setForm({ ...form, notificationSmsEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>SMS Dispatchers</span>
-                      </label>
-                      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                        <input type="checkbox" checked={form.notificationWhatsappEnabled} onChange={(e) => setForm({ ...form, notificationWhatsappEnabled: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>WhatsApp APIs</span>
-                      </label>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+                      {[
+                        { label: "Email Gateways", checked: form.notificationEmailEnabled, key: "notificationEmailEnabled" },
+                        { label: "SMS Dispatchers", checked: form.notificationSmsEnabled, key: "notificationSmsEnabled" },
+                        { label: "WhatsApp APIs", checked: form.notificationWhatsappEnabled, key: "notificationWhatsappEnabled" }
+                      ].map((item) => (
+                        <div 
+                          key={item.key}
+                          onClick={() => setForm({ ...form, [item.key]: !item.checked })}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "12px 16px",
+                            background: "white",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 12,
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#475569" }}>{item.label}</span>
+                          <div 
+                            style={{
+                              width: 36,
+                              height: 20,
+                              borderRadius: 100,
+                              background: item.checked ? "#10b981" : "#cbd5e1",
+                              position: "relative",
+                              transition: "all 0.25s"
+                            }}
+                          >
+                            <div style={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: "50%",
+                              background: "white",
+                              position: "absolute",
+                              top: 3,
+                              left: item.checked ? 19 : 3,
+                              transition: "all 0.25s",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.15)"
+                            }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
@@ -282,18 +315,36 @@ export default function SuperAdminSettingsPage() {
                         </div>
                       </div>
                       
-                      <div style={{ borderTop: "1px solid #fca5a5", paddingTop: 16, marginTop: 8 }}>
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                          <input 
-                            type="checkbox" 
-                            checked={form.maintenanceMode} 
-                            onChange={(e) => setForm({ ...form, maintenanceMode: e.target.checked })} 
-                            style={{ minHeight: "auto", width: "auto", scale: "1.1" }} 
-                          />
+                      <div style={{ borderTop: "1px solid #fca5a5", paddingTop: 16, marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div>
                           <span style={{ fontSize: "0.9rem", fontWeight: 700, color: form.maintenanceMode ? "#dc2626" : "#475569" }}>
                             {form.maintenanceMode ? "🚨 Maintenance Lockout is ACTIVE" : "Toggle Maintenance Mode (Currently Off)"}
                           </span>
-                        </label>
+                        </div>
+                        <div 
+                          onClick={() => setForm({ ...form, maintenanceMode: !form.maintenanceMode })}
+                          style={{
+                            width: 44,
+                            height: 24,
+                            borderRadius: 100,
+                            background: form.maintenanceMode ? "#ef4444" : "#cbd5e1",
+                            position: "relative",
+                            cursor: "pointer",
+                            transition: "all 0.25s"
+                          }}
+                        >
+                          <div style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: "50%",
+                            background: "white",
+                            position: "absolute",
+                            top: 3,
+                            left: form.maintenanceMode ? 23 : 3,
+                            transition: "all 0.25s",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                          }} />
+                        </div>
                       </div>
                     </div>
                   </div>

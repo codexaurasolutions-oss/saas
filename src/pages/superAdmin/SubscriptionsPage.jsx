@@ -3,6 +3,7 @@ import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
+import { Edit2, Bell, Trash2, Calendar, Award, Landmark, RefreshCw } from "lucide-react";
 
 const emptyForm = { salonId: "", planId: "", status: "ACTIVE", paymentStatus: "PAID", manualDiscount: 0, notes: "", startsAt: "", endsAt: "" };
 
@@ -159,35 +160,35 @@ export default function SubscriptionsPage() {
             <h1 style={{ marginTop: 0 }}>Customer Management</h1>
             <p style={{ marginBottom: 0 }}>Monitor active salon clients, verify payments, upgrade plans, and trigger renewal reminders.</p>
           </div>
-          <button type="button" onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button type="button" onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", color: "white", border: "none", minHeight: 40, padding: "0 18px", fontWeight: 700, borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.2)" }}>
             + Onboard Client
           </button>
         </div>
         <div className="badge-row" style={{ marginTop: 14 }}>
-          <span className="badge">Total: {rows.length}</span>
-          <span className="badge">Salons: {salons.length}</span>
-          <span className="badge">Plans: {plans.length}</span>
+          <span className="badge" style={{ background: "#eff6ff", color: "#1e40af", fontWeight: 700 }}>Total: {rows.length}</span>
+          <span className="badge" style={{ background: "#f5f3ff", color: "#5b21b6", fontWeight: 700 }}>Salons: {salons.length}</span>
+          <span className="badge" style={{ background: "#ecfdf5", color: "#065f46", fontWeight: 700 }}>Plans: {plans.length}</span>
         </div>
       </div>
 
       {status.success && <div style={{ padding: 12, borderRadius: 10, marginBottom: 16, background: "#ecfdf5", color: "#065f46", fontWeight: 500, fontSize: 14 }}>{status.success}</div>}
       {status.error && <div style={{ padding: 12, borderRadius: 10, marginBottom: 16, background: "#fef2f2", color: "#991b1b", fontWeight: 500, fontSize: 14 }}>{status.error}</div>}
 
-      <div className="panel-card" style={{ marginBottom: 20, padding: "16px 20px" }}>
+      <div className="panel-card" style={{ marginBottom: 24, padding: "20px 24px", background: "white", border: "1px solid #e2e8f0", borderRadius: 16 }}>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 260 }}>
             <input 
               value={filters.q} 
               placeholder="Search salon, plan name, or email..." 
               onChange={(e) => setFilters((c) => ({ ...c, q: e.target.value }))} 
-              style={{ width: "100%", minHeight: 40, padding: "8px 14px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+              style={{ width: "100%", minHeight: 40, padding: "8px 14px", borderRadius: 10, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
             />
           </div>
           <div style={{ width: 160 }}>
             <select 
               value={filters.status} 
               onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}
-              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 10, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
             >
               <option value="">All Statuses</option>
               <option value="ACTIVE">Active</option>
@@ -199,7 +200,7 @@ export default function SubscriptionsPage() {
             <select 
               value={filters.paymentStatus} 
               onChange={(e) => setFilters((c) => ({ ...c, paymentStatus: e.target.value }))}
-              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
+              style={{ width: "100%", minHeight: 40, padding: "8px 12px", borderRadius: 10, fontSize: 13, border: "1px solid #cbd5e1", background: "#f8fafc" }}
             >
               <option value="">All Payments</option>
               <option value="PAID">Paid</option>
@@ -211,7 +212,7 @@ export default function SubscriptionsPage() {
             <button 
               type="button" 
               onClick={() => setFilters({ q: "", status: "", paymentStatus: "" })} 
-              style={{ minHeight: 40, padding: "0 18px", borderRadius: 8, background: "#f1f5f9", color: "#475569", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer" }}
+              style={{ minHeight: 40, padding: "0 18px", borderRadius: 10, background: "#f1f5f9", color: "#475569", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", transition: "all 0.15s" }}
             >
               Reset
             </button>
@@ -222,15 +223,15 @@ export default function SubscriptionsPage() {
       {loading ? (
         <PageLoader compact title="Loading subscriptions" message="Fetching subscription data..." />
       ) : rows.length ? (
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", background: "white", border: "1px solid #e2e8f0", borderRadius: 16, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #f1f5f9", color: "#64748b", fontWeight: 700 }}>
-                <th style={{ padding: "12px 16px" }}>Salon Info</th>
-                <th style={{ padding: "12px 16px" }}>Plan Details</th>
-                <th style={{ padding: "12px 16px" }}>Validity Period</th>
-                <th style={{ padding: "12px 16px" }}>Quick Plan Actions</th>
-                <th style={{ padding: "12px 16px", textAlign: "right" }}>Actions</th>
+              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569", fontWeight: 700 }}>
+                <th style={{ padding: "14px 20px" }}>Salon Info</th>
+                <th style={{ padding: "14px 20px" }}>Plan Details</th>
+                <th style={{ padding: "14px 20px" }}>Validity Period</th>
+                <th style={{ padding: "14px 20px" }}>Quick Plan Actions</th>
+                <th style={{ padding: "14px 20px", textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -239,50 +240,64 @@ export default function SubscriptionsPage() {
                 const alertText = getAlertText(row);
                 return (
                   <tr key={row.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} className="table-row-hover">
-                    <td style={{ padding: "14px 16px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: row.status === "ACTIVE" ? "#059669" : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12 }}>{(row.salon?.name || "S").charAt(0).toUpperCase()}</div>
-                        <span style={{ fontWeight: 700, color: "#0f172a" }}>{row.salon?.name || "Unknown"}</span>
+                    <td style={{ padding: "16px 20px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", color: row.status === "ACTIVE" ? "#10b981" : "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+                          <Landmark size={15} />
+                        </div>
+                        <div>
+                          <span style={{ fontWeight: 750, color: "#0f172a", fontSize: "0.95rem" }}>{row.salon?.name || "Unknown"}</span>
+                          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{row.salon?.email}</div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 11, color: "#94a3b8" }}>{row.salon?.email}</div>
-                      <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: row.status === "ACTIVE" ? "#10b981" : "#ef4444", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", padding: "2px 6px", borderRadius: 100 }}>{row.status}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: row.paymentStatus === "PAID" ? "#16a34a" : "#ea580c", background: row.paymentStatus === "PAID" ? "#f0fdf4" : "#fff7ed", padding: "2px 6px", borderRadius: 100 }}>{row.paymentStatus || "PENDING"}</span>
+                      <div style={{ display: "flex", gap: 6, marginTop: 8, paddingLeft: 44 }}>
+                        <span style={{ fontSize: 10, fontWeight: 750, color: row.status === "ACTIVE" ? "#10b981" : "#ef4444", background: row.status === "ACTIVE" ? "#ecfdf5" : "#fef2f2", padding: "2px 8px", borderRadius: 100 }}>{row.status}</span>
+                        <span style={{ fontSize: 10, fontWeight: 750, color: row.paymentStatus === "PAID" ? "#10b981" : "#f59e0b", background: row.paymentStatus === "PAID" ? "#ecfdf5" : "#fffbeb", padding: "2px 8px", borderRadius: 100 }}>{row.paymentStatus || "PENDING"}</span>
                       </div>
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <div style={{ fontWeight: 700, color: "#0f172a" }}>{row.plan?.name}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
+                    <td style={{ padding: "16px 20px" }}>
+                      <div style={{ fontWeight: 750, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Award size={15} style={{ color: "#4f46e5" }} />
+                        {row.plan?.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 6, paddingLeft: 20 }}>
                         Branches: {row.plan?.branchLimit} &bull; Users: {row.plan?.userLimit}
                       </div>
-                      {row.manualDiscount > 0 && <div style={{ color: "#2563eb", fontWeight: 700, fontSize: 11, marginTop: 2 }}>Discount: ₹{Number(row.manualDiscount).toLocaleString("en-IN")}</div>}
+                      {row.manualDiscount > 0 && <div style={{ color: "#2563eb", fontWeight: 700, fontSize: 11, marginTop: 4, paddingLeft: 20 }}>Discount: ₹{Number(row.manualDiscount).toLocaleString("en-IN")}</div>}
                     </td>
-                    <td style={{ padding: "14px 16px", color: "#475569" }}>
-                      <div>Start: {new Date(row.startsAt).toLocaleDateString()}</div>
-                      <div style={{ marginTop: 2 }}>End: {new Date(row.endsAt).toLocaleDateString()}</div>
-                      {alertText && <div style={{ color: "#dc2626", fontWeight: 700, fontSize: 11, marginTop: 4 }}>⚠️ {alertText}</div>}
+                    <td style={{ padding: "16px 20px", color: "#475569" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Calendar size={14} style={{ color: "#64748b" }} />
+                        <span>Start: {new Date(row.startsAt).toLocaleDateString()}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                        <Calendar size={14} style={{ color: "#64748b" }} />
+                        <span>End: {new Date(row.endsAt).toLocaleDateString()}</span>
+                      </div>
+                      {alertText && <div style={{ color: "#dc2626", fontWeight: 750, fontSize: 11, marginTop: 6 }}>⚠️ {alertText}</div>}
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
+                    <td style={{ padding: "16px 20px" }}>
                       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <select style={{ padding: "6px 8px", fontSize: 12, height: 32, borderRadius: 6, border: "1px solid #cbd5e1", background: "white", minWidth: 120 }} value={selectedPlanChange[row.id] || ""} onChange={(e) => setSelectedPlanChange({ ...selectedPlanChange, [row.id]: e.target.value })}>
+                        <select style={{ padding: "6px 8px", fontSize: 12, height: 32, borderRadius: 8, border: "1px solid #cbd5e1", background: "white", minWidth: 120 }} value={selectedPlanChange[row.id] || ""} onChange={(e) => setSelectedPlanChange({ ...selectedPlanChange, [row.id]: e.target.value })}>
                           <option value="">Change plan...</option>
                           {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
-                        <button type="button" onClick={() => updateSubscriptionDirect(row.id, { planId: selectedPlanChange[row.id] })} disabled={!selectedPlanChange[row.id] || isBusy} style={{ padding: "0 10px", fontSize: 12, height: 32, borderRadius: 6, background: "#f1f5f9", color: "#475569", border: "none", cursor: "pointer", fontWeight: 700 }}>
+                        <button type="button" onClick={() => updateSubscriptionDirect(row.id, { planId: selectedPlanChange[row.id] })} disabled={!selectedPlanChange[row.id] || isBusy} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0 12px", fontSize: 12, height: 32, borderRadius: 8, background: "#f1f5f9", color: "#475569", border: "none", cursor: "pointer", fontWeight: 700, transition: "all 0.15s" }}>
+                          <RefreshCw size={12} className={isBusy ? "spin" : ""} />
                           Apply
                         </button>
                       </div>
                     </td>
-                    <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                        <button type="button" onClick={() => openEditModal(row)} disabled={isBusy} style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-                          Edit
+                    <td style={{ padding: "16px 20px", textAlign: "right" }}>
+                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                        <button type="button" onClick={() => openEditModal(row)} disabled={isBusy} title="Edit" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, border: "1px solid #cbd5e1", background: "white", color: "#475569", cursor: "pointer", transition: "all 0.2s" }}>
+                          <Edit2 size={14} />
                         </button>
-                        <button type="button" onClick={() => sendExpiryReminder(row.id)} disabled={isBusy} style={{ padding: "6px 12px", background: "#ecfdf5", color: "#0d9488", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-                          {busyId === `reminder-${row.id}` ? "..." : "Remind"}
+                        <button type="button" onClick={() => sendExpiryReminder(row.id)} disabled={isBusy} title="Send Expiry Reminder" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, border: "1px solid #a7f3d0", background: "#ecfdf5", color: "#065f46", cursor: "pointer", transition: "all 0.2s" }}>
+                          <Bell size={14} />
                         </button>
-                        <button type="button" onClick={() => deleteSubscription(row.id)} disabled={isBusy} style={{ padding: "6px 12px", background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-                          Delete
+                        <button type="button" onClick={() => deleteSubscription(row.id)} disabled={isBusy} title="Delete" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, border: "1px solid #fca5a5", background: "#fef2f2", color: "#991b1b", cursor: "pointer", transition: "all 0.2s" }}>
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -293,7 +308,7 @@ export default function SubscriptionsPage() {
           </table>
         </div>
       ) : (
-        <EmptyState title="No subscriptions yet" message="Onboard a client or wait for checkout completions." />
+        <EmptyState title="No subscriptions yet" message="Onboard a client or wait for checkout completions." label="Subscriptions" />
       )}
 
       {isCreateOpen && (

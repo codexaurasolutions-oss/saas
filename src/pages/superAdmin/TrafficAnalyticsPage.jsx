@@ -105,7 +105,7 @@ export default function TrafficAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyState title="No data" message="No visits in this period." />
+                <EmptyState title="No data" message="No visits in this period." label="Traffic" />
               )}
             </div>
 
@@ -125,7 +125,7 @@ export default function TrafficAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyState title="No data" message="No salon traffic yet." />
+                <EmptyState title="No data" message="No salon traffic yet." label="Traffic" />
               )}
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function TrafficAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyState title="No data" message="No page visits recorded." />
+                <EmptyState title="No data" message="No page visits recorded." label="Pages" />
               )}
             </div>
 
@@ -167,13 +167,13 @@ export default function TrafficAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyState title="No data" message="No referrer data yet." />
+                <EmptyState title="No data" message="No referrer data yet." label="Referrers" />
               )}
             </div>
           </div>
         </>
       ) : (
-        <EmptyState title="No traffic data" message="Data will appear once storefronts start receiving visitors." />
+        <EmptyState title="No traffic data" message="Data will appear once storefronts start receiving visitors." label="Traffic" />
       )}
     </div>
   );

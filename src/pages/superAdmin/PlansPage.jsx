@@ -216,14 +216,67 @@ export default function PlansPage() {
                 <span>Cloud Storage (GB)</span>
                 <input {...numInput("storageLimit")} placeholder="5" />
               </label>
-              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
-                <input type="checkbox" checked={Boolean(form.isCustom)} onChange={(e) => setForm({ ...form, isCustom: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                <span>Mark this as a custom plan</span>
-              </label>
-              <label style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                <input type="checkbox" checked={Boolean(form.isPopular)} onChange={(e) => setForm({ ...form, isPopular: e.target.checked })} style={{ minHeight: "auto", width: "auto" }} />
-                <span>Mark this as most popular</span>
-              </label>
+              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, marginTop: 8 }}>
+                <div>
+                  <span style={{ fontSize: "0.88rem", fontWeight: 750, color: "#0f172a" }}>Custom Plan</span>
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "#64748b", marginTop: 2 }}>Mark this plan as custom (not public)</span>
+                </div>
+                <div 
+                  onClick={() => setForm({ ...form, isCustom: !form.isCustom })}
+                  style={{
+                    width: 44,
+                    height: 24,
+                    borderRadius: 100,
+                    background: form.isCustom ? "#10b981" : "#cbd5e1",
+                    position: "relative",
+                    cursor: "pointer",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                  }}
+                >
+                  <div style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: "50%",
+                    background: "white",
+                    position: "absolute",
+                    top: 3,
+                    left: form.isCustom ? 23 : 3,
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                  }} />
+                </div>
+              </div>
+
+              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, marginTop: 4 }}>
+                <div>
+                  <span style={{ fontSize: "0.88rem", fontWeight: 750, color: "#0f172a" }}>Most Popular Plan</span>
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "#64748b", marginTop: 2 }}>Highlight this plan with a "Most Popular" badge on public site</span>
+                </div>
+                <div 
+                  onClick={() => setForm({ ...form, isPopular: !form.isPopular })}
+                  style={{
+                    width: 44,
+                    height: 24,
+                    borderRadius: 100,
+                    background: form.isPopular ? "#10b981" : "#cbd5e1",
+                    position: "relative",
+                    cursor: "pointer",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                  }}
+                >
+                  <div style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: "50%",
+                    background: "white",
+                    position: "absolute",
+                    top: 3,
+                    left: form.isPopular ? 23 : 3,
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                  }} />
+                </div>
+              </div>
               <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
                 <button type="submit" style={{ width: "100%" }} disabled={saving}>
                   {saving ? (editingId ? "Saving..." : "Creating...") : (editingId ? "Save Changes" : "Create Plan")}
@@ -348,7 +401,7 @@ export default function PlansPage() {
             })}
           </div>
         ) : (
-          <EmptyState title="No pricing plans yet" message="Click '+ Add New Plan' to create your first plan." />
+          <EmptyState title="No pricing plans yet" message="Click '+ Add New Plan' to create your first plan." label="Plans" />
         )}
       </div>
     </div>
