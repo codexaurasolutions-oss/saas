@@ -542,11 +542,32 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
 
       {/* Top White Row */}
       <div className="respark-top-row">
-        <div className="respark-logo-area">
+        <div className="respark-logo-area" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {auth?.user?.systemRole === "SUPER_ADMIN" ? (
-            <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0, fontWeight: 800, fontSize: "1.2rem", color: "#1e1b4b" }}>
-              Super Admin
-            </div>
+            <>
+              <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0, fontWeight: 800, fontSize: "1.2rem", color: "#1e1b4b" }}>
+                Super Admin
+              </div>
+              <button 
+                type="button" 
+                className="respark-menu-btn" 
+                onClick={onToggleSidebar}
+                style={{ 
+                  background: "transparent", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  padding: 6, 
+                  borderRadius: 6, 
+                  color: "#1e1b4b",
+                  marginLeft: 4
+                }}
+              >
+                <Menu size={20} />
+              </button>
+            </>
           ) : (
             <div className="respark-salon-name">{salonName}</div>
           )}
@@ -733,21 +754,23 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       </div>
 
       {/* Dark Tabs Row */}
-      <div className="respark-nav-row">
-        <button className="respark-menu-btn" onClick={onToggleSidebar}>
-          <Menu size={20} />
-        </button>
-        <div className="respark-tabs">
-          {tabs.map(tab => {
-             const isActive = location.pathname.startsWith(tab.path);
-             return (
-               <Link key={tab.path} to={tab.path} className={`respark-tab ${isActive ? 'active' : ''}`}>
-                 {tab.icon} {tab.label}
-               </Link>
-             )
-          })}
+      {auth?.user?.systemRole !== "SUPER_ADMIN" && (
+        <div className="respark-nav-row">
+          <button className="respark-menu-btn" onClick={onToggleSidebar}>
+            <Menu size={20} />
+          </button>
+          <div className="respark-tabs">
+            {tabs.map(tab => {
+               const isActive = location.pathname.startsWith(tab.path);
+               return (
+                 <Link key={tab.path} to={tab.path} className={`respark-tab ${isActive ? 'active' : ''}`}>
+                   {tab.icon} {tab.label}
+                 </Link>
+               )
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
