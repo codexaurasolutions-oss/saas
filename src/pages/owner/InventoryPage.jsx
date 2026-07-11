@@ -9,7 +9,8 @@ import IndianPhoneInput from "../../components/IndianPhoneInput";
 import { Package, Search, ShoppingCart, CheckCircle, XCircle, AlertTriangle, ArrowLeft, Tag, Layers, RefreshCw, Users, FileText, Activity, Plus, Trash2, ChevronDown, Save, Upload, Download } from "lucide-react";
 
 const emptyCategory = { name: "", description: "", imageUrl: "", sortOrder: 0, isPublicVisible: true };
-const emptyProduct = { branchId: "", categoryId: "", name: "", productType: "RETAIL", costPrice: 0, sellingPrice: 0, minStock: 0, sku: "", barcode: "", imageUrl: "" };
+  const emptyProduct = { branchId: "", categoryId: "", name: "", productType: "RETAIL",
+    costPrice: 0, sellingPrice: 0, currentStock: 0, minStock: 0, allowNegativeStock: false, sku: "", barcode: "", imageUrl: "" };
 const emptyMovement = { productId: "", branchId: "", movementType: "STOCK_IN", quantity: 1, note: "" };
 const emptyVendor = { branchId: "", name: "", phone: "", email: "", address: "", notes: "" };
 const createEmptyPoItem = () => ({ productId: "", quantityOrdered: 1, unitCost: 0 });
@@ -391,7 +392,7 @@ export default function InventoryPage() {
   const handleProductSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/owner/inventory/products", { ...productForm, costPrice: Number(productForm.costPrice), sellingPrice: Number(productForm.sellingPrice), minStock: Number(productForm.minStock) });
+      await api.post("/owner/inventory/products", { ...productForm, costPrice: Number(productForm.costPrice), sellingPrice: Number(productForm.sellingPrice), currentStock: Number(productForm.currentStock) || 0, minStock: Number(productForm.minStock), allowNegativeStock: Boolean(productForm.allowNegativeStock) });
       setIsProductModalOpen(false);
       setProductForm(emptyProduct);
       loadAll();
@@ -1434,6 +1435,22 @@ export default function InventoryPage() {
                   <div className="sp-group">
                     <label className="sp-label">Selling Price ({formatMoney(1).replace(/[\d.,]/g, '').trim()})</label>
                     <input type="number" className="sp-input" required value={productForm.sellingPrice} onChange={e => setProductForm({...productForm, sellingPrice: e.target.value})} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div className="sp-group">
+                    <label className="sp-label">Current Stock *</label>
+                    <input type="number" className="sp-input" value={productForm.currentStock} onChange={e => setProductForm({...productForm, currentStock: e.target.value})} min="0" />
+                  </div>
+                  <div className="sp-group">
+                    <label className="sp-label">Min Stock Alert</label>
+                    <input type="number" className="sp-input" value={productForm.minStock} onChange={e => setProductForm({...productForm, minStock: e.target.value})} min="0" />
+                  </div>
+                  <div className="sp-group" style={{ display: "flex", alignItems: "end", paddingBottom: 4 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#334155", cursor: "pointer" }}>
+                      <input type="checkbox" checked={productForm.allowNegativeStock} onChange={e => setProductForm({...productForm, allowNegativeStock: e.target.checked})} style={{ width: 16, height: 16, accentColor: "#2563eb" }} />
+                      Allow Negative Stock
+                    </label>
                   </div>
                 </div>
                 <div className="sp-group">

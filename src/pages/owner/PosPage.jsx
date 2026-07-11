@@ -101,6 +101,7 @@ export default function PosPage() {
   const [gcModalGc, setGcModalGc] = useState(null);
   const [gcDraft, setGcDraft] = useState({ staffId: "", price: "", validityDays: "", purchaseDate: new Date().toISOString().slice(0, 10) });
   const [gcSearch, setGcSearch] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   const [showPkgModal, setShowPkgModal] = useState(false);
   const [pkgModalPkg, setPkgModalPkg] = useState(null);
@@ -454,6 +455,10 @@ export default function PosPage() {
       setForm(f => ({ ...f, branchId: defaultBranch.id }));
     }
   }, [context.branches, form.branchId]);
+
+  useEffect(() => {
+    if (!form.couponCode) setCouponDiscount(0);
+  }, [form.couponCode]);
 
   useEffect(() => {
     if (selectedBranchId) {
@@ -929,11 +934,11 @@ export default function PosPage() {
       return sum + (linePreTax * taxPct) / 100;
     }, 0);
     // Note: form.tax is part of the API payload (extra tax) but always 0 in this UI; per-item taxPct handles all tax.
-    const discount = Number(form.discount || 0);
+    const discount = Number(form.discount || 0) + couponDiscount;
     const total = subtotal + itemTax - discount;
     const paid = form.payments.filter(p => p.mode !== "BALANCE").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
     return { subtotal, itemTax, total, paid, due: Math.max(0, total - paid) };
-  }, [form, getCatalogBasePrice, context.settings]);
+  }, [form, getCatalogBasePrice, context.settings, couponDiscount]);
 
   const getEligibleStaffUsers = useCallback((item) => {
     const selectedBranchId = form.branchId;
@@ -1076,17 +1081,18 @@ export default function PosPage() {
         appliedMembershipId: "",
         discount: 0,
         tax: 0,
-        couponCode: "",
-        giftVoucherCode: "",
-        loyaltyPointsUsed: 0,
-        notes: "",
-        items: [emptyServiceItem],
-        packageRedemptions: [],
-        payments: [emptyPayment],
-        sendFeedbackMessage: true,
-        sendInvoiceMessage: true
-      });
-      await loadContext("", form.branchId);
+      couponCode: "",
+      giftVoucherCode: "",
+      loyaltyPointsUsed: 0,
+      notes: "",
+      items: [emptyServiceItem],
+      packageRedemptions: [],
+      payments: [emptyPayment],
+      sendFeedbackMessage: true,
+      sendInvoiceMessage: true
+    });
+    setCouponDiscount(0);
+    await loadContext("", form.branchId);
     } catch (error) {
       setToastMessage({ type: "error", title: "Invoice Failed", message: formatApiError(error, "Could not create invoice") });
     } finally {
@@ -1545,7 +1551,17 @@ export default function PosPage() {
                     );
                   }
                   return (
-                    <div>
+                    <div style={{ textAlign: "right" }}>
+                      {couponDiscount > 0 && (
+                        <div style={{ fontSize: 13, color: "#16a34a", marginBottom: 4 }}>
+                          Coupon ({form.couponCode}): <strong>-{formatMoney(couponDiscount.toFixed(0))}</strong>
+                        </div>
+                      )}
+                      {Number(form.discount || 0) > 0 && (
+                        <div style={{ fontSize: 13, color: "#64748b", marginBottom: 4 }}>
+                          Discount: <strong>-{formatMoney(form.discount)}</strong>
+                        </div>
+                      )}
                       Grand Total <strong>{formatMoney(totals.total.toFixed(0))}</strong>
                     </div>
                   );
@@ -1558,6 +1574,67 @@ export default function PosPage() {
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", padding: "8px 0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="text"
+                  placeholder="Coupon Code"
+                  value={form.couponCode}
+                  onChange={(e) => setForm(c => ({ ...c, couponCode: e.target.value.toUpperCase() }))}
+                  style={{ padding: "8px 12px", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, fontSize: 13, width: 150, fontWeight: 600, textTransform: "uppercase" }}
+                />
+                {form.couponCode ? (
+                  <button type="button" onClick={() => {
+                    const coupon = (context.coupons || []).find(c => c.code === form.couponCode);
+                    if (!coupon) {
+                      setToastMessage({ type: "error", title: "Invalid Coupon", message: `Coupon "${form.couponCode}" not found.` });
+                      return;
+                    }
+                    if (coupon.isArchived) {
+                      setToastMessage({ type: "error", title: "Coupon Inactive", message: "This coupon has been deactivated." });
+                      return;
+                    }
+                    if (coupon.startsAt && new Date(coupon.startsAt) > new Date()) {
+                      setToastMessage({ type: "error", title: "Coupon Not Active", message: `This coupon is valid from ${new Date(coupon.startsAt).toLocaleDateString()}.` });
+                      return;
+                    }
+                    if (coupon.endsAt && new Date(coupon.endsAt) < new Date()) {
+                      setToastMessage({ type: "error", title: "Coupon Expired", message: "This coupon has expired." });
+                      return;
+                    }
+                    if (coupon.usageLimit != null && coupon.usageCount >= coupon.usageLimit) {
+                      setToastMessage({ type: "error", title: "Usage Limit Reached", message: "This coupon has reached its usage limit." });
+                      return;
+                    }
+                    const subtotal = form.items.reduce((sum, item) => {
+                      const price = item.unitPrice != null ? toAmount(item.unitPrice) : getCatalogBasePrice(item);
+                      return sum + Number(item.qty || 0) * price;
+                    }, 0);
+                    if (coupon.minBillAmount && subtotal < Number(coupon.minBillAmount)) {
+                      setToastMessage({ type: "error", title: "Minimum Bill Not Met", message: `Minimum bill amount is ${formatMoney(Number(coupon.minBillAmount))}. Current subtotal: ${formatMoney(subtotal)}` });
+                      return;
+                    }
+                    let couponDiscount = 0;
+                    if (coupon.discountType === "PERCENT") {
+                      couponDiscount = Number(((subtotal * Number(coupon.discountValue)) / 100).toFixed(2));
+                    } else {
+                      couponDiscount = Math.min(Number(coupon.discountValue), subtotal);
+                    }
+                    setForm(c => ({ ...c }));
+                    setCouponDiscount(couponDiscount);
+                    setToastMessage({ type: "success", title: "Coupon Applied", message: `Coupon "${coupon.code}" applied. ${coupon.discountType === "PERCENT" ? coupon.discountValue + "% off" : formatMoney(couponDiscount) + " off"}` });
+                  }} style={{ padding: "8px 14px", background: "var(--accent, #3b82f6)", color: "#fff", border: "none", borderRadius: 20, cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Apply</button>
+                ) : (
+                  <button type="button" disabled style={{ padding: "8px 14px", background: "#e2e8f0", color: "#94a3b8", border: "none", borderRadius: 20, fontWeight: 600, fontSize: 13, cursor: "not-allowed" }}>Apply</button>
+                )}
+                {form.couponCode && selectedCoupon && (
+                  <span style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600 }}>
+                    {selectedCoupon.discountType === "PERCENT" ? `${selectedCoupon.discountValue}% off` : `${formatMoney(Number(selectedCoupon.discountValue))} off`}
+                  </span>
+                )}
+                {form.couponCode && (
+                  <button type="button" onClick={() => { setForm(c => ({ ...c, couponCode: "" })); setCouponDiscount(0); setToastMessage({ type: "success", title: "Coupon Removed", message: "Coupon has been cleared." }); }} style={{ padding: "6px 10px", fontSize: "11px", background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 20, cursor: "pointer", color: "#991b1b", fontWeight: 600 }}>Clear</button>
+                )}
+              </div>
               <button type="button" onClick={openDiscountModal} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap" }}>Apply Discount</button>
               <button type="button" onClick={loadCustomerPackagesForRedemption} disabled={loadingCustomerPkgs} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: loadingCustomerPkgs ? "not-allowed" : "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap", opacity: loadingCustomerPkgs ? 0.6 : 1 }}>{loadingCustomerPkgs ? "Loading..." : "Apply Package"}</button>
               <button type="button" onClick={() => { setGcRedemptionCode(""); setGcRedemptionResult(null); setShowGcRedemptionModal(true); }} style={{ padding: "8px 18px", background: "#fff", border: "1px solid var(--accent, #3b82f6)", borderRadius: 20, cursor: "pointer", fontWeight: 600, color: "var(--accent, #3b82f6)", fontSize: 13, whiteSpace: "nowrap" }}>Apply Gift Card</button>

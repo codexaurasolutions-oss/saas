@@ -14,7 +14,9 @@ import {
   X,
   LogOut,
   Globe,
+  CreditCard,
 } from "lucide-react";
+import { api } from "../api/client";
 
 const GROUP_ICONS = {
   "My Workspace":     <User size={17} />,
@@ -51,6 +53,7 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
 
   const [openGroups, setOpenGroups] = useState(defaultOpen);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [subscription, setSubscription] = useState(null);
 
   const closeMobile = () => setMobileOpen(false);
   const closeWorkspace = () => {
@@ -61,6 +64,10 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
   useEffect(() => {
     setOpenGroups((current) => ({ ...current, ...defaultOpen }));
   }, [defaultOpen]);
+
+  useEffect(() => {
+    api.get("/owner/subscription").then((res) => setSubscription(res.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -119,6 +126,15 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
               <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", marginLeft: 8 }}>{auth?.membership?.salonName || "ReSpark"}</span>
             )}
           </div>
+          {sidebarExpanded && subscription?.active && subscription?.plan && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", margin: "0 0 8px", background: "rgba(255,255,255,0.08)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
+              <CreditCard size={12} style={{ color: "#10b981" }} />
+              <span style={{ color: "#d1d5db", fontSize: "0.7rem", fontWeight: 600 }}>{subscription.plan.name}</span>
+              {subscription.daysRemaining <= 7 && (
+                <span style={{ color: "#fbbf24", fontSize: "0.65rem", fontWeight: 500 }}>({subscription.daysRemaining}d left)</span>
+              )}
+            </div>
+          )}
           <button
             type="button"
             className="sidebar-close-btn sidebar-mobile-close"

@@ -1,4 +1,4 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { api } from "../../api/client";
 import { useBranch } from '../../context/BranchContext';
@@ -7,6 +7,7 @@ import IndianPhoneInput from "../../components/IndianPhoneInput";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import { formatApiError } from "../../utils/apiError";
+import { loadFaceVerificationModels } from "../../utils/faceVerification";
 import {
   clonePermissions,
   countGrantedActions,
@@ -58,6 +59,10 @@ export default function UsersPage() {
   const [form, setForm] = useState(makeEmptyForm);
   const [status, setStatus] = useState({ error: "", success: "", loading: true });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [attendanceCapture, setAttendanceCapture] = useState({ active: false, rowId: "", loading: false, error: "" });
+  const attendanceVideoRef = useRef(null);
+  const attendanceCanvasRef = useRef(null);
+  const attendanceStreamRef = useRef(null);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
 
   const load = async (branchId = selectedBranchId) => {
@@ -308,6 +313,70 @@ export default function UsersPage() {
       setSelectedId(rowId);
     });
   };
+
+  const startAttendanceCapture = async (rowId) => {
+    setAttendanceCapture({ active: true, rowId, loading: true, error: "" });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      attendanceStreamRef.current = stream;
+      if (attendanceVideoRef.current) {
+        attendanceVideoRef.current.srcObject = stream;
+        await attendanceVideoRef.current.play().catch(() => {});
+      }
+      setAttendanceCapture((c) => ({ ...c, loading: false }));
+    } catch (err) {
+      setAttendanceCapture((c) => ({ ...c, loading: false, error: "Camera access denied. Please allow camera permissions." }));
+    }
+  };
+
+  const submitAttendanceEnrollment = async () => {
+    if (!attendanceCanvasRef.current || !attendanceVideoRef.current) return;
+    setAttendanceCapture((c) => ({ ...c, loading: true, error: "" }));
+    try {
+      const canvas = attendanceCanvasRef.current;
+      const video = attendanceVideoRef.current;
+      canvas.width = video.videoWidth || 720;
+      canvas.height = video.videoHeight || 960;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+      if (!blob) throw new Error("Failed to capture photo");
+      const formData = new FormData();
+      formData.append("image", blob, "attendance-enrollment.jpg");
+      const uploadRes = await api.post("/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      const photoUrl = uploadRes.data?.url || "";
+      if (!photoUrl) throw new Error("Upload failed");
+      await loadFaceVerificationModels().catch(() => {});
+      await api.patch(`/owner/users/${attendanceCapture.rowId}`, {
+        attendanceEnabled: true,
+        attendanceEnrollmentPhotoUrl: photoUrl
+      });
+      stopAttendanceStream();
+      setAttendanceCapture({ active: false, rowId: "", loading: false, error: "" });
+      setStatus((c) => ({ ...c, success: "Attendance enrollment photo captured and saved." }));
+      await load(selectedBranchId);
+    } catch (err) {
+      setAttendanceCapture((c) => ({ ...c, loading: false, error: formatApiError(err, "Failed to capture enrollment photo.") }));
+    }
+  };
+
+  const stopAttendanceStream = () => {
+    if (attendanceStreamRef.current) {
+      attendanceStreamRef.current.getTracks().forEach((t) => t.stop());
+      attendanceStreamRef.current = null;
+    }
+  };
+
+  const toggleAttendanceEnabled = async (row) => {
+    const next = !row.attendanceEnabled;
+    await api.patch(`/owner/users/${row.id}`, {
+      attendanceEnabled: next,
+      ...(next ? {} : { attendanceEnrollmentPhotoUrl: null })
+    });
+    await load(selectedBranchId);
+  };
+
+  useEffect(() => () => stopAttendanceStream(), []);
 
   return (
     <div className="page-shell" style={{ padding: 0, height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -582,6 +651,44 @@ export default function UsersPage() {
                           <input type="text" className="hub-input" value={form.ifscCode} onChange={(event) => setForm({ ...form, ifscCode: event.target.value })} placeholder="IFSC Code" />
                         </div>
                       </div>
+                    </div>
+
+                    {/* Attendance Enrollment */}
+                    <div style={{ marginBottom: 32 }}>
+                      <h4 style={{ fontSize: 15, color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginBottom: 16 }}>Attendance Enrollment</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                        <div className="hub-toggle-group">
+                          <input type="checkbox" checked={Boolean(selectedRow.attendanceEnabled)} onChange={() => toggleAttendanceEnabled(selectedRow)} />
+                          <span>Enable GPS + selfie attendance for this staff member</span>
+                        </div>
+                        {selectedRow.attendanceEnabled && !selectedRow.attendanceEnrollmentPhotoUrl && (
+                          <button type="button" className="secondary-button" style={{ fontSize: 13, padding: '6px 12px' }} onClick={() => startAttendanceCapture(selectedRow.id)}>
+                            Capture Enrollment Photo
+                          </button>
+                        )}
+                      </div>
+                      {selectedRow.attendanceEnabled && (
+                        <div style={{ fontSize: 13, color: '#64748b' }}>
+                          {selectedRow.attendanceEnrollmentPhotoUrl
+                            ? "Enrollment photo captured. Face verification is active for attendance check-ins."
+                            : "Attendance enabled but no enrollment photo. Capture one to enable face verification."}
+                        </div>
+                      )}
+                      {attendanceCapture.active && attendanceCapture.rowId === selectedRow.id && (
+                        <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'grid', gap: 10, maxWidth: 360 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>Capture Enrollment Photo</div>
+                          {attendanceCapture.loading && !attendanceStreamRef.current && <div style={{ color: '#64748b', fontSize: 13 }}>Starting camera...</div>}
+                          {attendanceCapture.error && <div className="error-text" style={{ fontSize: 13 }}>{attendanceCapture.error}</div>}
+                          <video ref={attendanceVideoRef} autoPlay playsInline muted style={{ width: '100%', borderRadius: 8, background: '#0f172a', maxHeight: 240, objectFit: 'cover' }} />
+                          <canvas ref={attendanceCanvasRef} style={{ display: 'none' }} />
+                          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                            <button type="button" className="secondary-button" style={{ fontSize: 13, padding: '6px 12px' }} onClick={() => { stopAttendanceStream(); setAttendanceCapture({ active: false, rowId: "", loading: false, error: "" }); }}>Cancel</button>
+                            <button type="button" onClick={() => void submitAttendanceEnrollment()} disabled={attendanceCapture.loading} style={{ fontSize: 13, padding: '6px 12px' }}>
+                              {attendanceCapture.loading ? "Saving..." : "Capture & Save"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, borderTop: '1px solid #e2e8f0', paddingTop: 24 }}>

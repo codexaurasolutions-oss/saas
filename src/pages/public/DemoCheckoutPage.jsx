@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import PageLoader from "../../components/PageLoader";
 import PublicMobileMenu from "../../components/PublicMobileMenu";
@@ -15,6 +15,7 @@ const navItems = [
 
 export default function DemoCheckoutPage() {
   const { leadId, planId } = useParams();
+  const navigate = useNavigate();
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -29,6 +30,11 @@ export default function DemoCheckoutPage() {
         setLoading(false);
       })
       .catch((err) => {
+        if (err?.response?.status === 409) {
+          const userEmail = err.response.data?.email || "";
+          window.location.href = `/login?email=${encodeURIComponent(userEmail)}`;
+          return;
+        }
         setError(formatApiError(err, "Could not fetch checkout information. Please verify link details."));
         setLoading(false);
       });
@@ -55,6 +61,10 @@ export default function DemoCheckoutPage() {
       }
 
       const res = await api.post(`/public/demo-checkout/${leadId}/razorpay-order`, { planId });
+      if (res.data?.message === "ALREADY_CONVERTED") {
+        window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
+        return;
+      }
       const order = res.data;
 
       const options = {
@@ -67,16 +77,36 @@ export default function DemoCheckoutPage() {
         handler: async function (response) {
           setSubmitting(true);
           try {
-            await api.post(`/public/demo-checkout/verify-razorpay`, {
+            const verifyRes = await api.post(`/public/demo-checkout/verify-razorpay`, {
               leadId,
               planId,
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature
             });
+            const { setupToken, loginAccessToken, email, alreadyConverted } = verifyRes.data || {};
+
+            if (alreadyConverted) {
+              window.location.href = `/login?email=${encodeURIComponent(email || info?.leadEmail || "")}`;
+              return;
+            }
+
+            if (setupToken && loginAccessToken && email) {
+              window.location.href = `/reset-password?token=${encodeURIComponent(setupToken)}&email=${encodeURIComponent(email)}&access=${encodeURIComponent(loginAccessToken)}`;
+              return;
+            }
+
             setSuccess(true);
           } catch (err) {
-            setError(formatApiError(err, "Payment verification failed. Please contact support."));
+            const errMsg = err.response?.data?.message || "";
+            if (errMsg.includes("already belongs to an existing user")) {
+              setError("This email is already registered. Please login with your existing account.");
+            } else if (errMsg.includes("already converted")) {
+              window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
+              return;
+            } else {
+              setError(formatApiError(err, "Payment verification failed. Please contact support."));
+            }
           } finally {
             setSubmitting(false);
           }
@@ -123,6 +153,11 @@ export default function DemoCheckoutPage() {
       });
       rzp.open();
     } catch (err) {
+      const errMsg = err.response?.data?.message || "";
+      if (errMsg.includes("ALREADY_CONVERTED")) {
+        window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
+        return;
+      }
       setError(formatApiError(err, "Could not initialize payment. Please try again."));
       setSubmitting(false);
     }
@@ -170,14 +205,12 @@ export default function DemoCheckoutPage() {
               <div className="demo-success-badge" style={{ fontSize: 16, padding: "8px 16px" }}>Payment Captured</div>
               <h1 style={{ fontSize: 32, margin: "20px 0 10px" }}>Subscription Activated Successfully!</h1>
               <p style={{ fontSize: 16, lineHeight: "1.7", marginBottom: 30 }} className="muted">
-                Thank you for purchasing the <strong>{info?.planName}</strong> subscription plan for <strong>{info?.company || "your salon"}</strong>. 
-                Your workspace creation order has been updated in the Admin Panel. 
-                <br/><br/>
-                Our Super Admin team will now provision your active account and send your secure login password-setup credentials to <strong>{info?.leadEmail}</strong>.
+                Thank you for purchasing the <strong>{info?.planName}</strong> subscription plan for <strong>{info?.company || "your salon"}</strong>.
+                Your workspace has been created. Please check your email for the password setup link, or click below to set your password.
               </p>
               <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
                 <Link to="/" className="cta-primary">Go to Homepage</Link>
-                <a href="mailto:support@respark.local" className="cta-secondary">Contact Support</a>
+                <Link to={`/login?email=${encodeURIComponent(info?.leadEmail || "")}`} className="cta-secondary">Go to Login</Link>
               </div>
             </div>
           </section>
@@ -251,7 +284,7 @@ export default function DemoCheckoutPage() {
                 </div>
 
                 <div style={{ fontSize: "0.8rem", background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: 12, display: "flex", gap: "8px", alignItems: "center" }}>
-                  <span>🛡️</span>
+                  <span>&#128737;&#65039;</span>
                   <span>Payments are secured via Razorpay. All cards, UPI, Wallets, and Netbanking are supported.</span>
                 </div>
 

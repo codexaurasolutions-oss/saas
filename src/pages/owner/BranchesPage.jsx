@@ -5,7 +5,7 @@ import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
 import { formatApiError } from "../../utils/apiError";
 
-const emptyForm = { name: "", phone: "", email: "", address: "", businessHours: "", weeklyOff: "" };
+const emptyForm = { name: "", phone: "", email: "", address: "", businessHours: "", weeklyOff: "", latitude: "", longitude: "", geofenceRadiusMeters: "75" };
 
 export default function BranchesPage() {
   const [rows, setRows] = useState([]);
@@ -55,11 +55,22 @@ export default function BranchesPage() {
     event.preventDefault();
     setStatus({ error: "", success: "" });
     try {
+      const payload = {
+        name: form.name,
+        phone: form.phone || undefined,
+        email: form.email || undefined,
+        address: form.address || undefined,
+        businessHours: form.businessHours || undefined,
+        weeklyOff: form.weeklyOff || undefined,
+        latitude: form.latitude ? Number(form.latitude) : undefined,
+        longitude: form.longitude ? Number(form.longitude) : undefined,
+        geofenceRadiusMeters: form.geofenceRadiusMeters ? Number(form.geofenceRadiusMeters) : undefined
+      };
       if (editingId) {
-        await api.patch(`/owner/branches/${editingId}`, form);
+        await api.patch(`/owner/branches/${editingId}`, payload);
         setStatus({ error: "", success: "Branch updated." });
       } else {
-        await api.post("/owner/branches", form);
+        await api.post("/owner/branches", payload);
         setStatus({ error: "", success: "Branch created." });
       }
       resetForm();
@@ -83,7 +94,10 @@ export default function BranchesPage() {
       email: branch.email || "",
       address: branch.address || "",
       businessHours: branch.businessHours || "",
-      weeklyOff: branch.weeklyOff || ""
+      weeklyOff: branch.weeklyOff || "",
+      latitude: branch.latitude != null ? String(branch.latitude) : "",
+      longitude: branch.longitude != null ? String(branch.longitude) : "",
+      geofenceRadiusMeters: branch.geofenceRadiusMeters != null ? String(branch.geofenceRadiusMeters) : "75"
     });
   };
 
@@ -154,6 +168,23 @@ export default function BranchesPage() {
                 <option value="Sunday">Sunday</option>
               </select>
             </label>
+            <div className="settings-input-group" style={{ gridColumn: "1 / -1" }}>
+              <span className="muted" style={{ display: "block", marginBottom: 6 }}>Geofence Settings (for attendance check-in)</span>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <label style={{ flex: "1 1 140px" }}>
+                  <span className="muted" style={{ fontSize: 12 }}>Latitude</span>
+                  <input type="number" step="any" placeholder="e.g. 24.8607" value={form.latitude} onChange={(event) => setForm({ ...form, latitude: event.target.value })} />
+                </label>
+                <label style={{ flex: "1 1 140px" }}>
+                  <span className="muted" style={{ fontSize: 12 }}>Longitude</span>
+                  <input type="number" step="any" placeholder="e.g. 67.0011" value={form.longitude} onChange={(event) => setForm({ ...form, longitude: event.target.value })} />
+                </label>
+                <label style={{ flex: "1 1 140px" }}>
+                  <span className="muted" style={{ fontSize: 12 }}>Radius (meters)</span>
+                  <input type="number" min="10" max="5000" step="5" value={form.geofenceRadiusMeters} onChange={(event) => setForm({ ...form, geofenceRadiusMeters: event.target.value })} />
+                </label>
+              </div>
+            </div>
             <div className="form-actions" style={{ gridColumn: "1 / -1", marginTop: "16px" }}>
               <button type="submit">{editingId ? "Save Branch" : "Add Branch"}</button>
               {editingId && <button type="button" className="secondary-button" onClick={resetForm}>Cancel Edit</button>}

@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
+import ImageUploader from "../../components/ImageUploader";
 import PageLoader from "../../components/PageLoader";
 import "./ServiceHubPage.css";
 
@@ -16,6 +17,9 @@ const defaultProductForm = {
   costPrice: 0,
   sellingPrice: 0,
   salePrice: 0,
+  currentStock: 0,
+  minStock: 0,
+  allowNegativeStock: false,
   nonDiscountable: false,
   sku: "",
   productType: "RETAIL",
@@ -107,6 +111,9 @@ export default function ProductCategoriesPage() {
       costPrice: Number(p.costPrice) || 0,
       sellingPrice: Number(p.sellingPrice) || 0,
       salePrice: Number(p.salePrice) || 0,
+      currentStock: Number(p.currentStock) || 0,
+      minStock: Number(p.minStock) || 0,
+      allowNegativeStock: Boolean(p.allowNegativeStock),
       nonDiscountable: Boolean(p.nonDiscountable),
       sku: p.sku || "",
       productType: p.productType || "RETAIL",
@@ -134,6 +141,9 @@ export default function ProductCategoriesPage() {
         costPrice: Number(productForm.costPrice),
         sellingPrice: Number(productForm.sellingPrice),
         salePrice: productForm.salePrice ? Number(productForm.salePrice) : null,
+        currentStock: Number(productForm.currentStock) || 0,
+        minStock: Number(productForm.minStock) || 0,
+        allowNegativeStock: Boolean(productForm.allowNegativeStock),
         featured: Boolean(productForm.featured),
         targetGroup: productForm.targetGroup || "BOTH",
         hideFromCatalogue: Boolean(productForm.hideFromCatalogue),
@@ -316,13 +326,13 @@ export default function ProductCategoriesPage() {
                 <textarea className="hub-input" value={categoryForm.description} onChange={e => setCategoryForm({...categoryForm, description: e.target.value})} placeholder="Short description for this category" rows={2} style={{ width: "100%", resize: "vertical" }} />
               </div>
               <div className="hub-form-group" style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" }}>Category Image URL</label>
-                <input type="text" className="hub-input" value={categoryForm.imageUrl} onChange={e => setCategoryForm({...categoryForm, imageUrl: e.target.value})} placeholder="https://example.com/image.jpg or paste a URL" style={{ width: "100%" }} />
-                {categoryForm.imageUrl && (
-                  <div style={{ marginTop: 8, width: 120, height: 80, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
-                    <img src={categoryForm.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
-                  </div>
-                )}
+                <ImageUploader
+                  label="Category Image"
+                  value={categoryForm.imageUrl}
+                  onChange={(url) => setCategoryForm({...categoryForm, imageUrl: url})}
+                  uploadEndpoint="/upload"
+                  hint="Upload a category image (JPG, PNG, WebP — max 5MB)"
+                />
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid #e2e8f0", paddingTop: 16 }}>
                 <button type="button" className="btn-cancel" onClick={() => setShowCategoryModal(false)}>Cancel</button>
@@ -469,6 +479,27 @@ export default function ProductCategoriesPage() {
                       <input type="checkbox" checked={productForm.productType === "RETAIL"} onChange={e => setProductForm({...productForm, productType: e.target.checked ? "RETAIL" : "CONSUMABLE"})} style={{ width: 18, height: 18, accentColor: "#2563eb" }} />
                       Retail
                     </label>
+                  </div>
+                </div>
+
+                {/* Stock */}
+                <div style={{ marginBottom: 20, padding: "12px 0", borderTop: "1px solid #f1f5f9" }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: "#0f172a", display: "block", marginBottom: 10 }}>Stock Management</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 12, color: "#64748b", marginBottom: 4, display: "block" }}>Current Stock *</label>
+                      <input type="number" className="hub-input" value={productForm.currentStock} onChange={e => setProductForm({...productForm, currentStock: e.target.value})} placeholder="0" min="0" style={{ width: "100%" }} />
+                    </div>
+                    <div className="hub-form-group">
+                      <label style={{ fontSize: 12, color: "#64748b", marginBottom: 4, display: "block" }}>Min Stock Alert</label>
+                      <input type="number" className="hub-input" value={productForm.minStock} onChange={e => setProductForm({...productForm, minStock: e.target.value})} placeholder="0" min="0" style={{ width: "100%" }} />
+                    </div>
+                    <div className="hub-form-group" style={{ display: "flex", alignItems: "end" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#334155", cursor: "pointer" }}>
+                        <input type="checkbox" checked={productForm.allowNegativeStock} onChange={e => setProductForm({...productForm, allowNegativeStock: e.target.checked})} style={{ width: 18, height: 18, accentColor: "#2563eb" }} />
+                        Allow Negative Stock
+                      </label>
+                    </div>
                   </div>
                 </div>
 

@@ -64,11 +64,17 @@ export default function ProductDetailPage() {
             <div style={{ display: "flex", border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
               <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 40, height: 40, border: "none", background: "#f8fafc", cursor: "pointer", fontSize: "1.1rem" }}>-</button>
               <span style={{ width: 48, height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600 }}>{qty}</span>
-              <button onClick={() => setQty(qty + 1)} style={{ width: 40, height: 40, border: "none", background: "#f8fafc", cursor: "pointer", fontSize: "1.1rem" }}>+</button>
+              <button onClick={() => setQty(Math.min(product.currentStock || 99, qty + 1))} style={{ width: 40, height: 40, border: "none", background: "#f8fafc", cursor: "pointer", fontSize: "1.1rem" }}>+</button>
             </div>
-            <button onClick={() => addToCart({ ...product, qty })} style={{ flex: 1, padding: "14px 24px", background: "var(--sf-accent, #c8a97e)", color: "#fff", border: "none", borderRadius: 12, fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>
-              Add to Cart - {currency} {(price * qty).toFixed(2)}
-            </button>
+            {product.currentStock > 0 ? (
+              <button onClick={() => { addToCart({ id: product.id, name: product.name, imageUrl: product.imageUrl, sellingPrice: product.sellingPrice, salePrice: product.salePrice, category: product.category, currentStock: product.currentStock }, qty); alert("Added to cart!"); setQty(1); }} style={{ flex: 1, padding: "14px 24px", background: "var(--sf-accent, #c8a97e)", color: "#fff", border: "none", borderRadius: 12, fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}>
+                Add to Cart - {currency} {(price * qty).toFixed(2)}
+              </button>
+            ) : (
+              <button disabled style={{ flex: 1, padding: "14px 24px", background: "#d1d5db", color: "#6b7280", border: "none", borderRadius: 12, fontWeight: 700, fontSize: "1rem", cursor: "not-allowed" }}>
+                Out of Stock
+              </button>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 16, marginTop: 24, paddingTop: 24, borderTop: "1px solid #f1f5f9" }}>

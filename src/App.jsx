@@ -49,6 +49,7 @@ const MyAppointmentsPage = lazyWithRetry(() => import("./pages/owner/MyAppointme
 const MyCommissionPage = lazyWithRetry(() => import("./pages/owner/MyCommissionPage.jsx"));
 const MyDashboardPage = lazyWithRetry(() => import("./pages/owner/MyDashboardPage.jsx"));
 const MyPayrollPage = lazyWithRetry(() => import("./pages/owner/MyPayrollPage.jsx"));
+const MyAttendanceHistoryPage = lazyWithRetry(() => import("./pages/owner/MyAttendanceHistoryPage.jsx"));
 const MyProfilePage = lazyWithRetry(() => import("./pages/owner/MyProfilePage.jsx"));
 const MySchedulePage = lazyWithRetry(() => import("./pages/owner/MySchedulePage.jsx"));
 const ServiceCategoriesPage = lazyWithRetry(() => import("./pages/owner/ServiceCategoriesPage.jsx"));
@@ -82,6 +83,8 @@ const CategoryDetailPage = lazyWithRetry(() => import("./pages/storefront/Catego
 const ProductDetailPage = lazyWithRetry(() => import("./pages/storefront/ProductDetailPage.jsx"));
 const CartPage = lazyWithRetry(() => import("./pages/storefront/CartPage.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/storefront/CheckoutPage.jsx"));
+const OrderConfirmationPage = lazyWithRetry(() => import("./pages/storefront/OrderConfirmationPage.jsx"));
+const CustomerOrdersPage = lazyWithRetry(() => import("./pages/storefront/CustomerOrdersPage.jsx"));
 const AboutPage = lazyWithRetry(() => import("./pages/storefront/AboutPage.jsx"));
 const ContactPage = lazyWithRetry(() => import("./pages/storefront/ContactPage.jsx"));
 const LegalContentPage = lazyWithRetry(() => import("./pages/shared/LegalContentPage.jsx"));
@@ -101,6 +104,7 @@ const SuperAdminSupportTicketsPage = lazyWithRetry(() => import("./pages/superAd
 const SuperAdminSettingsPage = lazyWithRetry(() => import("./pages/superAdmin/SettingsPage.jsx"));
 const SuperAdminAuditLogsPage = lazyWithRetry(() => import("./pages/superAdmin/AuditLogsPage.jsx"));
 const SuperAdminTrafficAnalyticsPage = lazyWithRetry(() => import("./pages/superAdmin/TrafficAnalyticsPage.jsx"));
+const SuperAdminStaffPage = lazyWithRetry(() => import("./pages/superAdmin/StaffManagementPage.jsx"));
 
 const RouteFallback = () => (
   <div className="page-shell">
@@ -128,6 +132,7 @@ const Protected = () => {
     can("myDashboard") && { label: "My Dashboard", to: "/admin/my-dashboard" },
     can("myAppointments") && enabled("appointments") && { label: "My Appointments", to: "/admin/my-appointments" },
     can("mySchedule") && enabled("appointments") && { label: "My Schedule", to: "/admin/my-schedule" },
+    can("myAttendance") && enabled("attendance") && { label: "My Attendance", to: "/admin/my-attendance" },
     can("myCommission") && { label: "My Commission", to: "/admin/my-commission" },
     can("myProfile") && { label: "My Profile", to: "/admin/my-profile" }
   ].filter(Boolean);
@@ -270,7 +275,8 @@ const Protected = () => {
         { label: "Dashboard", to: "/super-admin/dashboard" },
         { label: "Salons Control", to: "/super-admin/salons" },
         { label: "Plans Catalog", to: "/super-admin/plans" },
-        { label: "Customer Management", to: "/super-admin/subscriptions" }
+        { label: "Customer Management", to: "/super-admin/subscriptions" },
+        { label: "Staff Management", to: "/super-admin/staff" }
       ]
     },
     {
@@ -293,7 +299,17 @@ const Protected = () => {
   ];
 
   const visibleGroups = auth?.user?.systemRole === "SUPER_ADMIN"
-    ? superAdminGroups
+    ? (() => {
+        const perms = auth?.user?.pagePermissions;
+        if (!perms || !Array.isArray(perms) || perms.length === 0) return superAdminGroups;
+        return superAdminGroups.map((group) => ({
+          ...group,
+          items: group.items.filter((item) => {
+            const pageKey = item.to.split("/").pop();
+            return perms.includes(pageKey);
+          })
+        })).filter((group) => group.items.length > 0);
+      })()
     : [
         ...(shouldShowMyWorkspace && myWorkspaceItems.length
           ? [{
@@ -414,6 +430,8 @@ export default function App() {
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="my-orders" element={<CustomerOrdersPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="terms" element={<LegalContentPage scope="salon" title="Terms & Conditions" contentKey="termsAndConditions" />} />
@@ -572,6 +590,7 @@ export default function App() {
           <Route path="/admin/my-schedule" element={<OwnerRoute moduleKey="mySchedule" featureKey="appointments" element={<MySchedulePage />} />} />
           <Route path="/admin/my-commission" element={<OwnerRoute moduleKey="myCommission" element={<MyCommissionPage />} />} />
           <Route path="/admin/my-payroll" element={<OwnerRoute moduleKey="myPayroll" element={<MyPayrollPage />} />} />
+          <Route path="/admin/my-attendance" element={<OwnerRoute moduleKey="myAttendance" featureKey="attendance" element={<MyAttendanceHistoryPage />} />} />
           <Route path="/admin/my-profile" element={<OwnerRoute moduleKey="myProfile" element={<MyProfilePage />} />} />
 
           {/* Super Admin Area */}
@@ -584,6 +603,7 @@ export default function App() {
           <Route path="/super-admin/settings" element={<SuperAdminRoute element={<SuperAdminSettingsPage />} />} />
           <Route path="/super-admin/audit-logs" element={<SuperAdminRoute element={<SuperAdminAuditLogsPage />} />} />
           <Route path="/super-admin/traffic" element={<SuperAdminRoute element={<SuperAdminTrafficAnalyticsPage />} />} />
+          <Route path="/super-admin/staff" element={<SuperAdminRoute element={<SuperAdminStaffPage />} />} />
 
           <Route path="/branches" element={<Navigate to="/admin/branches" replace />} />
           <Route path="/services" element={<Navigate to="/admin/services" replace />} />

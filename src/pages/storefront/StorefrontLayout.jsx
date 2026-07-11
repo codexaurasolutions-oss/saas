@@ -1,25 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Outlet, Link, useParams, useLocation } from "react-router-dom";
 import { api } from "../../api/client";
 import "../../storefront.css";
+
+const CART_KEY = "sf_cart";
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveCart(items) {
+  try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch {}
+}
 
 export default function StorefrontLayout() {
   const { slug } = useParams();
   const location = useLocation();
   const [salon, setSalon] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(loadCart);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const addToCart = (item) => {
-    setCart([...cart, item]);
-    alert("Added to cart!");
-  };
+  useEffect(() => { saveCart(cart); }, [cart]);
+
+  const addToCart = useCallback((item, qty = 1) => {
+    setCart(prev => {
+      const existing = prev.find(c => c.id === item.id);
+      if (existing) {
+        return prev.map(c => c.id === item.id ? { ...c, qty: c.qty + qty } : c);
+      }
+      return [...prev, { ...item, qty }];
+    });
+  }, []);
+
+  const removeFromCart = useCallback((productId) => {
+    setCart(prev => prev.filter(c => c.id !== productId));
+  }, []);
+
+  const updateCartQty = useCallback((productId, qty) => {
+    if (qty <= 0) {
+      setCart(prev => prev.filter(c => c.id !== productId));
+    } else {
+      setCart(prev => prev.map(c => c.id === productId ? { ...c, qty } : c));
+    }
+  }, []);
+
+  const cartCount = cart.reduce((sum, c) => sum + c.qty, 0);
 
   useEffect(() => {
+    if (!slug) return;
     api.get(`/public/salon/${slug}`)
       .then(res => {
-        const fullSalon = { ...res.data.salon, websiteConfig: res.data.websiteConfig, uiSettings: res.data.uiSettings, footerContent: res.data.footerContent };
+        const fullSalon = { ...res.data.salon, websiteConfig: res.data.websiteConfig, uiSettings: res.data.uiSettings, footerContent: res.data.footerContent, ecommerceSettings: res.data.ecommerceSettings };
         setSalon(fullSalon);
         setLoading(false);
         const wc = res.data.websiteConfig || {};
@@ -74,8 +109,11 @@ export default function StorefrontLayout() {
           </nav>
           
           <div className="sf-header-actions">
+            <Link to={`/site/${salon.slug}/my-orders`} className="sf-btn sf-btn-secondary" style={{ fontSize: '0.85rem' }}>
+              My Orders
+            </Link>
             <Link to={`/site/${salon.slug}/cart`} className="sf-btn sf-btn-secondary">
-              Cart ({cart.length})
+              Cart ({cartCount})
             </Link>
             <Link to={`/site/${salon.slug}/book`} className="sf-btn sf-btn-primary">
               Book Appointment
@@ -85,7 +123,7 @@ export default function StorefrontLayout() {
       </header>
       
       <main>
-        <Outlet context={{ salon, cart, addToCart }} />
+        <Outlet context={{ salon, cart, addToCart, removeFromCart, updateCartQty, cartCount }} />
       </main>
       
       <footer style={{ padding: '60px 20px', background: '#111', color: 'white', textAlign: 'center', marginTop: 'auto' }}>
