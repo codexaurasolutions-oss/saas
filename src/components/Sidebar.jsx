@@ -66,6 +66,7 @@ export default function Sidebar({ groups, auth, onLogout, sidebarExpanded = true
   }, [defaultOpen]);
 
   useEffect(() => {
+    if (auth?.user?.systemRole === "SUPER_ADMIN") return;
     api.get("/owner/subscription").then((res) => setSubscription(res.data)).catch(() => {});
   }, []);
 
