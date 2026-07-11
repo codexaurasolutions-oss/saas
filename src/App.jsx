@@ -159,7 +159,9 @@ const Protected = () => {
             can("staff") && {
               label: "Roles & Permissions",
               to: "/admin/roles-permissions"
-            }
+            },
+            can("attendance") && enabled("attendance") && { label: "Attendance", to: "/admin/attendance" },
+            can("myAttendance") && enabled("attendance") && { label: "My Attendance", to: "/admin/my-attendance" }
           ].filter(Boolean)
         },
 

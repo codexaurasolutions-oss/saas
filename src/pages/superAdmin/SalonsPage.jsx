@@ -334,9 +334,10 @@ export default function SalonsPage() {
                 {salons.map((salon) => {
                   const planName = salon.subscriptions?.[0]?.plan?.name || "No active plan";
                   const isBusy = busyId === salon.id;
-                  let statusBg = "#f1f5f9", statusColor = "#64748b";
+                  let statusBg = "#f1f5f9", statusColor = "#64748b", statusLabel = salon.status;
                   if (salon.status === "ACTIVE") { statusBg = "#ecfdf5"; statusColor = "#10b981"; }
                   else if (salon.status === "SUSPENDED") { statusBg = "#fef2f2"; statusColor = "#ef4444"; }
+                  else if (salon.status === "TRIAL") { statusBg = "#fffbeb"; statusColor = "#d97706"; statusLabel = "Pending"; }
                   
                   return (
                     <tr key={salon.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} className="table-row-hover">
@@ -356,7 +357,7 @@ export default function SalonsPage() {
                       </td>
                       <td style={{ padding: "14px 16px" }}>
                         <span style={{ background: statusBg, color: statusColor, fontWeight: 700, fontSize: 11, padding: "3px 8px", borderRadius: 100 }}>
-                          {salon.status}
+                          {statusLabel}
                         </span>
                       </td>
                       <td style={{ padding: "14px 16px", textAlign: "right" }}>
