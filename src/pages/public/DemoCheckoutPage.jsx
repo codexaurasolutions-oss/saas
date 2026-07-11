@@ -60,7 +60,30 @@ export default function DemoCheckoutPage() {
         throw new Error("Failed to load Razorpay payment SDK. Please check your internet connection.");
       }
 
-      const res = await api.post(`/public/demo-checkout/${leadId}/razorpay-order`, { planId });
+      let res;
+      try {
+        res = await api.post(`/public/demo-checkout/${leadId}/razorpay-order`, { planId });
+      } catch (orderErr) {
+        const status = orderErr?.response?.status;
+        const msg = (orderErr?.response?.data?.message || "").toLowerCase();
+        if (status === 409 || msg.includes("already_converted") || msg.includes("already converted")) {
+          window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
+          return;
+        }
+        if (status === 404 || msg.includes("not found")) {
+          setError("This subscription link has expired or the lead was already processed. Please contact support for a new link.");
+          setSubmitting(false);
+          return;
+        }
+        if (status === 503 || msg.includes("not configured")) {
+          setError("Payment system is being set up. Please contact support at support@codexaurasolutions.com to complete your subscription.");
+          setSubmitting(false);
+          return;
+        }
+        setError(formatApiError(orderErr, "Could not initialize payment. Please try again."));
+        setSubmitting(false);
+        return;
+      }
       if (res.data?.message === "ALREADY_CONVERTED") {
         window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
         return;
@@ -98,12 +121,14 @@ export default function DemoCheckoutPage() {
 
             setSuccess(true);
           } catch (err) {
-            const errMsg = err.response?.data?.message || "";
-            if (errMsg.includes("already belongs to an existing user")) {
+            const errMsg = (err.response?.data?.message || "").toLowerCase();
+            if (errMsg.includes("already belongs to an existing user") || errMsg.includes("already belongs to an existing")) {
               setError("This email is already registered. Please login with your existing account.");
-            } else if (errMsg.includes("already converted")) {
+            } else if (errMsg.includes("already converted") || errMsg.includes("alreadyConverted")) {
               window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
               return;
+            } else if (errMsg.includes("not found")) {
+              setError("This subscription link has expired. Please contact support for a new link.");
             } else {
               setError(formatApiError(err, "Payment verification failed. Please contact support."));
             }
@@ -153,8 +178,8 @@ export default function DemoCheckoutPage() {
       });
       rzp.open();
     } catch (err) {
-      const errMsg = err.response?.data?.message || "";
-      if (errMsg.includes("ALREADY_CONVERTED")) {
+      const errMsg = (err.response?.data?.message || "").toLowerCase();
+      if (errMsg.includes("already_converted") || errMsg.includes("already converted")) {
         window.location.href = `/login?email=${encodeURIComponent(info?.leadEmail || "")}`;
         return;
       }
