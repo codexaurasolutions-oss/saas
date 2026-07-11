@@ -301,6 +301,9 @@ export default function SalonsPage() {
         </div>
       )}
 
+      {status.error && <div style={{ background: "#fef2f2", color: "#991b1b", border: "1px solid #fca5a5", padding: "12px 16px", borderRadius: 10, marginBottom: 16, fontSize: "0.85rem" }}>{status.error}</div>}
+      {status.success && <div style={{ background: "#ecfdf5", color: "#065f46", border: "1px solid #6ee7b7", padding: "12px 16px", borderRadius: 10, marginBottom: 16, fontSize: "0.85rem" }}>{status.success}</div>}
+
       <div className="panel-card" style={{ maxWidth: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -372,6 +375,11 @@ export default function SalonsPage() {
                           {salon.status === "ACTIVE" && (
                             <button type="button" onClick={() => updateStatus(salon.id, "SUSPENDED")} disabled={isBusy} style={{ padding: "6px 12px", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
                               Suspend
+                            </button>
+                          )}
+                          {salon.status !== "EXPIRED" && (
+                            <button type="button" onClick={() => updateStatus(salon.id, "EXPIRED")} disabled={isBusy} style={{ padding: "6px 12px", background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                              Archive
                             </button>
                           )}
                         </div>

@@ -192,6 +192,7 @@ export default function SubscriptionsPage() {
             >
               <option value="">All Statuses</option>
               <option value="ACTIVE">Active</option>
+              <option value="TRIAL">Trial</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="EXPIRED">Expired</option>
             </select>
@@ -268,11 +269,11 @@ export default function SubscriptionsPage() {
                     <td style={{ padding: "16px 20px", color: "#475569" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <Calendar size={14} style={{ color: "#64748b" }} />
-                        <span>Start: {new Date(row.startsAt).toLocaleDateString()}</span>
+                        <span>Start: {row.startsAt ? new Date(row.startsAt).toLocaleDateString() : "—"}</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
                         <Calendar size={14} style={{ color: "#64748b" }} />
-                        <span>End: {new Date(row.endsAt).toLocaleDateString()}</span>
+                        <span>End: {row.endsAt ? new Date(row.endsAt).toLocaleDateString() : "—"}</span>
                       </div>
                       {alertText && <div style={{ color: "#dc2626", fontWeight: 750, fontSize: 11, marginTop: 6 }}>⚠️ {alertText}</div>}
                     </td>
@@ -337,6 +338,7 @@ export default function SubscriptionsPage() {
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
+                  <option value="TRIAL">Trial</option>
                   <option value="SUSPENDED">Suspended</option>
                 </select>
               </label>
@@ -384,6 +386,7 @@ export default function SubscriptionsPage() {
                 <span>Status</span>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                   <option value="ACTIVE">Active</option>
+                  <option value="TRIAL">Trial</option>
                   <option value="SUSPENDED">Suspended</option>
                   <option value="EXPIRED">Expired</option>
                 </select>

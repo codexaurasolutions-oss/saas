@@ -197,6 +197,10 @@ export default function PlansPage() {
                 <input {...numInput("yearlyPrice")} placeholder="0" />
               </label>
               <label>
+                <span>Trial Days</span>
+                <input {...numInput("trialDays", { min: 0, max: 90 })} placeholder="0" />
+              </label>
+              <label>
                 <span>Branch Limit</span>
                 <input {...numInput("branchLimit", { min: 1 })} placeholder="1" />
               </label>
@@ -216,6 +220,17 @@ export default function PlansPage() {
                 <span>Cloud Storage (GB)</span>
                 <input {...numInput("storageLimit")} placeholder="5" />
               </label>
+              <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: 750, color: "#0f172a", display: "block", marginBottom: 8 }}>Feature Access</span>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {Object.keys(defaultFeatureFlags).map((key) => (
+                    <label key={key} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.8rem", color: "#475569", cursor: "pointer", padding: "6px 8px", borderRadius: 6, background: form.featureFlags?.[key] ? "#f0fdf4" : "#f8fafc", border: `1px solid ${form.featureFlags?.[key] ? "#bbf7d0" : "#e2e8f0"}` }}>
+                      <input type="checkbox" checked={form.featureFlags?.[key] ?? true} onChange={(e) => setForm({ ...form, featureFlags: { ...form.featureFlags, [key]: e.target.checked } })} style={{ accentColor: "#10b981" }} />
+                      <span>{key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
               <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, marginTop: 8 }}>
                 <div>
                   <span style={{ fontSize: "0.88rem", fontWeight: 750, color: "#0f172a" }}>Custom Plan</span>

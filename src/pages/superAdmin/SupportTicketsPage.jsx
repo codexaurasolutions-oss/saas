@@ -3,7 +3,7 @@ import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
-import { MessageSquare, Calendar, User, Tag, AlertCircle, Filter, RefreshCw, FileText, CheckCircle2, Bookmark } from "lucide-react";
+import { MessageSquare, Calendar, User, Tag, AlertCircle, Filter, RefreshCw, FileText, CheckCircle2, Bookmark, Building2 } from "lucide-react";
 
 export default function SuperAdminSupportTicketsPage() {
   const [rows, setRows] = useState([]);
@@ -18,16 +18,20 @@ export default function SuperAdminSupportTicketsPage() {
 
   const load = async (nextFilters = filters) => {
     setLoading(true);
-    const response = await api.get("/super-admin/support-tickets", {
-      params: {
-        ...(nextFilters.q ? { q: nextFilters.q } : {}),
-        ...(nextFilters.status ? { status: nextFilters.status } : {}),
-        ...(nextFilters.priority ? { priority: nextFilters.priority } : {})
-      }
-    });
-    setRows(response.data);
-    setNotes(Object.fromEntries(response.data.map((row) => [row.id, row.internalNote || ""])));
-    setAssignedAgents(Object.fromEntries(response.data.map((row) => [row.id, row.assignedAgentName || ""])));
+    try {
+      const response = await api.get("/super-admin/support-tickets", {
+        params: {
+          ...(nextFilters.q ? { q: nextFilters.q } : {}),
+          ...(nextFilters.status ? { status: nextFilters.status } : {}),
+          ...(nextFilters.priority ? { priority: nextFilters.priority } : {})
+        }
+      });
+      setRows(response.data);
+      setNotes(Object.fromEntries(response.data.map((row) => [row.id, row.internalNote || ""])));
+      setAssignedAgents(Object.fromEntries(response.data.map((row) => [row.id, row.assignedAgentName || ""])));
+    } catch (err) {
+      setStatus({ error: formatApiError(err, "Could not load support tickets."), success: "" });
+    }
     setLoading(false);
   };
 
@@ -165,7 +169,7 @@ export default function SuperAdminSupportTicketsPage() {
                     <span className="badge" style={{ background: statBg, color: statColor, fontWeight: 800, fontSize: "0.7rem", padding: "2px 8px" }}>{row.status}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.8rem", color: "#64748b" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Landmark size={14} /> {row.salon?.name || "Global / System"}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Building2 size={14} /> {row.salon?.name || "Global / System"}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Tag size={14} /> {row.category || "General"}</span>
                   </div>
                 </div>

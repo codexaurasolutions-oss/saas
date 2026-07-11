@@ -128,6 +128,17 @@ export default function StaffManagementPage() {
     }
   };
 
+  const toggleActive = async (id, isActive) => {
+    setStatus({ error: "", success: "" });
+    try {
+      await api.patch(`/super-admin/staff/${id}`, { isActive });
+      setStatus({ error: "", success: `Staff ${isActive ? "activated" : "deactivated"}.` });
+      await load();
+    } catch (error) {
+      setStatus({ error: formatApiError(error, "Could not update status"), success: "" });
+    }
+  };
+
   const togglePagePermission = (pageKey) => {
     setForm((prev) => {
       const current = prev.pagePermissions;
@@ -228,14 +239,23 @@ export default function StaffManagementPage() {
                     </div>
                   </td>
                   <td style={tdStyle}>
-                    <span style={{
-                      display: "inline-block", padding: "2px 10px", borderRadius: 12,
-                      fontSize: 12, fontWeight: 600,
-                      background: s.isActive ? "#dcfce7" : "#fee2e2",
-                      color: s.isActive ? "#166534" : "#991b1b"
-                    }}>
-                      {s.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{
+                        display: "inline-block", padding: "2px 10px", borderRadius: 12,
+                        fontSize: 12, fontWeight: 600,
+                        background: s.isActive ? "#dcfce7" : "#fee2e2",
+                        color: s.isActive ? "#166534" : "#991b1b"
+                      }}>
+                        {s.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <button
+                        onClick={() => toggleActive(s.id, !s.isActive)}
+                        style={{ padding: "2px 8px", fontSize: 11, fontWeight: 600, borderRadius: 6, border: "1px solid #e2e8f0", background: s.isActive ? "#fef2f2" : "#ecfdf5", color: s.isActive ? "#ef4444" : "#10b981", cursor: "pointer" }}
+                        title={s.isActive ? "Deactivate" : "Activate"}
+                      >
+                        {s.isActive ? "Deactivate" : "Activate"}
+                      </button>
+                    </div>
                   </td>
                   <td style={tdStyle}>
                     {new Date(s.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}

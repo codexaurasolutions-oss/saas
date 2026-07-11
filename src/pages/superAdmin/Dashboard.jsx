@@ -91,7 +91,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
         <div className="inline-actions" style={{ marginTop: 16 }}>
-          <Link to="/super-admin/salons" className="cta-secondary">Add Salon</Link>
+          <Link to="/super-admin/salons" className="cta-secondary">Salons</Link>
           <Link to="/super-admin/plans" className="cta-secondary">Create Plan</Link>
           <Link to="/super-admin/demo-leads" className="cta-secondary">Demo Leads</Link>
           <Link to="/super-admin/support-tickets" className="cta-secondary">Support Queue</Link>
