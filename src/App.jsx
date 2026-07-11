@@ -50,6 +50,7 @@ const MyCommissionPage = lazyWithRetry(() => import("./pages/owner/MyCommissionP
 const MyDashboardPage = lazyWithRetry(() => import("./pages/owner/MyDashboardPage.jsx"));
 const MyPayrollPage = lazyWithRetry(() => import("./pages/owner/MyPayrollPage.jsx"));
 const MyAttendanceHistoryPage = lazyWithRetry(() => import("./pages/owner/MyAttendanceHistoryPage.jsx"));
+const AttendanceManagementPage = lazyWithRetry(() => import("./pages/owner/AttendanceManagementPage.jsx"));
 const MyProfilePage = lazyWithRetry(() => import("./pages/owner/MyProfilePage.jsx"));
 const MySchedulePage = lazyWithRetry(() => import("./pages/owner/MySchedulePage.jsx"));
 const ServiceCategoriesPage = lazyWithRetry(() => import("./pages/owner/ServiceCategoriesPage.jsx"));
@@ -144,7 +145,8 @@ const Protected = () => {
             can("inventory") && enabled("inventory") && { label: "Products", to: "/admin/product-categories" },
             can("packages") && { label: "Packages Manage", to: "/admin/packages" },
             can("memberships") && { label: "Membership Manage", to: "/admin/memberships" },
-            can("services") && { label: "Services", to: "/admin/services" }
+            can("services") && { label: "Services", to: "/admin/services" },
+            can("attendance") && enabled("attendance") && { label: "Attendance Management", to: "/admin/attendance-management" }
           ].filter(Boolean)
         },
         {
@@ -264,7 +266,8 @@ const Protected = () => {
         { label: "Payments", to: "/admin/payments" },
         { label: "Campaigns", to: "/admin/campaigns" },
         { label: "Reports Hub", to: "/admin/reports-hub" },
-        { label: "Inventory", to: "/admin/inventory" }
+        { label: "Inventory", to: "/admin/inventory" },
+        { label: "Attendance Management", to: "/admin/attendance-management" }
       ]
     }
   ];
@@ -593,6 +596,7 @@ export default function App() {
           <Route path="/admin/my-commission" element={<OwnerRoute moduleKey="myCommission" element={<MyCommissionPage />} />} />
           <Route path="/admin/my-payroll" element={<OwnerRoute moduleKey="myPayroll" element={<MyPayrollPage />} />} />
           <Route path="/admin/my-attendance" element={<OwnerRoute moduleKey="myAttendance" featureKey="attendance" element={<MyAttendanceHistoryPage />} />} />
+          <Route path="/admin/attendance-management" element={<OwnerRoute moduleKey="attendance" featureKey="attendance" element={<AttendanceManagementPage />} />} />
           <Route path="/admin/my-profile" element={<OwnerRoute moduleKey="myProfile" element={<MyProfilePage />} />} />
 
           {/* Super Admin Area */}
