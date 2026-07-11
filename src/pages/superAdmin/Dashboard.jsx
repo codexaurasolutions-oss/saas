@@ -24,7 +24,7 @@ export default function SuperAdminDashboard() {
   const healthCards = useMemo(() => [
     { label: "Total Salons", value: data?.totalSalons || 0, caption: "All tenants", icon: Building2, color: "#4f46e5", bg: "#f5f3ff" },
     { label: "Active Salons", value: data?.activeSalons || 0, caption: "Operational", icon: CheckCircle, color: "#10b981", bg: "#ecfdf5" },
-    { label: "Trial Salons", value: data?.trialSalons || 0, caption: "In trial", icon: Clock, color: "#f59e0b", bg: "#fffbeb" },
+    { label: "New Salons", value: data?.trialSalons || 0, caption: "Recently onboarded", icon: Clock, color: "#f59e0b", bg: "#fffbeb" },
     { label: "Suspended", value: data?.suspendedSalons || 0, caption: "Needs follow-up", icon: AlertTriangle, color: "#ef4444", bg: "#fef2f2" },
     { label: "Demo Leads", value: data?.demoLeadsCount || 0, caption: "Pipeline", icon: Sparkles, color: "#06b6d4", bg: "#ecfeff" },
     { label: "Support Queue", value: data?.supportTicketsCount || 0, caption: "Open tickets", icon: LifeBuoy, color: "#ec4899", bg: "#fdf2f8" }
