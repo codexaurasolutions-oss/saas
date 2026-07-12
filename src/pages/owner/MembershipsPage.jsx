@@ -801,6 +801,21 @@ export default function MembershipsPage() {
                 {!customerPackageMode && (
                   <div className="inline-actions" style={{ marginTop: 10 }}>
                     <Link to={`/admin/packages/${item.id}/edit`} className="cta-secondary">Edit</Link>
+                    <button type="button" className="secondary-button" style={{ color: "#dc2626" }} onClick={async () => {
+                      if (!window.confirm(`Delete package "${item.name}"? This cannot be undone.`)) return;
+                      try {
+                        await api.delete(`/owner/packages/${item.id}`);
+                        setPackages((current) => current.filter((p) => p.id !== item.id));
+                        setStatus({ error: "", success: "Package deleted." });
+                      } catch (error) {
+                        setStatus({ error: formatApiError(error, "Could not delete package"), success: "" });
+                      }
+                    }}>Delete</button>
+                    <button type="button" className="cta-primary" onClick={() => {
+                      setAssignPackageForm((current) => ({ ...current, packageId: item.id }));
+                      const section = document.querySelector('[data-section="packages-assign"]');
+                      if (section) section.scrollIntoView({ behavior: "smooth" });
+                    }}>Assign</button>
                   </div>
                 )}
                 {customerPackageMode && (
@@ -861,7 +876,7 @@ export default function MembershipsPage() {
           </form>
         </div>}
 
-        {(activeSection === "packages") && <div className="panel-card">
+        {(activeSection === "packages") && <div className="panel-card" data-section="packages-assign">
           <h3>Assign Package</h3>
           <div className="item-meta" style={{ marginBottom: 10 }}>{customerScopeLabel}</div>
           <form onSubmit={async (event) => {
