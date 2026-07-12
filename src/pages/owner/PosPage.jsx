@@ -93,7 +93,7 @@ export default function PosPage() {
   const [membershipSearch, setMembershipSearch] = useState("");
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState("");
-  const [paymentLinkForm, setPaymentLinkForm] = useState({ gatewayName: "RAZORPAY_PLACEHOLDER", expiresAt: "", note: "" });
+  const [paymentLinkForm, setPaymentLinkForm] = useState({ gatewayName: "RAZORPAY", expiresAt: "", note: "" });
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
   
@@ -1135,7 +1135,7 @@ export default function PosPage() {
     });
     const invoiceResponse = await api.get(`/owner/invoices/${result.id}`);
     setResult(invoiceResponse.data);
-    setPaymentLink((current) => current ? { ...current, paymentLinkStatus: linkStatus === "PAID_PLACEHOLDER" ? "PAID" : linkStatus } : current);
+    setPaymentLink((current) => current ? { ...current, paymentLinkStatus: linkStatus === "PAID" ? "PAID" : linkStatus } : current);
     setStatus({ error: "", success: `Payment link marked ${linkStatus.toLowerCase()}.` });
   };
 

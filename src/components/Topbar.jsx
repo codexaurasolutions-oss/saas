@@ -38,15 +38,20 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       }).catch(()=> {});
     }
 
-    if (canNotifications && !isSuperAdmin) {
-      api.get("/owner/notifications", { params: { limit: 5 } }).then((res) => {
-        if (active && res.data) {
-          setNotifications(res.data);
-        }
-      }).catch(() => {});
-    }
+    const fetchNotifications = () => {
+      if (canNotifications && !isSuperAdmin) {
+        api.get("/owner/notifications", { params: { limit: 5 } }).then((res) => {
+          if (active && res.data) {
+            setNotifications(res.data);
+          }
+        }).catch(() => {});
+      }
+    };
 
-    return () => { active = false; };
+    fetchNotifications();
+    const notifInterval = setInterval(fetchNotifications, 30000);
+
+    return () => { active = false; clearInterval(notifInterval); };
   }, [canNotifications, canPos, auth?.user?.systemRole]);
 
   useEffect(() => {

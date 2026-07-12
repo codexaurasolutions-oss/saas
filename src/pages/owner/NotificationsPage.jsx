@@ -34,7 +34,10 @@ export default function NotificationsPage() {
     const timeoutId = setTimeout(() => {
       void load();
     }, 0);
-    return () => clearTimeout(timeoutId);
+    const refreshInterval = setInterval(() => {
+      void load();
+    }, 15000);
+    return () => { clearTimeout(timeoutId); clearInterval(refreshInterval); };
   }, [load]);
 
   const markAllRead = async () => {

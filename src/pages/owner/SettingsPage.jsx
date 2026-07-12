@@ -336,7 +336,7 @@ const initialForm = {
   cancellationPolicy: "",
   allowNegativeStock: false,
   paymentGatewaySettings: {
-    defaultGateway: "RAZORPAY_PLACEHOLDER",
+    defaultGateway: "RAZORPAY",
     paymentLinkEnabled: true,
     edcTerminalName: "",
     upiHandle: "",
@@ -344,7 +344,7 @@ const initialForm = {
   },
   advancedSettings: mergeAdvancedSettings(),
   smsSettings: {
-    gatewayProvider: "TWILIO_PLACEHOLDER",
+    gatewayProvider: "TWILIO",
     apiKey: "",
     senderId: ""
   }
@@ -569,7 +569,7 @@ export default function SettingsPage() {
             cancellationPolicy: row.cancellationPolicy || "",
             allowNegativeStock: Boolean(row.allowNegativeStock),
             paymentGatewaySettings: {
-              defaultGateway: row.paymentGatewaySettings?.defaultGateway || "RAZORPAY_PLACEHOLDER",
+              defaultGateway: row.paymentGatewaySettings?.defaultGateway || "RAZORPAY",
               paymentLinkEnabled: row.paymentGatewaySettings?.paymentLinkEnabled ?? true,
               edcTerminalName: row.paymentGatewaySettings?.edcTerminalName || "",
               upiHandle: row.paymentGatewaySettings?.upiHandle || "",
@@ -577,7 +577,7 @@ export default function SettingsPage() {
             },
             advancedSettings: mergeAdvancedSettings(row.advancedSettings || {}),
             smsSettings: {
-              gatewayProvider: row.smsSettings?.gatewayProvider || "TWILIO_PLACEHOLDER",
+              gatewayProvider: row.smsSettings?.gatewayProvider || "TWILIO",
               apiKey: row.smsSettings?.apiKey || "",
               senderId: row.smsSettings?.senderId || ""
             }
@@ -847,7 +847,7 @@ export default function SettingsPage() {
           cancellationPolicy: row.cancellationPolicy || "",
           allowNegativeStock: Boolean(row.allowNegativeStock),
           paymentGatewaySettings: {
-            defaultGateway: row.paymentGatewaySettings?.defaultGateway || "RAZORPAY_PLACEHOLDER",
+            defaultGateway: row.paymentGatewaySettings?.defaultGateway || "RAZORPAY",
             paymentLinkEnabled: row.paymentGatewaySettings?.paymentLinkEnabled ?? true,
             edcTerminalName: row.paymentGatewaySettings?.edcTerminalName || "",
             upiHandle: row.paymentGatewaySettings?.upiHandle || "",
@@ -855,7 +855,7 @@ export default function SettingsPage() {
           },
           advancedSettings: mergeAdvancedSettings(row.advancedSettings || {}),
           smsSettings: {
-            gatewayProvider: row.smsSettings?.gatewayProvider || "TWILIO_PLACEHOLDER",
+            gatewayProvider: row.smsSettings?.gatewayProvider || "TWILIO",
             apiKey: row.smsSettings?.apiKey || "",
             senderId: row.smsSettings?.senderId || ""
           }
@@ -3280,7 +3280,7 @@ export default function SettingsPage() {
 
   const renderSmsSection = () => (
     <>
-      <SectionHeader title="Messaging Center" description="Configure SMTP or delivery-provider credentials, sender identity, and message-routing defaults without leaving settings." badges={[form.smsSettings.gatewayProvider.replace("_PLACEHOLDER", ""), form.smsSettings.senderId || "No Sender ID"]} action={<Link className="secondary-button" to="/admin/whatsapp">Open Messaging</Link>} />
+      <SectionHeader title="Messaging Center" description="Configure SMTP or delivery-provider credentials, sender identity, and message-routing defaults without leaving settings." badges={[form.smsSettings.gatewayProvider, form.smsSettings.senderId || "No Sender ID"]} action={<Link className="secondary-button" to="/admin/whatsapp">Open Messaging</Link>} />
       <div className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
         Gateway/provider details are synced into the live messaging configuration used by notification, reminder, and manual outreach defaults.
       </div>
@@ -3289,9 +3289,9 @@ export default function SettingsPage() {
           <label className="settings-input-group">
             <span className="muted">Gateway provider</span>
             <select value={form.smsSettings.gatewayProvider} onChange={(event) => setForm((current) => ({ ...current, smsSettings: { ...current.smsSettings, gatewayProvider: event.target.value } }))}>
-              <option value="TWILIO_PLACEHOLDER">Twilio</option>
-              <option value="MSG91_PLACEHOLDER">Msg91</option>
-              <option value="GUPSHUP_PLACEHOLDER">Gupshup</option>
+              <option value="TWILIO">Twilio</option>
+              <option value="MSG91">Msg91</option>
+              <option value="GUPSHUP">Gupshup</option>
             </select>
           </label>
           <label className="settings-input-group">

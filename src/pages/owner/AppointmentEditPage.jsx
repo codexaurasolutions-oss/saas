@@ -136,7 +136,7 @@ export default function AppointmentEditPage() {
                 <option value="MANUAL">Manual</option>
                 <option value="WALK_IN">Walk-in</option>
                 <option value="PHONE">Phone</option>
-                <option value="ONLINE_PLACEHOLDER">Online Placeholder</option>
+                <option value="ONLINE">Online</option>
               </select>
               <input value={form.title} placeholder="Appointment title" onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
               <label><span className="muted">Appointment start</span><input type="datetime-local" min={nowStr} value={form.startAt} onChange={(event) => setForm((current) => ({ ...current, startAt: event.target.value }))} /></label>
