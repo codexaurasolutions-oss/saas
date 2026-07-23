@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 export default function PublicMobileMenu({
   brand = { label: "ReSpark", sublabel: "Salon ERP Platform", logo: "/logo-respark.svg", to: "/" },
@@ -8,9 +9,19 @@ export default function PublicMobileMenu({
 }) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef(null);
+  const [wasOpen, setWasOpen] = useState(false);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {
+      if (wasOpen) {
+        toggleRef.current?.focus();
+        setWasOpen(false);
+      }
+      return undefined;
+    }
+
+    setWasOpen(true);
     document.body.style.overflow = "hidden";
     const onKeyDown = (event) => {
       if (event.key === "Escape") setOpen(false);
@@ -20,24 +31,10 @@ export default function PublicMobileMenu({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [open, wasOpen]);
 
-  return (
+  const drawerContent = (
     <>
-      <div className="public-mobile-menu-trigger">
-        <button
-          type="button"
-          className={`public-menu-toggle ${open ? "active" : ""}`}
-          onClick={() => setOpen((current) => !current)}
-          aria-expanded={open}
-          aria-label="Toggle website menu"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </div>
-
       <div className={`surface-overlay ${open ? "active" : ""}`} onClick={() => setOpen(false)} aria-hidden={!open} />
 
       <aside className={`surface-drawer public-surface-drawer ${open ? "active" : ""}`} aria-hidden={!open}>
@@ -74,6 +71,27 @@ export default function PublicMobileMenu({
           </div>
         ) : null}
       </aside>
+    </>
+  );
+
+  return (
+    <>
+      <div className="public-mobile-menu-trigger">
+        <button
+          ref={toggleRef}
+          type="button"
+          className={`public-menu-toggle ${open ? "active" : ""}`}
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-label="Toggle website menu"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
+
+      {createPortal(drawerContent, document.body)}
     </>
   );
 }
