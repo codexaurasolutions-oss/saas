@@ -786,7 +786,7 @@ pre {
 .surface-overlay {
   position: fixed;
   inset: 0;
-  z-index: 44;
+  z-index: 9999 !important;
   background: rgba(15, 23, 42, 0.32);
   backdrop-filter: blur(8px);
   opacity: 0;
@@ -815,7 +815,7 @@ pre {
   transform: translateX(108%);
   opacity: 0;
   transition: transform 260ms ease, opacity 220ms ease;
-  z-index: 46;
+  z-index: 10000 !important;
   overflow-y: auto;
 }
 
