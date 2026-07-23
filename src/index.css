@@ -19,8 +19,15 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
   min-height: 100vh;
   color: var(--text-main);
   text-rendering: optimizeLegibility;
@@ -4749,6 +4756,18 @@ pre {
 @media (max-width: 768px) {
   .demo-lead-heading {
     font-size: 2.2rem !important;
+  }
+}
+
+.hero-floating-badge {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+}
+@media (max-width: 768px) {
+  .hero-floating-badge {
+    right: 0px !important;
+    top: -8px !important;
   }
 }
 

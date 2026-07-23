@@ -288,7 +288,7 @@ export default function MarketingHomePage() {
                     </div>
                   </div>
                   {/* Floating badge */}
-                  <div style={{ position: "absolute", top: -16, right: -16, background: "#fff", borderRadius: 16, padding: "12px 20px", boxShadow: "0 8px 30px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 10, zIndex: 3 }}>
+                  <div className="hero-floating-badge" style={{ background: "#fff", borderRadius: 16, padding: "12px 20px", boxShadow: "0 8px 30px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 10, zIndex: 3 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #10b981, #34d399)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18 }}>✓</div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>12 Branches</div>
