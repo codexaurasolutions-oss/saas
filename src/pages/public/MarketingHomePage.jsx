@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Calendar, Users, CreditCard, BarChart3, Package, Settings, Shield,
   Store, ShoppingCart, FileText, UserCheck, Gift, MessageSquare, Megaphone, Star,
   Clock, MapPin, Bell, HeadphonesIcon, Globe, Repeat, Wallet, TrendingUp,
-  ClipboardList, Tags, PieChart, Truck, ChevronRight, Check, ArrowRight
+  ClipboardList, Tags, PieChart, Truck, Check
 } from "lucide-react";
 
 const navLinks = [
@@ -221,12 +221,12 @@ export default function MarketingHomePage() {
               <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Salon ERP Platform</div>
             </div>
           </Link>
-          <nav style={{ display: "flex", gap: 32, alignItems: "center" }}>
+          <nav className="public-nav-links" style={{ gap: 32 }}>
             {navLinks.map(item => (
               <Link key={item.to} to={item.to} style={{ textDecoration: "none", fontSize: 14, fontWeight: 500, color: location.pathname === item.to ? "#0d9488" : "#64748b", transition: "color 0.2s" }}>{item.label}</Link>
             ))}
           </nav>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div className="public-nav-cta" style={{ gap: 12 }}>
             <Link to="/login" style={{ textDecoration: "none", fontSize: 14, fontWeight: 600, color: "#64748b", padding: "8px 16px" }}>Login</Link>
             <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 14, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, #0d9488, #14b8a6)", padding: "10px 24px", borderRadius: 10, boxShadow: "0 2px 8px rgba(13,148,136,0.3)" }}>Request Demo</Link>
           </div>
@@ -244,16 +244,16 @@ export default function MarketingHomePage() {
           <>
             {/* HERO */}
             <section style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #f0fdfa 0%, #f8fafc 50%, #ecfdf5 100%)" }}>
-              <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 60px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+              <div className="public-hero" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 60px", gap: 60 }}>
                 <div>
                   <div style={{ display: "inline-block", padding: "6px 16px", background: "#ccfbf1", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 20 }}>SALON ERP PLATFORM</div>
-                  <h1 style={{ fontSize: "3.5rem", fontWeight: 900, color: "#0f172a", lineHeight: 1.1, margin: "0 0 20px", letterSpacing: "-0.02em" }}>
+                  <h1 className="marketing-hero-heading" style={{ margin: "0 0 20px" }}>
                     Run your entire salon business from one calm, <span style={{ color: "#0d9488" }}>controlled</span> operating system.
                   </h1>
                   <p style={{ fontSize: "1.15rem", color: "#64748b", lineHeight: 1.7, margin: "0 0 32px", maxWidth: 520 }}>
                     ReSpark brings Super Admin controls, a unified owner/admin panel, POS billing, team permissions, CRM, support, and reporting into one responsive platform for modern salon businesses.
                   </p>
-                  <div style={{ display: "flex", gap: 16, marginBottom: 40 }}>
+                  <div className="public-hero-actions" style={{ display: "flex", gap: 16, marginBottom: 40 }}>
                     <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, #0d9488, #14b8a6)", padding: "16px 36px", borderRadius: 12, boxShadow: "0 4px 16px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>Request Demo</Link>
                     <Link to="/pricing" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#0d9488", background: "#fff", padding: "16px 36px", borderRadius: 12, border: "2px solid #0d9488", transition: "all 0.2s" }}>See Pricing</Link>
                   </div>
@@ -301,7 +301,7 @@ export default function MarketingHomePage() {
 
             {/* STATS BAR */}
             <section style={{ background: "#0f172a", padding: "40px 24px" }}>
-              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
+              <div className="marketing-stats-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
                 {stats.map(s => (
                   <div key={s.label} style={{ textAlign: "center" }}>
                     <div style={{ fontSize: "2rem", fontWeight: 900, color: "#14b8a6" }}>{s.value}</div>
@@ -315,10 +315,10 @@ export default function MarketingHomePage() {
             <section style={{ padding: "80px 24px", background: "#fff" }}>
               <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
                 <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>OUR WORLD</div>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Built for Premium Salons</h2>
+                <h2 className="marketing-section-heading">Built for Premium Salons</h2>
                 <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 600, margin: "0 auto" }}>From luxury spas to neighborhood studios, ReSpark powers the modern salon experience.</p>
               </div>
-              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+              <div className="marketing-images-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
                 {[salonImages.styling, salonImages.spa, salonImages.beauty].map((img, i) => (
                   <div key={i} style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,0.08)", transition: "all 0.3s", cursor: "pointer" }}
                     onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.15)"; }}
@@ -333,10 +333,10 @@ export default function MarketingHomePage() {
             <section style={{ padding: "80px 24px", background: "#f8fafc" }}>
               <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
                 <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURES</div>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Everything Your Salon Needs</h2>
+                <h2 className="marketing-section-heading">Everything Your Salon Needs</h2>
                 <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 600, margin: "0 auto" }}>One platform to manage branches, staff, customers, billing, and growth.</p>
               </div>
-              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+              <div className="marketing-features-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
                 {features.map((f, i) => {
                   const Icon = f.icon;
                   return (
@@ -356,10 +356,10 @@ export default function MarketingHomePage() {
 
             {/* WHY CHOOSE US */}
             <section style={{ padding: "80px 24px", background: "#fff" }}>
-              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+              <div className="marketing-why-grid" style={{ maxWidth: 1200, margin: "0 auto", alignItems: "center" }}>
                 <div>
                   <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>WHY REARK</div>
-                  <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: "0 0 20px", lineHeight: 1.2 }}>One operational rhythm from front desk to owner reporting.</h2>
+                  <h2 className="marketing-section-heading" style={{ margin: "0 0 20px", lineHeight: 1.2 }}>One operational rhythm from front desk to owner reporting.</h2>
                   <p style={{ fontSize: "1.05rem", color: "#64748b", lineHeight: 1.7, margin: "0 0 32px" }}>
                     The platform reduces scattered processes by keeping customers, services, staff access, invoices, payments, reports, and support inside one unified operational structure.
                   </p>
@@ -395,9 +395,9 @@ export default function MarketingHomePage() {
             <section style={{ padding: "80px 24px", background: "#fff" }}>
               <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
                 <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>TESTIMONIALS</div>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>What Salon Owners Say</h2>
+                <h2 className="marketing-section-heading" style={{ margin: 0 }}>What Salon Owners Say</h2>
               </div>
-              <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+              <div className="marketing-testimonials-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
                 {testimonials.map((t, i) => (
                   <div key={i} style={{ background: "#f8fafc", borderRadius: 16, padding: 32, border: "1px solid #e2e8f0" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
@@ -422,9 +422,9 @@ export default function MarketingHomePage() {
             <section style={{ padding: "60px 24px", maxWidth: 1200, margin: "0 auto" }}>
               <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>FEATURE CATEGORIES</div>
-                <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>Deep dive into each module</h2>
+                <h2 className="marketing-section-heading">Deep dive into each module</h2>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+              <div className="marketing-categories-grid">
                 {featureCategories.map((cat, i) => {
                   const CatIcon = cat.icon;
                   return (
@@ -454,10 +454,10 @@ export default function MarketingHomePage() {
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <div style={{ textAlign: "center", marginBottom: 48 }}>
                   <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>ALL FEATURES</div>
-                  <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>{allFeatures.length} features built for real salon operations</h2>
+                  <h2 className="marketing-section-heading">{allFeatures.length} features built for real salon operations</h2>
                   <p style={{ fontSize: "1rem", color: "#64748b" }}>Every module is designed around how salons actually work.</p>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                <div className="marketing-all-features-grid">
                   {allFeatures.map((f, i) => {
                     const FeatIcon = f.icon;
                     return (
@@ -483,10 +483,10 @@ export default function MarketingHomePage() {
           <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 60 }}>
               <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>PLANS & PRICING</div>
-              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Choose the plan that matches your salon growth stage.</h1>
+              <h1 className="marketing-hero-heading" style={{ margin: "0 0 16px" }}>Choose the plan that matches your salon growth stage.</h1>
               <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>Transparent limits, clear feature access, and room for custom plans.</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            <div className="marketing-plans-grid">
               {plans.map((plan) => (
                 <div key={plan.id} style={{ background: "#fff", borderRadius: 20, padding: 32, border: plan.isPopular ? "2px solid #0d9488" : "1px solid #e2e8f0", position: "relative", boxShadow: plan.isPopular ? "0 8px 30px rgba(13,148,136,0.15)" : "none" }}>
                   {plan.isPopular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#0d9488", color: "#fff", padding: "4px 16px", borderRadius: 100, fontSize: 11, fontWeight: 700 }}>MOST POPULAR</div>}
@@ -517,10 +517,10 @@ export default function MarketingHomePage() {
           <section style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 60 }}>
               <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>PLATFORM</div>
-              <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#0f172a", margin: "0 0 16px" }}>Built specifically for salons that need discipline, visibility, and scale.</h1>
+              <h1 className="marketing-hero-heading" style={{ margin: "0 0 16px" }}>Built specifically for salons that need discipline, visibility, and scale.</h1>
               <p style={{ fontSize: "1.1rem", color: "#64748b", maxWidth: 700, margin: "0 auto" }}>This is not a generic dashboard. The product structure follows real salon operations.</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
+            <div className="marketing-platform-grid">
               {[
                 { title: "Multi-Tenant Isolation", desc: "Each salon is logically isolated at the query level using secure client references." },
                 { title: "Secure JWT Authentication", desc: "Cryptographic access tokens ensure backend routers confirm actor role and permissions." },
@@ -533,7 +533,7 @@ export default function MarketingHomePage() {
                 </div>
               ))}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 40 }}>
+            <div className="marketing-platform-badges-grid" style={{ marginTop: 40 }}>
               {[{ label: "Frontend", value: "React" }, { label: "Backend", value: "Node + Express" }, { label: "Database", value: "MySQL" }, { label: "Control", value: "RBAC + Tenancy" }].map((b, i) => (
                 <div key={i} style={{ background: "#0f172a", borderRadius: 12, padding: 20, textAlign: "center" }}>
                   <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>{b.label}</div>
@@ -548,7 +548,7 @@ export default function MarketingHomePage() {
         <section style={{ padding: "80px 24px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", textAlign: "center" }}>
           <div style={{ maxWidth: 800, margin: "0 auto" }}>
             <div style={{ display: "inline-block", padding: "6px 16px", background: "rgba(20,184,166,0.1)", color: "#14b8a6", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>READY FOR WALKTHROUGH</div>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#fff", margin: "0 0 16px" }}>See the platform with your salon use case mapped live.</h2>
+            <h2 className="marketing-section-heading" style={{ color: "#fff", margin: "0 0 16px" }}>See the platform with your salon use case mapped live.</h2>
             <p style={{ fontSize: "1.1rem", color: "#94a3b8", marginBottom: 32 }}>We can walk through branch structure, roles, services, billing flow, reports, and support controls in one demo.</p>
             <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
               <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 16, fontWeight: 700, color: "#0f172a", background: "#fff", padding: "16px 36px", borderRadius: 12 }}>Request Demo</Link>

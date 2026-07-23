@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatApiError } from "../../utils/apiError";
 import { Check, ArrowRight, Calendar, Users, CreditCard, BarChart3, Shield, Store } from "lucide-react";
+import PublicMobileMenu from "../../components/PublicMobileMenu";
 
 const initialForm = { name: "", email: "", phone: "", company: "", message: "" };
 const navLinks = [
@@ -32,12 +33,11 @@ const nextSteps = [
 export default function PublicDemoLeadPage() {
   const [form, setForm] = useState(initialForm);
   const [state, setState] = useState({ error: "", success: "" });
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "Request Demo | ReSpark";
-    api.get("/public/settings").then(() => setLoading(false)).catch(() => setLoading(false));
+    api.get("/public/settings").catch(() => {});
   }, []);
 
   const submit = async (e) => {
@@ -67,26 +67,31 @@ export default function PublicDemoLeadPage() {
               <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Salon ERP Platform</div>
             </div>
           </Link>
-          <nav style={{ display: "flex", gap: 32, alignItems: "center" }}>
+          <nav className="public-nav-links" style={{ gap: 32 }}>
             {navLinks.map(item => (
               <Link key={item.to} to={item.to} style={{ textDecoration: "none", fontSize: 14, fontWeight: 500, color: location.pathname === item.to ? "#0d9488" : "#64748b" }}>{item.label}</Link>
             ))}
           </nav>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div className="public-nav-cta" style={{ gap: 12 }}>
             <Link to="/login" style={{ textDecoration: "none", fontSize: 14, fontWeight: 600, color: "#64748b", padding: "8px 16px" }}>Login</Link>
             <Link to="/book-demo" style={{ textDecoration: "none", fontSize: 14, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, #0d9488, #14b8a6)", padding: "10px 24px", borderRadius: 10 }}>Request Demo</Link>
           </div>
+          <PublicMobileMenu
+            brand={{ label: "ReSpark", sublabel: "Salon ERP Platform", logo: "/logo-respark.svg", to: "/" }}
+            items={navLinks}
+            cta={{ label: "Book Demo", to: "/book-demo" }}
+          />
         </div>
       </header>
 
       <main>
         {/* HERO + FORM */}
-        <section style={{ background: "linear-gradient(135deg, #f0fdfa 0%, #f8fafc 50%, #ecfdf5 100%)", padding: "80px 24px 60px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+        <section className="demo-lead-hero-section" style={{ background: "linear-gradient(135deg, #f0fdfa 0%, #f8fafc 50%, #ecfdf5 100%)" }}>
+          <div className="demo-lead-hero-grid" style={{ maxWidth: 1200, margin: "0 auto", alignItems: "center" }}>
             {/* Left - Content */}
             <div>
               <div style={{ display: "inline-block", padding: "6px 16px", background: "#ccfbf1", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 20 }}>DEMO SESSION</div>
-              <h1 style={{ fontSize: "3.2rem", fontWeight: 900, color: "#0f172a", lineHeight: 1.1, margin: "0 0 20px", letterSpacing: "-0.02em" }}>
+              <h1 className="demo-lead-heading" style={{ margin: "0 0 20px" }}>
                 Let's map your <span style={{ color: "#0d9488" }}>salon workflow.</span>
               </h1>
               <p style={{ fontSize: "1.1rem", color: "#64748b", lineHeight: 1.7, margin: "0 0 32px", maxWidth: 480 }}>
@@ -96,7 +101,7 @@ export default function PublicDemoLeadPage() {
               {/* Agenda */}
               <div style={{ background: "#fff", borderRadius: 20, padding: 28, border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
                 <h3 style={{ margin: "0 0 20px", fontSize: "1rem", fontWeight: 700, color: "#0f172a" }}>Demo Agenda Highlights</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="demo-agenda-grid" style={{ gap: 16 }}>
                   {agendaItems.map((item, i) => {
                     const Icon = item.icon;
                     return (
@@ -125,7 +130,7 @@ export default function PublicDemoLeadPage() {
             </div>
 
             {/* Right - Form */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: 36, border: "1px solid #e2e8f0", boxShadow: "0 8px 30px rgba(0,0,0,0.06)" }}>
+            <div className="demo-form-card-container">
               <div style={{ display: "inline-block", padding: "6px 14px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 20 }}>REQUEST GUIDED WALKTHROUGH</div>
 
               {state.success ? (
@@ -181,13 +186,13 @@ export default function PublicDemoLeadPage() {
             <div style={{ display: "inline-block", padding: "6px 16px", background: "#f0fdfa", color: "#0f766e", borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>NEXT STEPS</div>
             <h2 style={{ fontSize: "2.2rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>What happens after you submit?</h2>
           </div>
-          <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          <div className="demo-steps-grid" style={{ maxWidth: 1000, margin: "0 auto" }}>
             {nextSteps.map((s, i) => (
               <div key={i} style={{ textAlign: "center", position: "relative" }}>
                 <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0d9488, #14b8a6)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 18, margin: "0 auto 16px" }}>{s.step}</div>
-                <h4 style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>{s.title}</h4>
-                <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
-                {i < nextSteps.length - 1 && <ArrowRight size={20} color="#d1d5db" style={{ position: "absolute", right: -20, top: 18 }} />}
+                 <h4 style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>{s.title}</h4>
+                 <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
+                 {i < nextSteps.length - 1 && <ArrowRight className="step-arrow" size={20} color="#d1d5db" style={{ position: "absolute", right: -20, top: 18 }} />}
               </div>
             ))}
           </div>
