@@ -150,7 +150,7 @@ export default function CustomersPage() {
     dateOfBirth: "",
     anniversary: "",
     gst: "",
-    gender: "female"
+    gender: ""
   });
 
   const load = async (searchText = query, selectedFilter = filterType) => {
@@ -775,7 +775,7 @@ export default function CustomersPage() {
         dateOfBirth: "",
         anniversary: "",
         gst: "",
-        gender: "female"
+        gender: ""
       });
       await load();
     } catch (error) {
@@ -1392,10 +1392,10 @@ export default function CustomersPage() {
                   <input required type="text" value={formData.name} placeholder="Guest Name" onChange={(event) => setFormData((current) => ({ ...current, name: event.target.value }))} />
                 </div>
                 <div className="form-group">
-                  <label>Gender</label>
+                  <label>Gender *</label>
                   <div className="radio-group">
-                    <label><input type="radio" name="gender" checked={formData.gender === "female"} onChange={() => setFormData((current) => ({ ...current, gender: "female" }))} /> Female</label>
-                    <label><input type="radio" name="gender" checked={formData.gender === "male"} onChange={() => setFormData((current) => ({ ...current, gender: "male" }))} /> Male</label>
+                    <label><input required type="radio" name="gender" checked={formData.gender === "female"} onChange={() => setFormData((current) => ({ ...current, gender: "female" }))} /> Female</label>
+                    <label><input required type="radio" name="gender" checked={formData.gender === "male"} onChange={() => setFormData((current) => ({ ...current, gender: "male" }))} /> Male</label>
                   </div>
                 </div>
                 <div className="form-group">
@@ -2024,20 +2024,20 @@ export default function CustomersPage() {
                           <div className="cust-detail-section-title">Update Profile</div>
                           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div className="form-group">
-                              <label>Name</label>
-                              <input type="text" value={updateForm.name} onChange={(e) => setUpdateForm(prev => ({ ...prev, name: e.target.value }))} />
+                              <label>Name *</label>
+                              <input required type="text" value={updateForm.name} onChange={(e) => setUpdateForm(prev => ({ ...prev, name: e.target.value }))} />
                             </div>
                             <div className="form-group">
-                              <label>Phone</label>
-                              <IndianPhoneInput value={updateForm.phone} onChange={(phone) => setUpdateForm(prev => ({ ...prev, phone }))} />
+                              <label>Phone *</label>
+                              <IndianPhoneInput required value={updateForm.phone} onChange={(phone) => setUpdateForm(prev => ({ ...prev, phone }))} />
                             </div>
                             <div className="form-group">
                               <label>Email</label>
                               <input type="email" value={updateForm.email} onChange={(e) => setUpdateForm(prev => ({ ...prev, email: e.target.value }))} />
                             </div>
                             <div className="form-group">
-                              <label>Gender</label>
-                              <select value={updateForm.gender} onChange={(e) => setUpdateForm(prev => ({ ...prev, gender: e.target.value }))}>
+                              <label>Gender *</label>
+                              <select required value={updateForm.gender} onChange={(e) => setUpdateForm(prev => ({ ...prev, gender: e.target.value }))}>
                                 <option value="">Select</option>
                                 <option value="female">Female</option>
                                 <option value="male">Male</option>
