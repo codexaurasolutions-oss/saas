@@ -142,10 +142,8 @@ const Protected = () => {
           label: "Operations",
           hint: "Daily flow",
           items: [
-            can("inventory") && enabled("inventory") && { label: "Products", to: "/admin/product-categories" },
             can("packages") && { label: "Packages Manage", to: "/admin/packages" },
             can("memberships") && { label: "Membership Manage", to: "/admin/memberships" },
-            can("services") && { label: "Services", to: "/admin/services" },
             can("attendance") && enabled("attendance") && { label: "Attendance Management", to: "/admin/attendance-management" }
           ].filter(Boolean)
         },
@@ -153,17 +151,22 @@ const Protected = () => {
           label: "Setup",
           hint: "Branches and team",
           items: [
-            can("branches") && { label: "Branches", to: "/admin/branches" },
-            can("staff") && {
-              label: "Staff Details",
-              to: "/admin/users"
-            },
             can("staff") && {
               label: "Roles & Permissions",
               to: "/admin/roles-permissions"
             },
             can("attendance") && enabled("attendance") && { label: "Attendance", to: "/admin/attendance" },
             can("myAttendance") && enabled("attendance") && { label: "My Attendance", to: "/admin/my-attendance" }
+          ].filter(Boolean)
+        },
+        {
+          label: "Manage",
+          hint: "Catalog & Team",
+          items: [
+            can("inventory") && enabled("inventory") && { label: "Manage Products", to: "/admin/product-categories" },
+            can("services") && { label: "Manage Services", to: "/admin/services" },
+            can("branches") && { label: "Manage Branch", to: "/admin/branches" },
+            can("staff") && { label: "Manage Staff", to: "/admin/users" }
           ].filter(Boolean)
         },
 
