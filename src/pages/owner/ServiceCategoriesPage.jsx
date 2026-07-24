@@ -3,6 +3,7 @@ import { api } from "../../api/client";
 import { downloadFromApi } from "../../utils/download";
 import EmptyState from "../../components/EmptyState";
 import PageLoader from "../../components/PageLoader";
+import ImageUploader from "../../components/ImageUploader";
 import { formatApiError } from "../../utils/apiError";
 
 const DURATION_OPTIONS = [
@@ -18,6 +19,8 @@ const DURATION_OPTIONS = [
 
 const initialServiceForm = {
   name: "",
+  imageUrl: "",
+  position: 0,
   branchId: "",
   gender: "UNISEX",
   price: 0,
@@ -163,6 +166,7 @@ export default function ServiceCategoriesPage() {
     setEditingServiceId(service.id);
     setServiceForm({
       name: service.name || "",
+      imageUrl: service.imageUrl || "",
       branchId: service.branchId || "",
       categoryId: service.categoryId || selectedSubId || "",
       gender: service.gender || "UNISEX",
@@ -275,6 +279,7 @@ export default function ServiceCategoriesPage() {
     }
     const payload = {
       name: serviceForm.name.trim(),
+      imageUrl: serviceForm.imageUrl || undefined,
       branchId: serviceForm.branchId || undefined,
       categoryId: serviceForm.categoryId,
       gender: serviceForm.gender || "UNISEX",
@@ -849,6 +854,16 @@ export default function ServiceCategoriesPage() {
                     style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: 12, fontSize: 14 }}
                   />
                 </div>
+              </div>
+
+              <div>
+                <ImageUploader
+                  label="Service Image"
+                  value={serviceForm.imageUrl}
+                  onChange={(url) => setServiceForm((current) => ({ ...current, imageUrl: url }))}
+                  uploadEndpoint="/upload"
+                  hint="Upload an image for this service (JPG, PNG, WebP — max 5MB)"
+                />
               </div>
 
               <div>

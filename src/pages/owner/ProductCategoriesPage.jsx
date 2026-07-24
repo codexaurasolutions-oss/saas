@@ -582,6 +582,16 @@ export default function ProductCategoriesPage() {
                   <textarea className="hub-input" value={productForm.usageInstructions} onChange={e => setProductForm({...productForm, usageInstructions: e.target.value})} placeholder="Usage Instructions" rows={2} style={{ width: "100%", resize: "vertical" }} />
                 </div>
 
+                <div className="hub-form-group" style={{ marginBottom: 20 }}>
+                  <ImageUploader
+                    label="Product Thumbnail"
+                    value={productForm.imageUrl}
+                    onChange={(url) => setProductForm({...productForm, imageUrl: url})}
+                    uploadEndpoint="/upload"
+                    hint="Upload main product image (JPG, PNG, WebP — max 5MB)"
+                  />
+                </div>
+
                 {/* Display Images */}
                 <div style={{ marginBottom: 20, padding: "12px 0", borderTop: "1px solid #f1f5f9" }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8, display: "block" }}>Display Images</label>
