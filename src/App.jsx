@@ -142,6 +142,13 @@ const Protected = () => {
           label: "Operations",
           hint: "Daily flow",
           items: [
+            can("dashboard") && { label: "Dashboard", to: "/admin/dashboard" },
+            can("pos") && enabled("pos") && { label: "Sales", to: "/admin/pos" },
+            can("orders") && enabled("onlineOrders") && { label: "POS Dashboard", to: "/admin/pos-dashboard" },
+            can("appointments") && enabled("appointments") && { label: "Appointments", to: "/admin/appointments" },
+            can("customers") && { label: "Customer", to: "/admin/customers" },
+            can("reports") && enabled("reports") && { label: "Reports", to: "/admin/reports" },
+            { label: "Trends", to: "/admin/trends" },
             can("packages") && { label: "Packages Manage", to: "/admin/packages" },
             can("memberships") && { label: "Membership Manage", to: "/admin/memberships" },
             can("attendance") && enabled("attendance") && { label: "Attendance Management", to: "/admin/attendance-management" }
