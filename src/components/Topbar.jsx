@@ -126,16 +126,6 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
   const dateOpts = { weekday: 'short', day: '2-digit', month: 'short' };
   const dateStr = today.toLocaleDateString('en-GB', dateOpts);
 
-  const tabs = [
-    { label: "DASHBOARD", path: "/admin/dashboard", moduleKey: "dashboard", icon: <LayoutDashboard size={14} style={{marginRight: 6}} /> },
-    { label: "POS", path: "/admin/pos", moduleKey: "pos", featureKey: "pos", icon: <Monitor size={14} style={{marginRight: 6}} /> },
-    { label: "POS DASHBOARD", path: "/admin/order-dashboard", moduleKey: "orders", featureKey: "onlineOrders", icon: <Package size={14} style={{marginRight: 6}} /> },
-    { label: "APPOINTMENT", path: "/admin/appointments", moduleKey: "appointments", featureKey: "appointments", icon: <CalendarIcon size={14} style={{marginRight: 6}} /> },
-    { label: "CRM", path: "/admin/customers", moduleKey: "customers", icon: <Users size={14} style={{marginRight: 6}} /> },
-    { label: "REPORTS", path: "/admin/reports", moduleKey: "reports", featureKey: "reports", icon: <BarChart2 size={14} style={{marginRight: 6}} /> },
-    { label: "INVENTORY", path: "/admin/inventory", moduleKey: "inventory", featureKey: "inventory", icon: <Package size={14} style={{marginRight: 6}} /> },
-    { label: "TRENDS", path: "/admin/trends", moduleKey: "reports", featureKey: "reports", icon: <TrendingUp size={14} style={{marginRight: 6}} /> }
-  ].filter((tab) => can(tab.moduleKey) && (!tab.featureKey || enabled(tab.featureKey)));
 
   return (
     <div className="respark-header-container">
@@ -548,33 +538,30 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
       {/* Top White Row */}
       <div className="respark-top-row">
         <div className="respark-logo-area" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button 
+            type="button" 
+            className="respark-menu-btn" 
+            onClick={onToggleSidebar}
+            style={{ 
+              background: "transparent", 
+              border: "none", 
+              cursor: "pointer", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              padding: 6, 
+              borderRadius: 6, 
+              color: "#1e1b4b"
+            }}
+          >
+            <Menu size={20} />
+          </button>
           {auth?.user?.systemRole === "SUPER_ADMIN" ? (
-            <>
-              <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0, fontWeight: 800, fontSize: "1.2rem", color: "#1e1b4b" }}>
-                Super Admin
-              </div>
-              <button 
-                type="button" 
-                className="respark-menu-btn" 
-                onClick={onToggleSidebar}
-                style={{ 
-                  background: "transparent", 
-                  border: "none", 
-                  cursor: "pointer", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  padding: 6, 
-                  borderRadius: 6, 
-                  color: "#1e1b4b",
-                  marginLeft: 4
-                }}
-              >
-                <Menu size={20} />
-              </button>
-            </>
+            <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0, fontWeight: 800, fontSize: "1.2rem", color: "#1e1b4b" }}>
+              Super Admin
+            </div>
           ) : (
-            <div className="respark-salon-name">{salonName}</div>
+            <div className="respark-salon-name" style={{ borderLeft: "none", paddingLeft: 0 }}>{salonName}</div>
           )}
         </div>
 
@@ -758,24 +745,6 @@ export default function Topbar({ auth, sidebarExpanded, onToggleSidebar, onLogou
         </div>
       </div>
 
-      {/* Dark Tabs Row */}
-      {auth?.user?.systemRole !== "SUPER_ADMIN" && (
-        <div className="respark-nav-row">
-          <button className="respark-menu-btn" onClick={onToggleSidebar}>
-            <Menu size={20} />
-          </button>
-          <div className="respark-tabs">
-            {tabs.map(tab => {
-               const isActive = location.pathname.startsWith(tab.path);
-               return (
-                 <Link key={tab.path} to={tab.path} className={`respark-tab ${isActive ? 'active' : ''}`}>
-                   {tab.icon} {tab.label}
-                 </Link>
-               )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
