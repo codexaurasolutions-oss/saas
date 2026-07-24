@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Package } from "lucide-react";
 import { downloadFromApi } from "../../utils/download";
 import { useSalonSettings } from "../../context/SalonSettingsContext";
 import { useBranch } from '../../context/BranchContext';
@@ -1493,10 +1493,9 @@ export default function PosPage() {
                         <td>{total.toFixed(0)}</td>
                         <td style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           {item.itemType === "SERVICE" && (
-                            <button type="button" title="Add Consumable Items For Service" onClick={() => openConsumableModal(index)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, fontSize: 16, color: '#2563eb', borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>📦</button>
-                          )}
-                          {item.itemType === "SERVICE" && (
-                            <span title={`${item.consumableItems?.length || 0} consumable item(s)`} style={{ fontSize: 11, color: item.consumableItems?.length ? '#16a34a' : '#94a3b8', fontWeight: 600, cursor: 'default' }}>{item.consumableItems?.length || 0}</span>
+                            <button type="button" title="Add Consumables For Service" onClick={() => openConsumableModal(index)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', cursor: 'pointer', padding: '4px 8px', fontSize: 11, fontWeight: 600, color: item.consumableItems?.length ? '#16a34a' : '#334155', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                              <Package size={12} /> Consumables {item.consumableItems?.length ? `(${item.consumableItems.length})` : ""}
+                            </button>
                           )}
                           <button type="button" className="pos-cart-remove" onClick={() => setForm(c => {
                             const removedItem = c.items[index];
